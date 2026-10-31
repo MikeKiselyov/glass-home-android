@@ -87,7 +87,7 @@ Pick one on the phone website; the TV changes straight away.
 | Clock | about 85 MB |
 | Glass | about 80 MB |
 | Postcard | about 120 MB |
-| Type | about 75 MB |
+| Type | about 80 MB |
 
 Measured with `dumpsys meminfo` (total PSS, fresh start) on a 2 GB Google TV.
 Postcard keeps a blurred copy of the photo behind the card. With another app
@@ -104,13 +104,23 @@ type `glasshome.local:8090` on a phone on the same Wi-Fi and enter the code.
   <img src="docs/images/phone-panel.jpg" width="820" alt="The Set up from your phone panel on the TV: a QR code, the address glasshome.local:8090 and a 6-digit code">
 </p>
 
-On the website you add and order photos and icons, pick the theme, font, date
-and weather style, choose your city and reorder or hide apps in the dock.
+The website shows the TV as it is right now at the top: its photo with the
+clock, date, weather and dock drawn the way you set them, so every change can
+be seen before you look up. Below it, four tabs:
+
+- **Look**: theme, clock (24 h, 12 h or the TV's setting), clock font, date,
+  weather style and night mode.
+- **Photos**: add photos, shuffle or your own order, how long each one stays.
+- **Apps**: the dock in order, hide or show, and the colour buttons.
+- **More**: the weather city, a shared iCloud or Google Photos album, icons.
+
+It follows the phone's light or dark setting; the sun/moon button at the top
+switches it, and the phone remembers the choice.
 
 <p align="center">
-  <img src="docs/images/web-look.png" width="300" alt="The phone website, Look section: four theme cards, Clock selected">
+  <img src="docs/images/web-look.png" width="300" alt="The phone website in light mode: the live preview of the TV with the Alps photo and 17:55, the tabs, and the Look tab with four theme cards over the same photo, Clock selected">
   &nbsp;&nbsp;
-  <img src="docs/images/web-dock.png" width="300" alt="The phone website, Dock section: apps in order with up, down and hide buttons">
+  <img src="docs/images/web-apps.png" width="300" alt="The phone website in dark mode: the live preview and the Apps tab, apps in order with up, down and hide buttons, Live TV hidden">
 </p>
 
 ## Languages
@@ -142,12 +152,12 @@ additions to [debloat/packages.tsv](debloat/packages.tsv) for your TV brand.
 
 No phone at hand? Hold **OK** on any app and choose **Glass Home settings**, or press
 **Open settings on this TV** on the phone panel. The same website opens on the
-TV, already signed in. Arrows move between controls, **OK** picks, **Back**
-closes it. Adding photos and icons needs a phone (files come from there);
-everything else works with the remote.
+TV, already signed in, with the tabs down the left. Arrows move between
+controls, **OK** picks, **Back** closes it. Adding photos and icons needs a
+phone (files come from there); everything else works with the remote.
 
 <p align="center">
-  <img src="docs/images/tv-settings.jpg" width="820" alt="The settings website on the TV: the Look section, the first clock font outlined by the focus ring">
+  <img src="docs/images/tv-settings.jpg" width="820" alt="The settings website on the TV: the live preview and the tabs on the left, the theme cards on the right with Glass outlined by the remote's yellow focus ring and Clock marked as the current theme">
 </p>
 
 ## Speed and memory
@@ -292,5 +302,7 @@ days.
 - Code: MIT, see [LICENSE](LICENSE). Based on Glass Home for Samsung TVs by
   victaphu ([MIT](licenses/MIT-glass-home-samsung-tv.txt)).
 - Photos: CC0, see [CREDITS.md](CREDITS.md).
-- Instrument Serif: SIL Open Font License, see [licenses](licenses/OFL-InstrumentSerif.txt).
+- Fonts (Instrument Serif and the other clock fonts, Bricolage Grotesque and
+  Atkinson Hyperlegible for the settings website): SIL Open Font License, see
+  [licenses](licenses) and [CREDITS.md](CREDITS.md).
 - Not affiliated with Google, Sony, Microsoft, Nintendo, Apple or any app shown.

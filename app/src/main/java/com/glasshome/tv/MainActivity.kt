@@ -142,7 +142,10 @@ class MainActivity : Activity() {
             slideB,
             { app.settings.photoIntervalSeconds * 1000L },
             { app.settings.shufflePhotos },
-        ) { wallpaper -> showCaption(wallpaper) }
+        ) { wallpaper ->
+            app.currentPhotoKey = wallpaper.key
+            showCaption(wallpaper)
+        }
         val ambient: ImageView? = findViewById(R.id.ambient)
         if (ambient != null) {
             Backdrop.prepareBlurredView(ambient)

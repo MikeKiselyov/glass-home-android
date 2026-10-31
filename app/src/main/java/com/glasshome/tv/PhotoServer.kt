@@ -29,6 +29,9 @@ class PhotoServer(
     private val catalog: AppCatalog,
 ) : NanoHTTPD(PORT) {
 
+    /** Key of the photo on the TV right now (null before the first one); set by the app. */
+    var currentPhoto: () -> String? = { null }
+
     /** Photos in the shared album after the last sync (-1: the link failed); set by the app. */
     var albumCount: () -> Int? = { null }
 
@@ -102,6 +105,9 @@ class PhotoServer(
             if (!isSignedIn(session)) {
                 return json(Response.Status.UNAUTHORIZED, JSONObject().put("error", "sign-in"))
             }
+            if (method == Method.GET && path == "/api/screen") {
+                return screen()
+            }
             if (method == Method.GET && path == "/api/photos") {
                 return listPhotos()
             }
@@ -166,6 +172,8 @@ class PhotoServer(
         val html = context.assets.open("upload.html").use { input -> input.bufferedReader().readText() }
         val response = newFixedLengthResponse(Response.Status.OK, "text/html; charset=utf-8", html)
         response.addHeader("Content-Security-Policy", "default-src 'self'; img-src 'self' blob: data:; font-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'")
+        // Check for a newer page every time: after an app update the phone must not keep the old one.
+        response.addHeader("Cache-Control", "no-cache")
         return response
     }
 
@@ -225,7 +233,33 @@ class PhotoServer(
         return response
     }
 
-    /** The clock fonts, so the website can preview them. Public: they are OFL fonts. */
+    /**
+     * A small JPEG of the photo on the TV right now, for the live preview at
+     * the top of the website. Never cached: it changes with every photo.
+     */
+    private fun screen(): Response {
+        var wallpaper: Wallpaper? = null
+        val key = currentPhoto()
+        if (key != null) {
+            wallpaper = store.find(key)
+        }
+        if (wallpaper == null) {
+            wallpaper = store.playlist().firstOrNull()
+        }
+        if (wallpaper == null) {
+            return text(Response.Status.NOT_FOUND, I18n.t("server.not_found"))
+        }
+        val bitmap = store.loadThumb(wallpaper) ?: return text(Response.Status.NOT_FOUND, I18n.t("server.not_found"))
+        val bytes = java.io.ByteArrayOutputStream()
+        bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, bytes)
+        bitmap.recycle()
+        val body = bytes.toByteArray()
+        val response = newFixedLengthResponse(Response.Status.OK, "image/jpeg", java.io.ByteArrayInputStream(body), body.size.toLong())
+        response.addHeader("Cache-Control", "no-store")
+        return response
+    }
+
+    /** The clock and website fonts, so the website can use them. Public: they are OFL fonts. */
     private fun font(name: String): Response {
         val resource = when (name) {
             "instrument.ttf" -> R.font.instrument_serif_regular
@@ -233,6 +267,9 @@ class PhotoServer(
             "dmserif.ttf" -> R.font.dm_serif_display_regular
             "bebas.ttf" -> R.font.bebas_neue_regular
             "spacemono.ttf" -> R.font.space_mono_regular
+            "bricolage.ttf" -> R.font.bricolage_grotesque
+            "atkinson.ttf" -> R.font.atkinson_hyperlegible_regular
+            "atkinson-bold.ttf" -> R.font.atkinson_hyperlegible_bold
             else -> return text(Response.Status.NOT_FOUND, I18n.t("server.not_found"))
         }
         val bytes = context.resources.openRawResource(resource).use { input -> input.readBytes() }
@@ -348,6 +385,8 @@ class PhotoServer(
         val body = JSONObject()
             .put("photoInterval", settings.photoIntervalSeconds)
             .put("clockFormat", settings.clockFormat)
+            // What the TV shows now; with "auto" that is the TV's own setting.
+            .put("clock24", uses24Hours())
             .put("nightEnabled", settings.nightEnabled)
             .put("nightFrom", settings.nightFrom)
             .put("nightTo", settings.nightTo)
@@ -452,6 +491,16 @@ class PhotoServer(
         return homeSettings()
     }
 
+    private fun uses24Hours(): Boolean {
+        if (settings.clockFormat == "24") {
+            return true
+        }
+        if (settings.clockFormat == "12") {
+            return false
+        }
+        return android.text.format.DateFormat.is24HourFormat(context)
+    }
+
     /** Language codes with a file in assets/i18n, e.g. ["en"]. */
     private fun availableLanguages(): List<String> {
         val files = context.assets.list("i18n") ?: emptyArray()
@@ -501,6 +550,12 @@ class PhotoServer(
         val body = JSONObject()
             .put("enabled", weather.enabled)
             .put("place", place?.name ?: "")
+        // The reading the TV shows now, for the website's preview.
+        val now = weather.cached()
+        if (now != null) {
+            body.put("temperature", now.temperature)
+                .put("description", now.description)
+        }
         return json(Response.Status.OK, body)
     }
 
@@ -532,7 +587,9 @@ class PhotoServer(
         if (name != null && latitude != null && longitude != null) {
             val validLatitude = latitude >= -90 && latitude <= 90
             val validLongitude = longitude >= -180 && longitude <= 180
-            if (!validLatitude || !validLongitude || name.length > 120) {
+            // City names have no markup; refusing < and > keeps a name from ever becoming HTML on a page.
+            val hasMarkup = name.contains('<') || name.contains('>')
+            if (!validLatitude || !validLongitude || name.length > 120 || hasMarkup) {
                 return json(Response.Status.BAD_REQUEST, JSONObject().put("error", "bad-place"))
             }
             weather.setPlace(WeatherPlace(name, latitude, longitude))

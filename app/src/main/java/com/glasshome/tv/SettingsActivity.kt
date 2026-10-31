@@ -43,8 +43,8 @@ class SettingsActivity : Activity() {
         webView.loadUrl("$ADDRESS/#look")
     }
 
-    // Back closes settings. The website is one page: jumping between its
-    // sections (#look, #dock) only adds history, nothing worth going back through.
+    // Back closes settings: the website is one page, and its tabs keep no
+    // history worth going back through.
 
     override fun onDestroy() {
         webView.destroy()
