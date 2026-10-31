@@ -164,22 +164,22 @@ phone (files come from there); everything else works with the remote.
 
 Measured on the TV it was built on (Smarttech Apollo Premium 4K, Google TV,
 Android 14, 4 cores, 2 GB RAM) with `scripts/measure.sh`, debug build as
-`scripts/deploy.sh` installs it, medians of 5 runs.
+`scripts/deploy.sh` installs it, medians of 5 runs, with *Don't keep
+activities* off (see [Good to know](#good-to-know)).
 
 | Theme | Cold start | Home | Idle CPU | Memory on screen | Behind another app |
 |---|---|---|---|---|---|
-| Clock | 1.4 s | 0.62 s | 2.5% | 76 MB | 54 MB |
-| Glass | 1.3 s | 0.55 s | 2.8% | 119 MB | 55 MB |
-| Postcard | 1.2 s | 0.56 s | 2.3% | 116 MB | 50 MB |
-| Type | 1.3 s | 0.54 s | 2.4% | 70 MB | 48 MB |
+| Clock | 1.44 s | 0.22 s | 2.4% | 78 MB | 74 MB |
+| Glass | 1.32 s | 0.19 s | 3.3% | 71 MB | 59 MB |
+| Postcard | 1.22 s | 0.21 s | 3.0% | 112 MB | 63 MB |
+| Type | 1.30 s | 0.20 s | 3.2% | 69 MB | 57 MB |
 
-- **Home** is pressing Home in another app. This TV ships with *Don't keep
-  activities* on (Developer options), so the home screen is built again every
-  time; the TV's own Settings app takes 0.29 s for the same.
-- **Idle CPU** is one core's share while the home screen just sits there. The
-  slow zoom on the photo moves in half-second steps you can't see, instead of
-  redrawing the screen 60 times a second (it used to cost about 20%).
-- While moving along the dock, 90% of frames take under 30-60 ms depending on
+- **Cold start** is the first start after the app was stopped; **Home** is
+  pressing Home in another app. Both count until the first frame is drawn.
+- **Idle CPU** is one core's share while the home screen just sits there: the
+  photo changes and its slow zoom moves in half-second steps you can't see
+  (redrawn 60 times a second it used to cost about 20%).
+- While moving along the dock, 90% of frames take under 20-60 ms depending on
   the theme.
 - The release APK is 6.6 MB.
 
@@ -190,12 +190,13 @@ screens, not a TV as it comes from the shop:
 
 | Home screen | Cold start | Home | Idle CPU | Memory on screen | Behind another app |
 |---|---|---|---|---|---|
-| Google TV | 0.34 s | 0.20 s | 32.6% | 108 MB | 82 MB |
-| Glass Home (Type) | 1.29 s | 0.59 s | 4.7% | 75 MB | 48 MB |
+| Google TV | 0.60 s | 0.17 s | 0.0% | 96 MB | 95 MB |
+| Glass Home (Type) | 1.34 s | 0.19 s | 4.2% | 67 MB | 55 MB |
 
-Google TV's home screen opens faster; Glass Home uses about a seventh of the
-CPU while it sits on screen and less memory in front and behind. Start times
-count until the first frame is drawn.
+Google TV's home screen starts faster from cold and does nothing while it
+sits still; pressing Home takes about the same time with either. Glass Home
+uses about a third less memory on screen and 40 MB less behind other apps
+(Google TV also runs a second background process of its own).
 
 ## Set up
 
@@ -276,6 +277,12 @@ your TV and are never part of this repository or the APK.
   uses a small accessibility service that brings Glass Home to the front when
   the stock home opens. The scripts refuse to disable a list of packages the
   TV needs (`scripts/changelog.sh`).
+- **Developer options > Don't keep activities** should be off. With it on,
+  Android closes every app the moment you leave it, so pressing Home builds
+  the home screen again each time (0.6 s instead of 0.15 s on the test TV)
+  and every other app starts from scratch too. Our test TV came with it on.
+  Turn it off in Settings > System > Developer options; changing it with
+  `adb shell settings` only takes effect after a reboot.
 - **After a reboot** Wireless debugging may switch itself off. Turn it on
   again; you don't need to pair again.
 - **System updates** can switch the accessibility service off. Run `set-home.sh` again.
