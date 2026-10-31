@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Theme "Clock": a large clock bottom left over the photo. Sizes for a 960x540 dp screen. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black">
+
+    <include
+        layout="@layout/part_photos"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/shade_left" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/shade_bottom" />
+
+    <!-- Tinted toward the album art while music plays. -->
+    <View
+        android:id="@+id/music_tint"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0"
+        android:background="@android:color/black" />
+
+    <!-- Night mode: a warm dark veil over the photos. -->
+    <View
+        android:id="@+id/night_shade"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0"
+        android:background="#FF1F0E00" />
+
+    <include
+        layout="@layout/part_now_playing"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start|top"
+        android:layout_marginStart="48dp"
+        android:layout_marginTop="36dp" />
+
+    <TextView
+        android:id="@+id/time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start|bottom"
+        android:layout_marginStart="44dp"
+        android:layout_marginBottom="108dp"
+        android:fontFamily="@font/instrument_serif_regular"
+        android:includeFontPadding="false"
+        android:letterSpacing="-0.02"
+        android:shadowColor="#66000000"
+        android:shadowRadius="24"
+        android:textColor="@android:color/white"
+        android:textSize="163dp" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start|bottom"
+        android:layout_marginStart="52dp"
+        android:layout_marginBottom="88dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/instrument_serif_italic"
+            android:shadowColor="#66000000"
+            android:shadowRadius="12"
+            android:textColor="#E6FFFFFF"
+            android:textSize="20dp" />
+
+        <!-- "17°, light rain in Porto"; hidden until the first reading or when weather is off. -->
+        <TextView
+            android:id="@+id/weather"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="18dp"
+            android:fontFamily="@font/instrument_serif_italic"
+            android:shadowColor="#66000000"
+            android:shadowRadius="12"
+            android:textColor="#B3FFFFFF"
+            android:textSize="20dp"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <HorizontalScrollView
+        android:id="@+id/dock_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        android:layout_gravity="start|bottom"
+        android:layout_marginEnd="220dp"
+        android:layout_marginBottom="16dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:fadingEdgeLength="40dp"
+        android:paddingStart="52dp"
+        android:paddingEnd="24dp"
+        android:requiresFadingEdge="horizontal"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/dock"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:clipChildren="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal" />
+    </HorizontalScrollView>
+
+    <TextView
+        android:id="@+id/place"
+        android:layout_width="210dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|bottom"
+        android:layout_marginEnd="38dp"
+        android:layout_marginBottom="36dp"
+        android:fontFamily="@font/instrument_serif_italic"
+        android:gravity="end"
+        android:shadowColor="#66000000"
+        android:shadowRadius="8"
+        android:textColor="#BFFFFFFF"
+        android:textSize="12dp" />
+
+    <!-- Weather style "week": seven days on a frosted panel. -->
+    <include
+        layout="@layout/part_weather_week"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|top"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="40dp" />
+
+    <!-- Weather, large, top right: the "corner" and "forecast" styles. -->
+    <include
+        layout="@layout/part_weather_corner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|top"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="40dp" />
+
+    <FrameLayout
+        android:id="@+id/overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+</FrameLayout>

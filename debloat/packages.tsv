@@ -1,0 +1,23 @@
+# package	kind	description
+# kind "junk": ads, tracking, demo and test apps, disabled by default (answer n to keep).
+# kind "feature": something you might use; kept by default (answer y to disable).
+# Only packages installed and enabled on your TV are offered. Add your TV's junk with a pull request.
+tv.anoki.acr.anokiacroptin	junk	ACR: reports what is on screen (incl. HDMI) for ad targeting
+fusion.android.tv.demo	junk	Store demo mode
+com.google.android.feedback	junk	Google feedback reporter
+com.android.tv.feedbackconsent	junk	Feedback consent dialogs
+com.android.adservices.api	junk	Android ad services (Privacy Sandbox ads)
+com.android.ondevicepersonalization.services	junk	On-device ad personalization
+com.android.federatedcompute.services	junk	Federated learning for personalization
+com.express.fac.test	junk	Factory test app (Expressluck TVs)
+com.google.android.tvrecommendations	junk	Recommendation rows on Android TV home
+com.google.android.play.games	feature	Google Play Games
+com.google.android.videos	feature	Google TV / Play Movies app (purchases, watchlist)
+com.google.android.youtube.tvmusic	feature	YouTube Music
+com.google.android.apps.mediashell	feature	Chromecast built-in (casting from phones)
+com.google.android.katniss	feature	Google Assistant / voice search (mic button)
+com.google.android.tv.assistant	feature	Google Assistant on TV
+com.google.android.apps.tv.dreamx	feature	Google ambient mode screensaver
+com.mediatek.wwtv.mediaplayer	feature	USB media player (MediaTek TVs)
+com.tcl.browser	feature	TCL Browser
+com.smartdevice.tv.aircast	feature	AirCast (AirPlay receiver)

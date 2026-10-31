@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Theme "Glass": clock top right, a frosted dock bar of large icons. Sizes for a 960x540 dp screen. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black">
+
+    <include
+        layout="@layout/part_photos"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/shade_top" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/shade_bottom" />
+
+    <View
+        android:id="@+id/music_tint"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0"
+        android:background="@android:color/black" />
+
+    <View
+        android:id="@+id/night_shade"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0"
+        android:background="#FF1F0E00" />
+
+    <TextView
+        android:id="@+id/brand"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start|top"
+        android:layout_marginStart="42dp"
+        android:layout_marginTop="34dp"
+        android:shadowColor="#66000000"
+        android:shadowRadius="10"
+        android:textColor="@android:color/white"
+        android:textSize="19dp"
+        android:textStyle="bold" />
+
+    <include
+        layout="@layout/part_now_playing"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start|top"
+        android:layout_marginStart="42dp"
+        android:layout_marginTop="76dp" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|top"
+        android:layout_marginTop="28dp"
+        android:layout_marginEnd="42dp"
+        android:gravity="end"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:includeFontPadding="false"
+            android:shadowColor="#66000000"
+            android:shadowRadius="16"
+            android:textColor="@android:color/white"
+            android:textSize="50dp" />
+
+        <TextView
+            android:id="@+id/date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:shadowColor="#66000000"
+            android:shadowRadius="10"
+            android:textColor="#E6FFFFFF"
+            android:textSize="14dp" />
+
+        <TextView
+            android:id="@+id/weather"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:shadowColor="#66000000"
+            android:shadowRadius="10"
+            android:textColor="#CCFFFFFF"
+            android:textSize="14dp"
+            android:visibility="gone" />
+
+        <!-- Weather style "week", under the clock as on the original Glass Home. -->
+        <include
+            layout="@layout/part_weather_week"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginStart="40dp"
+        android:layout_marginEnd="40dp"
+        android:layout_marginBottom="66dp"
+        android:background="@drawable/glass_panel"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:padding="10dp">
+
+        <HorizontalScrollView
+            android:id="@+id/dock_scroll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/dock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clipChildren="false"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp" />
+        </HorizontalScrollView>
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/dock_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start|bottom"
+        android:layout_marginStart="54dp"
+        android:layout_marginBottom="34dp"
+        android:shadowColor="#80000000"
+        android:shadowRadius="10"
+        android:textColor="@android:color/white"
+        android:textSize="15dp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/place"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|bottom"
+        android:layout_marginEnd="42dp"
+        android:layout_marginBottom="16dp"
+        android:gravity="end"
+        android:shadowColor="#66000000"
+        android:shadowRadius="8"
+        android:textColor="#B3FFFFFF"
+        android:textSize="10dp" />
+
+    <FrameLayout
+        android:id="@+id/overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+</FrameLayout>

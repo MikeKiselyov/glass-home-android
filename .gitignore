@@ -1,0 +1,14 @@
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+.DS_Store
+.playwright-mcp/
+.tv/
+# Third-party app icons exported from a TV for the design mockups (trademarks).
+design/icons/
+# Release signing.
+keystore.properties
+*.jks
+*.keystore

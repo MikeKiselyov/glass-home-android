@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Weather in the corner: icon and "20°" large, the description, and for the
+     "forecast" style three rows for the next days (built in MainActivity). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/weather_corner"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:gravity="end"
+    android:orientation="vertical"
+    android:visibility="gone">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/weather_corner_icon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="10dp"
+            android:importantForAccessibility="no" />
+
+        <TextView
+            android:id="@+id/weather_corner_temperature"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:includeFontPadding="false"
+            android:shadowColor="#66000000"
+            android:shadowRadius="16"
+            android:textColor="@android:color/white"
+            android:textSize="56dp" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/weather_corner_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:shadowColor="#66000000"
+        android:shadowRadius="10"
+        android:textColor="#D9FFFFFF"
+        android:textSize="16dp" />
+
+    <LinearLayout
+        android:id="@+id/weather_forecast"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="end"
+        android:orientation="vertical"
+        android:visibility="gone" />
+</LinearLayout>

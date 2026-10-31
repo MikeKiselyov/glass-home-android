@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12171b">
+<title>Glass Home</title>
+<style>
+  @font-face { font-family: "Instrument Serif"; src: url(/fonts/instrument.ttf) format("truetype"); font-display: swap; }
+  @font-face { font-family: "Instrument Serif"; font-style: italic; src: url(/fonts/instrument-italic.ttf) format("truetype"); font-display: swap; }
+  @font-face { font-family: "DM Serif Display"; src: url(/fonts/dmserif.ttf) format("truetype"); font-display: swap; }
+  @font-face { font-family: "Bebas Neue"; src: url(/fonts/bebas.ttf) format("truetype"); font-display: swap; }
+  @font-face { font-family: "Space Mono"; src: url(/fonts/spacemono.ttf) format("truetype"); font-display: swap; }
+
+  :root {
+    --ground: #12171b;
+    --surface: #1a2127;
+    --line: #2b343b;
+    --ink: #eef1f3;
+    --muted: #98a3ab;
+    --paper: #f2efe8;
+    --paper-ink: #1f2326;
+    --ring: #8fd3c8;
+    --danger: #ffb4a8;
+    --serif: "Instrument Serif", Georgia, "Times New Roman", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font: 16px/1.5 var(--sans);
+    -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 680px; margin: 0 auto; padding: 0 20px 96px; }
+  [hidden] { display: none !important; }
+
+  /* ---------- header and navigation ---------- */
+  header.top { max-width: 680px; margin: 0 auto; padding: 36px 20px 8px; }
+  header.top h1 { font: 400 52px/1 var(--serif); margin: 0; letter-spacing: -0.01em; }
+  header.top p { margin: 10px 0 0; color: var(--muted); }
+  nav.sections {
+    position: sticky; top: 0; z-index: 5;
+    background: rgba(18, 23, 27, .92);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  nav.sections ul { list-style: none; display: flex; gap: 6px; overflow-x: auto; max-width: 680px; margin: 0 auto; padding: 10px 20px; scrollbar-width: none; }
+  nav.sections ul::-webkit-scrollbar { display: none; }
+  nav.sections a { display: block; padding: 7px 14px; border-radius: 999px; color: var(--muted); text-decoration: none; white-space: nowrap; font-weight: 500; font-size: 15px; }
+  nav.sections a:hover, nav.sections a.current { color: var(--paper-ink); background: var(--paper); }
+
+  /* ---------- sections ---------- */
+  section.part { padding-top: 40px; }
+  section.part > h2 { font: 400 36px/1.05 var(--serif); margin: 0 0 6px; }
+  section.part > p.lead { color: var(--muted); margin: 0 0 20px; max-width: 56ch; }
+  h3 { font-size: 15px; font-weight: 600; margin: 28px 0 10px; }
+
+  button, .button {
+    font: 600 16px var(--sans);
+    padding: 13px 20px;
+    border-radius: 12px;
+    border: 0;
+    background: var(--paper);
+    color: var(--paper-ink);
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  button.quiet { background: transparent; color: var(--ink); border: 1px solid var(--line); font-weight: 500; }
+  button:disabled { opacity: .4; cursor: default; }
+  :focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
+  .file-button { position: relative; overflow: hidden; }
+  .file-button input { position: absolute; inset: 0; opacity: 0; cursor: pointer; font-size: 0; }
+
+  input[type=text], input[type=url], select {
+    font: 400 16px var(--sans);
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    width: 100%;
+  }
+  .inline { display: flex; gap: 10px; }
+  .inline input { flex: 1; }
+  .status { min-height: 1.5em; color: var(--muted); margin: 10px 0 0; }
+  .status.error { color: var(--danger); }
+
+  /* ---------- sign in ---------- */
+  #signin { padding-top: 24px; }
+  #signin input { font: 400 34px var(--serif); letter-spacing: .2em; text-align: center; }
+
+  /* ---------- photos ---------- */
+  .upload-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .progress { height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; margin-top: 14px; }
+  .progress span { display: block; height: 100%; width: 0; background: var(--paper); transition: width .2s; }
+  .photo-grid { list-style: none; padding: 0; margin: 18px 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .photo-grid li { position: relative; border-radius: 10px; overflow: hidden; background: var(--surface); aspect-ratio: 16 / 10; touch-action: pan-y; }
+  .photo-grid li img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; -webkit-user-select: none; user-select: none; }
+  .photo-grid li.dragging { opacity: .35; }
+  .photo-grid li .handle, .photo-grid li .remove {
+    position: absolute; top: 6px; width: 36px; height: 36px; border-radius: 10px; padding: 0; justify-content: center;
+    background: rgba(18, 23, 27, .72); color: var(--ink); font-size: 16px; border: 0;
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  }
+  .photo-grid li .handle { left: 6px; cursor: grab; touch-action: none; }
+  .photo-grid li .remove { right: 6px; }
+  .photo-grid li .number { position: absolute; left: 8px; bottom: 6px; font: 400 20px var(--serif); text-shadow: 0 1px 6px rgba(0,0,0,.7); }
+  .drag-ghost { position: fixed; z-index: 20; pointer-events: none; border-radius: 10px; overflow: hidden; box-shadow: 0 18px 40px rgba(0,0,0,.5); transform: scale(1.04); }
+  .drag-ghost img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .toggle { display: flex; align-items: center; gap: 12px; margin-top: 16px; color: var(--ink); }
+  .toggle input { width: 22px; height: 22px; accent-color: var(--paper); }
+
+  /* ---------- choice cards (theme, font, date) ---------- */
+  .choices { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .choice { position: relative; display: block; border: 1px solid var(--line); border-radius: 14px; padding: 12px; background: var(--surface); cursor: pointer; }
+  .choice input { position: absolute; opacity: 0; pointer-events: none; }
+  .choice.checked { border-color: var(--paper); box-shadow: inset 0 0 0 1px var(--paper); }
+  .choice.focused { outline: 3px solid var(--ring); outline-offset: 2px; }
+  .choice .name { font-weight: 600; display: block; }
+  .choice .note { color: var(--muted); font-size: 13px; display: block; margin-top: 2px; }
+
+  /* Theme previews: tiny drawings of each layout. */
+  .mini { position: relative; aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; margin-bottom: 10px;
+    background: linear-gradient(160deg, #5d7486 0%, #2f4250 55%, #1c2830 100%); }
+  .mini i, .mini b { position: absolute; display: block; border-radius: 3px; background: rgba(255,255,255,.85); }
+  .mini .clock-digits { left: 7%; bottom: 26%; background: none; font: 400 30px/1 var(--serif); color: #fff; border-radius: 0; }
+  .mini .bar { left: 5%; right: 5%; bottom: 12%; height: 22%; border-radius: 6px; background: rgba(255,255,255,.24); }
+  .mini.postcard { background: #2a3236; }
+  .mini .card { right: 6%; top: 10%; width: 56%; height: 66%; background: #f2efe8; transform: rotate(1.5deg); border-radius: 1px; }
+  .mini .card::after { content: ""; position: absolute; inset: 5% 5% 18%; background: linear-gradient(160deg, #5d7486, #2f4250); }
+  .mini .words { left: 7%; bottom: 14%; font: 600 12px/1 var(--sans); color: rgba(255,255,255,.95); background: none; white-space: nowrap; border-radius: 0; }
+
+  .font-sample { display: block; font-size: 38px; line-height: 1.1; margin-bottom: 4px; }
+  .date-sample { font-family: var(--serif); font-size: 20px; font-style: italic; display: block; }
+  /* Weather style previews over a little photo. */
+  .weather-sample { position: relative; height: 92px; border-radius: 8px; margin-bottom: 10px; overflow: hidden; color: #fff;
+    background: linear-gradient(160deg, #5d7486 0%, #2f4250 60%, #1c2830 100%); font-family: var(--serif); }
+  .weather-sample .by-date { position: absolute; left: 10px; bottom: 10px; font-style: italic; font-size: 15px; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .weather-sample .by-date .faint { opacity: .7; }
+  .weather-sample .in-corner { position: absolute; right: 10px; top: 8px; text-align: right; line-height: 1.05; }
+  .weather-sample .big { font-size: 30px; display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+  .weather-sample .small { font-size: 11px; opacity: .85; }
+  .weather-sample .days { font-size: 10px; opacity: .9; margin-top: 2px; }
+  .weather-sample .week { font-family: var(--sans); font-weight: 300; }
+  .weather-sample .small-sans { font-size: 12px; }
+  .weather-sample .panel { display: flex; gap: 2px; margin-top: 4px; padding: 4px 5px; border-radius: 6px; background: rgba(255,255,255,.2); }
+  .weather-sample .col { display: flex; flex-direction: column; align-items: center; font-size: 8px; line-height: 1.25; width: 15px; }
+  .weather-sample .col .sun { color: #ffd43b; font-size: 9px; }
+  .weather-sample svg { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+  .rows { display: grid; gap: 14px; }
+  .row { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(0, 1.4fr); gap: 12px; align-items: center; }
+  .row label { color: var(--muted); }
+  @media (max-width: 420px) { .row { grid-template-columns: 1fr; gap: 6px; } }
+
+  /* ---------- dock, weather, icons ---------- */
+  .dock-list { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--line); }
+  .dock-list li { display: flex; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .dock-list li span { flex: 1; }
+  .dock-list li.hidden span { color: var(--muted); text-decoration: line-through; }
+  .dock-list button { padding: 8px 12px; font-size: 14px; }
+  .results { display: grid; gap: 8px; margin-top: 12px; }
+  .results button { justify-content: flex-start; text-align: left; }
+  .icon-grid { list-style: none; padding: 0; margin: 16px 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 12px; }
+  .icon-grid li { text-align: center; }
+  .icon-grid img { width: 100%; aspect-ratio: 1; border-radius: 22%; display: block; background: var(--surface); }
+  .icon-grid button { margin-top: 6px; padding: 6px 10px; font-size: 13px; }
+
+  .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); opacity: 0;
+    background: var(--paper); color: var(--paper-ink); padding: 10px 18px; border-radius: 999px; font-weight: 600; transition: opacity .2s, transform .2s; pointer-events: none; z-index: 30; }
+  .toast.on { opacity: 1; transform: translate(-50%, 0); }
+  footer { color: var(--muted); font-size: 13px; padding-top: 48px; }
+  footer a, .status a { color: inherit; }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1 data-i18n="web.title"></h1>
+  <p id="intro"></p>
+</header>
+
+<main id="signin" hidden>
+  <p data-i18n="web.signin_help"></p>
+  <form id="signin-form" class="inline">
+    <input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" data-i18n-aria-label="web.code_label">
+    <button type="submit" data-i18n="web.signin"></button>
+  </form>
+  <p id="signin-status" class="status error" role="status"></p>
+</main>
+
+<div id="app" hidden>
+  <nav class="sections" aria-label="Sections">
+    <ul>
+      <li><a href="#photos" data-i18n="web.nav.photos"></a></li>
+      <li><a href="#look" data-i18n="web.nav.look"></a></li>
+      <li><a href="#dock" data-i18n="web.nav.dock"></a></li>
+      <li><a href="#weather" data-i18n="web.nav.weather"></a></li>
+      <li><a href="#album" data-i18n="web.nav.album"></a></li>
+      <li><a href="#icons" data-i18n="web.nav.icons"></a></li>
+    </ul>
+  </nav>
+  <main>
+    <!-- ===== Photos ===== -->
+    <section class="part" id="photos">
+      <h2 data-i18n="web.photos.title"></h2>
+      <p class="lead" data-i18n="web.photos.lead"></p>
+      <div class="upload-row">
+        <label class="button file-button"><span data-i18n="web.photos.add"></span><input id="files" type="file" accept="image/*" multiple></label>
+        <span id="upload-status" class="status" role="status"></span>
+      </div>
+      <div class="progress" id="upload-progress" hidden><span></span></div>
+      <label class="toggle"><input type="checkbox" id="shuffle"> <span data-i18n="web.photos.shuffle"></span></label>
+      <ul id="photo-grid" class="photo-grid" data-i18n-aria-label="web.photos.grid_label"></ul>
+      <p id="photos-empty" class="status" hidden data-i18n="web.photos.empty"></p>
+    </section>
+
+    <!-- ===== Look ===== -->
+    <section class="part" id="look">
+      <h2 data-i18n="web.look.title"></h2>
+      <p class="lead" data-i18n="web.look.lead"></p>
+
+      <h3 data-i18n="web.look.theme"></h3>
+      <div class="choices" id="themes" role="radiogroup" data-i18n-aria-label="web.look.theme"></div>
+      <p class="status" data-i18n="web.look.memory_note"></p>
+
+      <h3 data-i18n="web.look.font"></h3>
+      <div class="choices" id="fonts" role="radiogroup" data-i18n-aria-label="web.look.font"></div>
+
+      <h3 data-i18n="web.look.date"></h3>
+      <div class="choices" id="dates" role="radiogroup" data-i18n-aria-label="web.look.date"></div>
+
+      <h3 data-i18n="web.look.weather"></h3>
+      <div class="choices" id="weather-styles" role="radiogroup" data-i18n-aria-label="web.look.weather"></div>
+
+      <h3 data-i18n="web.look.more"></h3>
+      <div class="rows">
+        <div class="row"><label for="clock-format" data-i18n="web.look.clock"></label>
+          <select id="clock-format"><option value="auto" data-i18n="web.look.clock_auto"></option><option value="24" data-i18n="web.look.clock_24"></option><option value="12" data-i18n="web.look.clock_12"></option></select></div>
+        <div class="row"><label for="interval" data-i18n="web.look.interval"></label>
+          <select id="interval">
+            <option value="15" data-i18n="web.interval.15"></option><option value="30" data-i18n="web.interval.30"></option><option value="45" data-i18n="web.interval.45"></option>
+            <option value="60" data-i18n="web.interval.60"></option><option value="120" data-i18n="web.interval.120"></option><option value="300" data-i18n="web.interval.300"></option><option value="600" data-i18n="web.interval.600"></option>
+          </select></div>
+        <div class="row"><label for="night-enabled" data-i18n="web.look.night"></label>
+          <select id="night-enabled"><option value="1" data-i18n="web.look.night_on"></option><option value="0" data-i18n="web.look.night_off"></option></select></div>
+        <div class="row"><label for="night-from" data-i18n="web.look.night_hours"></label>
+          <div class="inline"><select id="night-from" data-i18n-aria-label="web.look.night_from"></select><select id="night-to" data-i18n-aria-label="web.look.night_to"></select></div></div>
+      </div>
+      <p id="buttons-now" class="status"></p>
+    </section>
+
+    <!-- ===== Dock ===== -->
+    <section class="part" id="dock">
+      <h2 data-i18n="web.dock.title"></h2>
+      <p class="lead" data-i18n="web.dock.lead"></p>
+      <ul id="dock-list" class="dock-list"></ul>
+    </section>
+
+    <!-- ===== Weather ===== -->
+    <section class="part" id="weather">
+      <h2 data-i18n="web.weather.title"></h2>
+      <p class="lead" id="weather-now" data-i18n="web.weather.pick"></p>
+      <form id="weather-form" class="inline">
+        <input id="weather-query" type="text" data-i18n-placeholder="web.weather.placeholder" data-i18n-aria-label="web.weather.city" autocomplete="address-level2">
+        <button type="submit" data-i18n="web.weather.find"></button>
+      </form>
+      <div id="weather-results" class="results"></div>
+      <p><button id="weather-toggle" type="button" class="quiet"></button></p>
+      <p class="status"><a href="https://open-meteo.com/" data-i18n="web.weather.credit"></a></p>
+    </section>
+
+    <!-- ===== Album ===== -->
+    <section class="part" id="album">
+      <h2 data-i18n="web.album.title"></h2>
+      <p class="lead" data-i18n="web.album.lead"></p>
+      <form id="album-form" class="inline">
+        <input id="album-link" type="url" placeholder="https://www.icloud.com/sharedalbum/#…" data-i18n-aria-label="web.album.label">
+        <button type="submit" data-i18n="web.album.save"></button>
+      </form>
+      <p id="album-status" class="status" role="status"></p>
+    </section>
+
+    <!-- ===== Icons ===== -->
+    <section class="part" id="icons">
+      <h2 data-i18n="web.icons.title"></h2>
+      <p class="lead" data-i18n="web.icons.lead"></p>
+      <label class="button file-button"><span data-i18n="web.icons.add"></span><input id="icon-files" type="file" accept="image/*" multiple></label>
+      <p id="icon-status" class="status" role="status"></p>
+      <ul id="icon-grid" class="icon-grid"></ul>
+    </section>
+
+    <footer data-i18n="web.footer"></footer>
+  </main>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  // Sizes the TV shows photos at: landscape photos cover 1920x1080, portrait ones fill 1080 px of height.
+  var SCREEN_WIDTH = 1920;
+  var SCREEN_HEIGHT = 1080;
+  var PORTRAIT_BELOW = 1.25;
+  var PARALLEL_UPLOADS = 2;
+
+  var THEMES = [
+    { id: 'clock',
+      drawing: '<i class="clock-digits">11:41</i><b style="left:7%;bottom:9%;width:5%;height:9%"></b><b style="left:15%;bottom:9%;width:5%;height:9%"></b><b style="left:23%;bottom:9%;width:5%;height:9%"></b>' },
+    { id: 'glass',
+      drawing: '<b class="bar"></b><b style="left:9%;bottom:16%;width:9%;height:14%"></b><b style="left:21%;bottom:16%;width:9%;height:14%"></b><b style="left:33%;bottom:16%;width:9%;height:14%"></b><i style="right:6%;top:8%;width:18%;height:9%"></i>' },
+    { id: 'postcard',
+      drawing: '<b class="card"></b><i style="left:6%;top:12%;width:22%;height:12%"></i><i style="left:6%;top:42%;width:24%;height:5%"></i><i style="left:6%;top:52%;width:20%;height:5%"></i><i style="left:6%;top:62%;width:22%;height:5%"></i>' },
+    { id: 'type',
+      drawing: '<i class="words">YouTube&nbsp;&nbsp;Netflix&nbsp;&nbsp;Spotify</i><i style="left:7%;top:10%;width:30%;height:6%"></i>' }
+  ];
+  var FONTS = [
+    { id: 'instrument', name: 'Instrument Serif', family: '"Instrument Serif", serif', weight: 400 },
+    { id: 'dmserif', name: 'DM Serif Display', family: '"DM Serif Display", serif', weight: 400 },
+    { id: 'bebas', name: 'Bebas Neue', family: '"Bebas Neue", sans-serif', weight: 400 },
+    { id: 'spacemono', name: 'Space Mono', family: '"Space Mono", monospace', weight: 400 },
+    { id: 'modern', name: 'Modern', family: 'Roboto, -apple-system, "Helvetica Neue", sans-serif', weight: 300 }
+  ];
+  var DATE_FORMATS = ['words', 'long', 'short', 'dmy', 'mdy', 'iso'];
+  var WEATHER_STYLES = ['week', 'line', 'compact', 'minimal', 'corner', 'forecast'];
+  // The TV's sun icon (res/drawable/weather_sun.xml), for the previews.
+  var SUN = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>';
+
+  function weatherSample(style) {
+    if (style === 'week') {
+      var columns = '';
+      for (var day = 1; day <= 7; day++) {
+        columns += '<span class="col"><span>' + STRINGS['date.weekdays_short'][day % 7].slice(0, 2) + '</span><span class="sun">' + SUN + '</span><span>2' + (day % 5) + '°</span></span>';
+      }
+      return '<div class="in-corner week"><div class="small-sans">20° ' + t('weather.0').replace(/^./, function (letter) { return letter.toUpperCase(); }) + '</div><div class="panel">' + columns + '</div></div>';
+    }
+    if (style === 'line') return '<span class="by-date">' + t('weather.line', { temperature: 20, description: t('weather.0'), city: 'Porto' }) + '</span>';
+    if (style === 'compact') return '<span class="by-date">' + SUN + ' 20°</span>';
+    if (style === 'minimal') return '<span class="by-date">20°</span>';
+    var corner = '<div class="in-corner"><div class="big">' + SUN + ' 20°</div><div class="small">' + t('weather.corner', { description: t('weather.0'), city: 'Porto' }) + '</div>';
+    if (style === 'forecast') corner += '<div class="days">' + STRINGS['date.weekdays_short'].slice(1, 4).join(' · ') + '</div>';
+    return corner + '</div>';
+  }
+
+  var settings = {};
+  var STRINGS = {};
+
+  // Memory the home screen uses in each theme, measured on a 2 GB Google TV (see README).
+  var THEME_MEMORY = { clock: 0, glass: 0, postcard: 0, type: 0 };
+
+  // All text comes from the TV's language file (assets/i18n): t('key', { name: value }).
+  function t(key, values) {
+    values = values || {};
+    var lookup = key;
+    if (values.count === 1 && STRINGS[key + '_one'] !== undefined) lookup = key + '_one';
+    var text = STRINGS[lookup];
+    if (text === undefined) return key;
+    Object.keys(values).forEach(function (name) {
+      text = text.split('{' + name + '}').join(String(values[name]));
+    });
+    return text;
+  }
+
+  function applyStaticText() {
+    document.documentElement.lang = settings.language || 'en';
+    document.querySelectorAll('[data-i18n]').forEach(function (element) { element.textContent = t(element.dataset.i18n); });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function (element) { element.placeholder = t(element.dataset.i18nPlaceholder); });
+    document.querySelectorAll('[data-i18n-aria-label]').forEach(function (element) { element.setAttribute('aria-label', t(element.dataset.i18nAriaLabel)); });
+  }
+
+  // ---------- helpers ----------
+
+  function $(id) { return document.getElementById(id); }
+
+  function api(path, body) {
+    var options = { credentials: 'same-origin', headers: { 'X-Glass-Home': '1' } };
+    if (body !== undefined) {
+      options.method = 'POST';
+      options.body = body;
+    }
+    return fetch(path, options).then(function (response) {
+      if (response.status === 401) {
+        showSignIn();
+        throw new Error('signin');
+      }
+      return response;
+    });
+  }
+
+  function json(response) { return response.json(); }
+
+  function form(values) {
+    var data = new URLSearchParams();
+    Object.keys(values).forEach(function (key) { data.set(key, values[key]); });
+    return data;
+  }
+
+  var toastTimer = null;
+  function toast(text) {
+    var element = $('toast');
+    element.textContent = text;
+    element.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { element.classList.remove('on'); }, 2200);
+  }
+
+  function pad(number) { return (number < 10 ? '0' : '') + number; }
+
+  // The same formats as the TV draws (MainActivity.formatDate), from the same language file.
+  function dateSample(format, date) {
+    var day = date.getDate();
+    var weekday = STRINGS['date.weekdays'][date.getDay()];
+    var month = STRINGS['date.months'][date.getMonth()];
+    if (format === 'words') return t('date.words', { weekday: weekday, ordinal: STRINGS['date.ordinals'][day - 1], month: month });
+    if (format === 'long') return t('date.long', { weekday: weekday, day: day, month: month });
+    if (format === 'short') return t('date.short', { weekday: STRINGS['date.weekdays_short'][date.getDay()], day: day, month: STRINGS['date.months_short'][date.getMonth()] });
+    if (format === 'dmy') return pad(day) + '.' + pad(date.getMonth() + 1) + '.' + date.getFullYear();
+    if (format === 'mdy') return pad(date.getMonth() + 1) + '/' + pad(day) + '/' + date.getFullYear();
+    return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(day);
+  }
+
+  // ---------- sign in ----------
+
+  function showSignIn() {
+    $('app').hidden = true;
+    $('signin').hidden = false;
+    $('intro').textContent = t('web.intro_signin');
+  }
+
+  function showApp() {
+    $('signin').hidden = true;
+    $('app').hidden = false;
+    $('intro').textContent = t('web.intro');
+  }
+
+  function signIn(code) {
+    return fetch('/api/login', { method: 'POST', credentials: 'same-origin', headers: { 'X-Glass-Home': '1' }, body: form({ code: code }) })
+      .then(function (response) {
+        if (response.ok) return true;
+        return response.json().then(function (result) {
+          $('signin-status').textContent = result.error === 'locked'
+            ? t('web.locked', { minutes: result.minutes })
+            : t('web.wrong_code');
+          return false;
+        });
+      });
+  }
+
+  $('signin-form').addEventListener('submit', function (event) {
+    event.preventDefault();
+    signIn($('code').value.trim()).then(function (ok) { if (ok) loadAll(); });
+  });
+
+  // ---------- photos ----------
+
+  function loadPhotos() {
+    return api('/api/photos').then(json).then(renderPhotos);
+  }
+
+  function renderPhotos(data) {
+    var grid = $('photo-grid');
+    grid.textContent = '';
+    var photos = data.photos || [];
+    $('photos-empty').hidden = photos.length > 0;
+    photos.forEach(function (photo, index) {
+      var item = document.createElement('li');
+      item.dataset.name = photo.name;
+
+      var image = document.createElement('img');
+      image.src = '/api/thumb/' + encodeURIComponent(photo.name);
+      image.alt = '';
+      image.loading = 'lazy';
+      image.decoding = 'async';
+      item.appendChild(image);
+
+      var number = document.createElement('span');
+      number.className = 'number';
+      number.textContent = String(index + 1);
+      item.appendChild(number);
+
+      var handle = document.createElement('button');
+      handle.type = 'button';
+      handle.className = 'handle';
+      handle.textContent = '⠿';
+      handle.setAttribute('aria-label', t('web.photos.move', { number: index + 1 }));
+      handle.addEventListener('pointerdown', function (event) { startDrag(event, item); });
+      handle.addEventListener('keydown', function (event) { keyMove(event, item); });
+      item.appendChild(handle);
+
+      var remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'remove';
+      remove.textContent = '✕';
+      remove.setAttribute('aria-label', t('web.photos.delete', { number: index + 1 }));
+      remove.addEventListener('click', function () {
+        api('/api/delete', form({ name: photo.name })).then(loadPhotos).then(function () { toast(t('web.photos.deleted')); });
+      });
+      item.appendChild(remove);
+
+      grid.appendChild(item);
+    });
+  }
+
+  function renumber() {
+    var items = $('photo-grid').children;
+    for (var index = 0; index < items.length; index++) {
+      items[index].querySelector('.number').textContent = String(index + 1);
+    }
+  }
+
+  function saveOrder() {
+    var names = [];
+    var items = $('photo-grid').children;
+    for (var index = 0; index < items.length; index++) names.push(items[index].dataset.name);
+    renumber();
+    return api('/api/photo-order', form({ names: names.join(',') })).then(function () { toast(t('web.photos.order_saved')); });
+  }
+
+  // Drag by the handle with a finger or a mouse (pointer events work on iPhone too).
+  function startDrag(event, item) {
+    event.preventDefault();
+    var grid = $('photo-grid');
+    var box = item.getBoundingClientRect();
+    var ghost = document.createElement('div');
+    ghost.className = 'drag-ghost';
+    ghost.style.width = box.width + 'px';
+    ghost.style.height = box.height + 'px';
+    ghost.appendChild(item.querySelector('img').cloneNode());
+    document.body.appendChild(ghost);
+    var offsetX = event.clientX - box.left;
+    var offsetY = event.clientY - box.top;
+    var startOrder = Array.prototype.indexOf.call(grid.children, item);
+    item.classList.add('dragging');
+
+    function place(x, y) {
+      ghost.style.left = (x - offsetX) + 'px';
+      ghost.style.top = (y - offsetY) + 'px';
+    }
+    place(event.clientX, event.clientY);
+
+    function move(moveEvent) {
+      place(moveEvent.clientX, moveEvent.clientY);
+      var under = document.elementFromPoint(moveEvent.clientX, moveEvent.clientY);
+      var target = under ? under.closest('#photo-grid li') : null;
+      if (target && target !== item) {
+        var targetBox = target.getBoundingClientRect();
+        var after = moveEvent.clientX > targetBox.left + targetBox.width / 2;
+        grid.insertBefore(item, after ? target.nextSibling : target);
+      }
+      // Scroll the page when dragging near the top or bottom edge.
+      if (moveEvent.clientY < 80) window.scrollBy(0, -12);
+      if (moveEvent.clientY > window.innerHeight - 80) window.scrollBy(0, 12);
+    }
+
+    function end() {
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', end);
+      document.removeEventListener('pointercancel', end);
+      ghost.remove();
+      item.classList.remove('dragging');
+      if (Array.prototype.indexOf.call(grid.children, item) !== startOrder) saveOrder();
+    }
+
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', end);
+    document.addEventListener('pointercancel', end);
+  }
+
+  function keyMove(event, item) {
+    var grid = $('photo-grid');
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      if (!item.previousElementSibling) return;
+      grid.insertBefore(item, item.previousElementSibling);
+    } else if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      if (!item.nextElementSibling) return;
+      grid.insertBefore(item.nextElementSibling, item);
+    } else {
+      return;
+    }
+    event.preventDefault();
+    item.querySelector('.handle').focus();
+    saveOrder();
+  }
+
+  // Resizes on the phone to exactly what the TV shows, so uploads are small
+  // and the TV can keep the file as it is (no second compression).
+  function prepare(file) {
+    return new Promise(function (resolve, reject) {
+      var url = URL.createObjectURL(file);
+      var image = new Image();
+      image.onload = function () {
+        var width = image.naturalWidth;
+        var height = image.naturalHeight;
+        var scale;
+        if (width / height < PORTRAIT_BELOW) scale = SCREEN_HEIGHT / height;
+        else scale = Math.max(SCREEN_WIDTH / width, SCREEN_HEIGHT / height);
+        scale = Math.min(1, scale);
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.round(width * scale);
+        canvas.height = Math.round(height * scale);
+        var context = canvas.getContext('2d');
+        context.imageSmoothingEnabled = true;
+        context.imageSmoothingQuality = 'high';
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        canvas.toBlob(function (blob) {
+          if (blob) resolve(blob);
+          else reject(new Error('encode'));
+        }, 'image/jpeg', 0.92);
+      };
+      image.onerror = function () {
+        URL.revokeObjectURL(url);
+        reject(new Error('decode'));
+      };
+      image.src = url;
+    });
+  }
+
+  function uploadPhotos(fileList) {
+    var files = Array.prototype.slice.call(fileList);
+    var total = files.length;
+    var finished = 0;
+    var added = 0;
+    var failed = 0;
+    var full = false;
+    var bar = $('upload-progress');
+    bar.hidden = false;
+    bar.firstElementChild.style.width = '0';
+    $('upload-status').textContent = t('web.photos.preparing', { count: total });
+
+    function progress() {
+      bar.firstElementChild.style.width = Math.round(finished / total * 100) + '%';
+      $('upload-status').textContent = t('web.photos.progress', { done: finished, total: total });
+    }
+
+    function one(file) {
+      return prepare(file).then(function (blob) {
+        var data = new FormData();
+        data.append('photo', blob, 'photo.jpg');
+        return api('/api/upload', data).then(json);
+      }).then(function (result) {
+        if (result.error === 'full') full = true;
+        added += result.added || 0;
+        failed += result.rejected || 0;
+      }, function () {
+        failed += 1;
+      }).then(function () {
+        finished += 1;
+        progress();
+      });
+    }
+
+    function worker() {
+      var file = files.shift();
+      if (!file || full) return Promise.resolve();
+      return one(file).then(worker);
+    }
+
+    var workers = [];
+    for (var index = 0; index < PARALLEL_UPLOADS; index++) workers.push(worker());
+    return Promise.all(workers).then(function () {
+      bar.hidden = true;
+      var text = t('web.photos.added', { count: added });
+      if (failed) text += ' ' + t('web.photos.unreadable', { count: failed });
+      if (full) text = t('web.photos.full');
+      $('upload-status').textContent = text;
+      toast(t('web.photos.added_toast', { count: added }));
+      return loadPhotos();
+    });
+  }
+
+  $('files').addEventListener('change', function (event) {
+    if (event.target.files.length) uploadPhotos(event.target.files);
+    event.target.value = '';
+  });
+
+  $('shuffle').addEventListener('change', function (event) {
+    saveSetting('shufflePhotos', event.target.checked ? '1' : '0').then(function () {
+      toast(event.target.checked ? t('web.photos.shuffling') : t('web.photos.in_order'));
+    });
+  });
+
+  // ---------- look ----------
+
+  function choiceCard(group, value, inner, checked) {
+    var label = document.createElement('label');
+    label.className = 'choice' + (checked ? ' checked' : '');
+    var input = document.createElement('input');
+    input.type = 'radio';
+    input.name = group;
+    input.value = value;
+    input.checked = checked;
+    input.addEventListener('focus', function () { label.classList.add('focused'); });
+    input.addEventListener('blur', function () { label.classList.remove('focused'); });
+    label.appendChild(input);
+    var body = document.createElement('div');
+    body.innerHTML = inner;
+    label.appendChild(body);
+    return label;
+  }
+
+  function renderLook() {
+    var themes = $('themes');
+    themes.textContent = '';
+    THEMES.forEach(function (theme) {
+      var note = t('web.theme.' + theme.id + '_note');
+      if (THEME_MEMORY[theme.id]) note += ' ' + t('web.theme.memory', { megabytes: THEME_MEMORY[theme.id] });
+      var inner = '<div class="mini ' + theme.id + '">' + theme.drawing + '</div><span class="name">' + t('web.theme.' + theme.id) + '</span><span class="note">' + note + '</span>';
+      themes.appendChild(choiceCard('theme', theme.id, inner, settings.theme === theme.id));
+    });
+
+    var fonts = $('fonts');
+    fonts.textContent = '';
+    FONTS.forEach(function (font) {
+      var style = 'font-family:' + font.family.replace(/"/g, '&quot;') + ';font-weight:' + font.weight;
+      var inner = '<span class="font-sample" style="' + style + '">11:41</span><span class="note">' + font.name + '</span>';
+      fonts.appendChild(choiceCard('clockFont', font.id, inner, settings.clockFont === font.id));
+    });
+
+    var styles = $('weather-styles');
+    styles.textContent = '';
+    WEATHER_STYLES.forEach(function (style) {
+      var inner = '<div class="weather-sample">' + weatherSample(style) + '</div><span class="name">' + t('web.weather_style.' + style) +
+        '</span><span class="note">' + t('web.weather_style.' + style + '_note') + '</span>';
+      styles.appendChild(choiceCard('weatherStyle', style, inner, settings.weatherStyle === style));
+    });
+
+    var dates = $('dates');
+    dates.textContent = '';
+    var today = new Date();
+    DATE_FORMATS.forEach(function (format) {
+      var inner = '<span class="date-sample">' + dateSample(format, today) + '</span>';
+      dates.appendChild(choiceCard('dateFormat', format, inner, settings.dateFormat === format));
+    });
+  }
+
+  ['themes', 'fonts', 'dates', 'weather-styles'].forEach(function (id) {
+    $(id).addEventListener('change', function (event) {
+      if (event.target.type !== 'radio') return;
+      saveSetting(event.target.name, event.target.value).then(function () { toast(t('web.saved')); });
+    });
+  });
+
+  function saveSetting(name, value) {
+    var values = {};
+    values[name] = value;
+    return api('/api/settings', form(values)).then(json).then(renderSettings);
+  }
+
+  function loadSettings() {
+    return api('/api/settings').then(json).then(renderSettings);
+  }
+
+  function renderSettings(data) {
+    if (data.error === 'bad-link') {
+      $('album-status').textContent = t('web.album.bad_link');
+      $('album-status').className = 'status error';
+      return;
+    }
+    settings = data;
+    $('shuffle').checked = !!data.shufflePhotos;
+    $('interval').value = String(data.photoInterval);
+    $('clock-format').value = data.clockFormat;
+    $('night-enabled').value = data.nightEnabled ? '1' : '0';
+    $('night-from').value = String(data.nightFrom);
+    $('night-to').value = String(data.nightTo);
+    if (document.activeElement !== $('album-link')) $('album-link').value = data.albumLink || '';
+    renderLook();
+
+    var album = $('album-status');
+    album.className = 'status';
+    if (!data.albumLink) {
+      album.textContent = '';
+    } else if (data.albumCount === null) {
+      album.textContent = t('web.album.checking');
+    } else if (data.albumCount < 0) {
+      album.textContent = t('web.album.failed');
+      album.className = 'status error';
+    } else {
+      album.textContent = t('web.album.count', { count: data.albumCount });
+    }
+
+    var colors = Object.keys(data.buttons || {});
+    $('buttons-now').textContent = colors.length
+      ? t('web.look.buttons', { list: colors.map(function (color) { return t('web.look.button_entry', { color: t('tv.color.' + color), app: data.buttons[color] }); }).join(', ') })
+      : t('web.look.buttons_tip');
+  }
+
+  (function fillHours() {
+    ['night-from', 'night-to'].forEach(function (id) {
+      var select = $(id);
+      for (var hour = 0; hour < 24; hour++) {
+        var option = document.createElement('option');
+        option.value = String(hour);
+        option.textContent = pad(hour) + ':00';
+        select.appendChild(option);
+      }
+    });
+  }());
+
+  [['interval', 'photoInterval'], ['clock-format', 'clockFormat'],
+   ['night-enabled', 'nightEnabled'], ['night-from', 'nightFrom'], ['night-to', 'nightTo']].forEach(function (pair) {
+    $(pair[0]).addEventListener('change', function (event) {
+      saveSetting(pair[1], event.target.value).then(function () { toast(t('web.saved')); });
+    });
+  });
+
+  // ---------- dock ----------
+
+  function loadDock() {
+    return api('/api/dock').then(json).then(renderDock);
+  }
+
+  function changeDock(key, name, value) {
+    var values = { key: key };
+    values[name] = value;
+    return api('/api/dock', form(values)).then(json).then(renderDock);
+  }
+
+  function renderDock(data) {
+    var list = $('dock-list');
+    list.textContent = '';
+    var items = data.items || [];
+    items.forEach(function (item, index) {
+      var row = document.createElement('li');
+      if (item.hidden) row.className = 'hidden';
+      var name = document.createElement('span');
+      name.textContent = item.label;
+      row.appendChild(name);
+      function button(text, label, onClick, disabled) {
+        var element = document.createElement('button');
+        element.type = 'button';
+        element.className = 'quiet';
+        element.textContent = text;
+        element.setAttribute('aria-label', label);
+        element.disabled = !!disabled;
+        element.addEventListener('click', onClick);
+        row.appendChild(element);
+      }
+      button('↑', t('web.dock.earlier', { app: item.label }), function () { changeDock(item.key, 'move', '-1'); }, index === 0);
+      button('↓', t('web.dock.later', { app: item.label }), function () { changeDock(item.key, 'move', '1'); }, index === items.length - 1);
+      button(item.hidden ? t('web.dock.show') : t('web.dock.hide'), (item.hidden ? t('web.dock.show') : t('web.dock.hide')) + ' ' + item.label,
+        function () { changeDock(item.key, 'hidden', item.hidden ? '0' : '1'); });
+      list.appendChild(row);
+    });
+  }
+
+  // ---------- weather ----------
+
+  function loadWeather() {
+    return api('/api/weather').then(json).then(renderWeather);
+  }
+
+  function renderWeather(data) {
+    var line = t('web.weather.off');
+    if (data.enabled && data.place) line = t('web.weather.showing', { place: data.place });
+    if (data.enabled && !data.place) line = t('web.weather.pick');
+    $('weather-now').textContent = line;
+    var toggle = $('weather-toggle');
+    toggle.textContent = data.enabled ? t('web.weather.turn_off') : t('web.weather.turn_on');
+    toggle.onclick = function () {
+      api('/api/weather', form({ enabled: data.enabled ? '0' : '1' })).then(json).then(renderWeather);
+    };
+  }
+
+  $('weather-form').addEventListener('submit', function (event) {
+    event.preventDefault();
+    var query = $('weather-query').value.trim();
+    var results = $('weather-results');
+    results.textContent = t('web.weather.searching');
+    api('/api/weather-search?q=' + encodeURIComponent(query)).then(json).then(function (data) {
+      results.textContent = '';
+      var places = data.places || [];
+      if (!places.length) {
+        results.textContent = t('web.weather.none');
+        return;
+      }
+      places.forEach(function (place) {
+        var choose = document.createElement('button');
+        choose.type = 'button';
+        choose.className = 'quiet';
+        choose.textContent = place.name;
+        choose.addEventListener('click', function () {
+          api('/api/weather', form({ name: place.name, latitude: place.latitude, longitude: place.longitude, enabled: '1' }))
+            .then(json)
+            .then(function (settingsNow) {
+              results.textContent = '';
+              $('weather-query').value = '';
+              renderWeather(settingsNow);
+              toast(t('web.weather.set', { city: place.name.split(',')[0] }));
+            });
+        });
+        results.appendChild(choose);
+      });
+    }).catch(function () {
+      results.textContent = t('web.offline');
+    });
+  });
+
+  // ---------- album ----------
+
+  $('album-form').addEventListener('submit', function (event) {
+    event.preventDefault();
+    $('album-status').textContent = t('web.album.saving');
+    saveSetting('albumLink', $('album-link').value.trim()).then(function () {
+      setTimeout(loadSettings, 8000);
+    });
+  });
+
+  // ---------- icons ----------
+
+  function loadIcons() {
+    return api('/api/icons').then(json).then(renderIcons);
+  }
+
+  function renderIcons(data) {
+    var grid = $('icon-grid');
+    grid.textContent = '';
+    (data.icons || []).slice().reverse().forEach(function (icon) {
+      var item = document.createElement('li');
+      var image = document.createElement('img');
+      image.src = '/api/icon/' + encodeURIComponent(icon.name);
+      image.alt = '';
+      var remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'quiet';
+      remove.textContent = t('web.icons.delete');
+      remove.addEventListener('click', function () {
+        api('/api/icon-delete', form({ name: icon.name })).then(loadIcons);
+      });
+      item.appendChild(image);
+      item.appendChild(remove);
+      grid.appendChild(item);
+    });
+  }
+
+  function squareIcon(file) {
+    return new Promise(function (resolve, reject) {
+      var url = URL.createObjectURL(file);
+      var image = new Image();
+      image.onload = function () {
+        var side = Math.min(image.naturalWidth, image.naturalHeight);
+        var canvas = document.createElement('canvas');
+        canvas.width = 312;
+        canvas.height = 312;
+        var context = canvas.getContext('2d');
+        context.imageSmoothingQuality = 'high';
+        context.drawImage(image, (image.naturalWidth - side) / 2, (image.naturalHeight - side) / 2, side, side, 0, 0, 312, 312);
+        URL.revokeObjectURL(url);
+        canvas.toBlob(function (blob) { if (blob) resolve(blob); else reject(new Error('encode')); }, 'image/png');
+      };
+      image.onerror = function () { URL.revokeObjectURL(url); reject(new Error('decode')); };
+      image.src = url;
+    });
+  }
+
+  $('icon-files').addEventListener('change', function (event) {
+    var files = Array.prototype.slice.call(event.target.files);
+    event.target.value = '';
+    var added = 0;
+    $('icon-status').textContent = t('web.icons.uploading');
+    function next() {
+      var file = files.shift();
+      if (!file) {
+        $('icon-status').textContent = t('web.icons.added', { count: added });
+        return loadIcons();
+      }
+      return squareIcon(file).then(function (blob) {
+        var data = new FormData();
+        data.append('icon', blob, 'icon.png');
+        return api('/api/icon-upload', data).then(json).then(function (result) { added += result.added || 0; });
+      }, function () { /* not an image: skip it */ }).then(next);
+    }
+    next();
+  });
+
+  // ---------- navigation highlight ----------
+
+  var links = document.querySelectorAll('nav.sections a');
+  if ('IntersectionObserver' in window) {
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        links.forEach(function (link) {
+          link.classList.toggle('current', link.getAttribute('href') === '#' + entry.target.id);
+        });
+      });
+    }, { rootMargin: '-40% 0px -55% 0px' });
+    document.querySelectorAll('section.part').forEach(function (section) { observer.observe(section); });
+  }
+
+  // ---------- start ----------
+
+  function loadAll() {
+    return loadPhotos().then(function () {
+      showApp();
+      return Promise.all([loadSettings(), loadDock(), loadWeather(), loadIcons()]);
+    }).then(function () {
+      applyStaticText();
+    }).catch(function (error) {
+      if (error && error.message === 'signin') return;
+      showSignIn();
+      $('signin-status').textContent = t('web.offline');
+    });
+  }
+
+  function start() {
+    applyStaticText();
+    $('intro').textContent = t('web.intro');
+    // The QR code on the TV carries the code: sign in, then drop it from the address bar.
+    var params = new URLSearchParams(location.search);
+    var codeFromLink = params.get('code');
+    if (codeFromLink) {
+      history.replaceState(null, '', location.pathname + location.hash);
+      signIn(codeFromLink).then(loadAll);
+    } else {
+      loadAll();
+    }
+  }
+
+  // The language file comes first: every text on the page is in it.
+  fetch('/i18n.json', { credentials: 'same-origin' }).then(json).then(function (strings) {
+    STRINGS = strings;
+    start();
+  }).catch(function () {
+    document.body.textContent = 'Can’t reach the TV. Check that this phone is on the home Wi-Fi.';
+  });
+}());
+</script>
+</body>
+</html>

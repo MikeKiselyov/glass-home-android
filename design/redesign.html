@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Glass Home - доработка тем</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gloock&family=Hanken+Grotesk:wght@200;300;400;500;600&family=Geist:wght@200;300;400;500;600&family=Young+Serif&family=Reenie+Beanie&family=Courier+Prime:wght@400;700&family=Big+Shoulders+Display:wght@500;800;900&family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,700;12..96,800&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=B612+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root { --page: #15191c; --ink: #eef1f3; --muted: #9aa5ad; --line: #2b3238; --pick: #f2efe8; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 16px/1.55 "Hanken Grotesk", system-ui, sans-serif; padding: 48px 32px 96px; }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  header h1 { font: 400 46px/1 Gloock, serif; margin: 0 0 12px; }
+  header p { color: var(--muted); max-width: 72ch; margin: 0 0 8px; }
+  nav { display: flex; gap: 8px; flex-wrap: wrap; margin: 24px 0 8px; }
+  nav a { color: var(--muted); text-decoration: none; border: 1px solid var(--line); padding: 6px 14px; border-radius: 999px; }
+  nav a:hover { color: #1f2326; background: var(--pick); }
+  section.theme { margin-top: 72px; }
+  section.theme > h2 { font: 400 34px/1.1 Gloock, serif; margin: 0 0 6px; }
+  section.theme > p { color: var(--muted); margin: 0 0 24px; max-width: 72ch; }
+  .option { margin: 0 0 40px; }
+  .option h3 { font-size: 18px; margin: 0 0 4px; display: flex; gap: 10px; align-items: baseline; }
+  .option h3 .tag { font-weight: 600; color: #1f2326; background: var(--pick); border-radius: 6px; padding: 1px 8px; font-size: 14px; }
+  .option h3 .tag.now { background: #3a434a; color: var(--ink); }
+  .option ul { margin: 6px 0 14px; padding-left: 20px; color: var(--muted); max-width: 90ch; }
+  .option li b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- the TV frame: 1920x1080 drawn in cqw units ---------- */
+  .tv { container-type: inline-size; position: relative; aspect-ratio: 16 / 9; width: 100%; overflow: hidden; border-radius: 10px; background: #000;
+    box-shadow: 0 0 0 1px var(--line), 0 30px 60px rgba(0,0,0,.45); color: #fff; }
+  .tv img.shot { width: 100%; height: 100%; display: block; }
+  .tv .photo { position: absolute; inset: 0; background: url(../app/src/main/assets/wallpapers/nature-07.jpg) center / cover; }
+  .tv .shade { position: absolute; inset: 0; }
+  .icon { display: block; width: 100%; height: 100%; object-fit: cover; }
+  svg.wx { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; display: block; }
+  .wx-sun { color: #ffd43b; } .wx-rain { color: #a5d8ff; } .wx-storm { color: #ffe066; } .wx-cloud { color: #e9ecef; }
+
+  /* =================== CLOCK A: museum =================== */
+  .clockA .shade { background: linear-gradient(90deg, rgba(10,14,18,.55), rgba(10,14,18,0) 55%), linear-gradient(0deg, rgba(10,14,18,.6), rgba(10,14,18,0) 45%); }
+  .clockA .time { position: absolute; left: 4.6cqw; bottom: 15.5cqw; font: 400 15cqw/.82 Gloock, serif; letter-spacing: -0.01em; }
+  .clockA .caption { position: absolute; left: 4.9cqw; bottom: 10.6cqw; font: 400 1.6cqw/1.35 "Hanken Grotesk", sans-serif; letter-spacing: .02em; color: rgba(255,255,255,.88); display: flex; gap: 1.6cqw; align-items: center; }
+  .clockA .caption .sep { width: .35cqw; height: .35cqw; border-radius: 50%; background: rgba(255,255,255,.6); }
+  .clockA .caption .wxi { font-size: 1.9cqw; }
+  .clockA .dock { position: absolute; left: 4.9cqw; bottom: 3.6cqw; display: flex; gap: 1.6cqw; align-items: flex-end; }
+  .clockA .dock .t { width: 3.6cqw; height: 3.6cqw; border-radius: .9cqw; overflow: hidden; box-shadow: 0 .4cqw 1.2cqw rgba(0,0,0,.35); opacity: .92; }
+  .clockA .dock .t.focus { width: 4.8cqw; height: 4.8cqw; border-radius: 1.15cqw; opacity: 1; box-shadow: 0 0 0 .22cqw rgba(255,255,255,.95), 0 .8cqw 2cqw rgba(0,0,0,.45); }
+  .clockA .dock .label { position: absolute; left: 0; top: -2.6cqw; font: 600 1.25cqw "Hanken Grotesk", sans-serif; white-space: nowrap; }
+  .clockA .week { position: absolute; right: 4.2cqw; top: 3.8cqw; display: flex; gap: 1.9cqw; font: 300 1.15cqw "Hanken Grotesk", sans-serif; text-align: center; color: rgba(255,255,255,.9); text-shadow: 0 1px 8px rgba(0,0,0,.35); }
+  .clockA .week .d { display: flex; flex-direction: column; align-items: center; gap: .45cqw; }
+  .clockA .week .d .name { letter-spacing: .08em; font-weight: 500; font-size: .95cqw; opacity: .8; }
+  .clockA .week .d .ic { font-size: 1.7cqw; }
+  .clockA .week .d .hi { font: 400 1.7cqw Gloock, serif; }
+  .clockA .week .d .lo { opacity: .65; }
+  .clockA .place { position: absolute; right: 4.2cqw; bottom: 3.6cqw; text-align: right; font: 400 1cqw/1.4 "Hanken Grotesk", sans-serif; color: rgba(255,255,255,.72); letter-spacing: .02em; }
+
+  /* =================== CLOCK B: swiss =================== */
+  .clockB .shade { background: linear-gradient(0deg, rgba(8,12,16,.65), rgba(8,12,16,0) 50%), linear-gradient(180deg, rgba(8,12,16,.35), rgba(8,12,16,0) 30%); }
+  .clockB .time { position: absolute; left: 4.4cqw; top: 3.6cqw; font: 200 11.5cqw/.85 "Hanken Grotesk", sans-serif; letter-spacing: -0.04em; }
+  .clockB .rule { position: absolute; left: 4.6cqw; right: 4.6cqw; bottom: 12.2cqw; height: 1px; background: rgba(255,255,255,.45); }
+  .clockB .meta { position: absolute; left: 4.6cqw; right: 4.6cqw; bottom: 13.4cqw; display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; font: 400 1.35cqw/1.35 "Hanken Grotesk", sans-serif; color: rgba(255,255,255,.9); }
+  .clockB .meta small { display: block; font-size: .9cqw; letter-spacing: .14em; text-transform: uppercase; opacity: .6; margin-bottom: .3cqw; }
+  .clockB .meta .big { font: 300 2.6cqw/1 "Hanken Grotesk", sans-serif; display: flex; align-items: center; gap: .7cqw; }
+  .clockB .dock { position: absolute; left: 4.6cqw; bottom: 3.8cqw; display: flex; gap: 1.4cqw; align-items: center; }
+  .clockB .dock .t { width: 4.4cqw; height: 4.4cqw; border-radius: 1cqw; overflow: hidden; }
+  .clockB .dock .t.focus { box-shadow: 0 0 0 .2cqw #fff; transform: translateY(-.5cqw); }
+  .clockB .dock .label { margin-left: .4cqw; font: 500 1.35cqw "Hanken Grotesk", sans-serif; }
+
+  /* =================== GLASS A: apple tv =================== */
+  .glassA .shade { background: linear-gradient(180deg, rgba(5,10,16,.42), rgba(5,10,16,0) 34%), linear-gradient(0deg, rgba(5,10,16,.55), rgba(5,10,16,0) 42%); }
+  .glassA .time { position: absolute; right: 4.2cqw; top: 3.2cqw; font: 300 5.2cqw/1 Geist, sans-serif; letter-spacing: -0.03em; text-align: right; }
+  .glassA .date { position: absolute; right: 4.3cqw; top: 9.2cqw; font: 400 1.35cqw Geist, sans-serif; color: rgba(255,255,255,.82); }
+  .glassA .brand { position: absolute; left: 4.2cqw; top: 3.9cqw; font: 600 1.45cqw Geist, sans-serif; display: flex; align-items: center; gap: .7cqw; letter-spacing: -.01em; }
+  .glassA .brand i { width: 1.7cqw; height: 1.15cqw; border: .18cqw solid #c4f4ef; border-radius: .35cqw; display: block; }
+  .glassA .wx { position: absolute; right: 4.2cqw; top: 12.6cqw; width: 34cqw; }
+  .glassA .wx .now { display: flex; align-items: center; justify-content: flex-end; gap: .8cqw; font: 300 1.4cqw Geist, sans-serif; color: rgba(255,255,255,.9); }
+  .glassA .wx .now .t { font: 200 2.8cqw Geist, sans-serif; color: #fff; }
+  .glassA .wx .now .ic { font-size: 2cqw; }
+  .glassA .panel { margin-top: 1cqw; padding: 1.1cqw 1.2cqw .8cqw; border-radius: 1.4cqw; background: rgba(255,255,255,.14); -webkit-backdrop-filter: blur(1.2cqw) saturate(150%); backdrop-filter: blur(1.2cqw) saturate(150%);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.14), 0 1.6cqw 3.2cqw rgba(0,0,0,.18); display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font: 300 1cqw Geist, sans-serif; }
+  .glassA .panel .d { display: flex; flex-direction: column; align-items: center; gap: .35cqw; }
+  .glassA .panel .name { font-weight: 500; opacity: .85; }
+  .glassA .panel .ic { font-size: 1.8cqw; }
+  .glassA .panel .hi { font: 400 1.5cqw Geist, sans-serif; }
+  .glassA .panel .lo { opacity: .6; }
+  .glassA .panel .rain { font-size: .8cqw; color: #a5d8ff; min-height: 1em; }
+  .glassA .dockbar { position: absolute; left: 4.2cqw; bottom: 6.4cqw; padding: 1.1cqw; display: flex; gap: 1.3cqw; border-radius: 2.2cqw;
+    background: rgba(255,255,255,.16); -webkit-backdrop-filter: blur(1.6cqw) saturate(160%); backdrop-filter: blur(1.6cqw) saturate(160%); box-shadow: inset 0 0 0 1px rgba(255,255,255,.16); }
+  .glassA .dockbar .t { width: 6.4cqw; height: 6.4cqw; border-radius: 1.5cqw; overflow: hidden; box-shadow: 0 .4cqw 1cqw rgba(0,0,0,.25); }
+  .glassA .dockbar .t.focus { transform: translateY(-.7cqw) scale(1.14); box-shadow: 0 1.6cqw 3cqw rgba(0,0,0,.5), 0 0 0 .12cqw rgba(255,255,255,.7); }
+  .glassA .label { position: absolute; left: 5.4cqw; bottom: 3cqw; font: 500 1.5cqw Geist, sans-serif; }
+
+  /* =================== GLASS B: tvOS top shelf =================== */
+  .glassB .shade { background: linear-gradient(180deg, rgba(5,10,16,.5), rgba(5,10,16,0) 40%), linear-gradient(0deg, rgba(5,10,16,.5), rgba(5,10,16,0) 35%); }
+  .glassB .row { position: absolute; left: 0; right: 0; top: 4cqw; display: flex; gap: 1.6cqw; padding-left: 4.2cqw; }
+  .glassB .row .t { width: 13cqw; aspect-ratio: 16 / 10; border-radius: 1.2cqw; overflow: hidden; display: grid; place-items: center; box-shadow: 0 .6cqw 1.6cqw rgba(0,0,0,.35); }
+  .glassB .row .t img { width: 38%; height: auto; border-radius: .8cqw; }
+  .glassB .row .t.focus { transform: scale(1.12) translateY(.3cqw); box-shadow: 0 2cqw 3.6cqw rgba(0,0,0,.55); }
+  .glassB .row .t .lbl { display: none; }
+  .glassB .focus-label { position: absolute; left: 4.2cqw; top: 13.6cqw; font: 500 1.4cqw Geist, sans-serif; }
+  .glassB .bottom { position: absolute; left: 4.2cqw; right: 4.2cqw; bottom: 3.8cqw; display: flex; justify-content: space-between; align-items: flex-end; }
+  .glassB .time { font: 200 6cqw/1 Geist, sans-serif; letter-spacing: -.03em; }
+  .glassB .date { font: 400 1.35cqw Geist, sans-serif; opacity: .85; margin-top: .4cqw; }
+  .glassB .mini { display: flex; gap: 1.5cqw; align-items: flex-end; font: 300 1cqw Geist, sans-serif; text-align: center; }
+  .glassB .mini .d { display: flex; flex-direction: column; align-items: center; gap: .3cqw; }
+  .glassB .mini .ic { font-size: 1.6cqw; }
+  .glassB .mini .hi { font-size: 1.4cqw; font-weight: 400; }
+  .glassB .mini .today { font-size: 1.1cqw; text-align: right; margin-right: 1cqw; }
+  .glassB .mini .today b { display: block; font: 200 3.2cqw/1 Geist, sans-serif; }
+
+  /* =================== POSTCARD A: fridge =================== */
+  .pcA { background: #262d31; }
+  .pcA .blur { position: absolute; inset: -6%; background: url(../app/src/main/assets/wallpapers/nature-07.jpg) center / cover; filter: blur(3.5cqw) brightness(.45) saturate(1.1); }
+  .pcA .card { position: absolute; right: 5cqw; top: 6.5cqw; width: 54cqw; aspect-ratio: 1.38; background: #f4f0e6; padding: 1.4cqw 1.4cqw 6cqw; transform: rotate(-1.6deg); box-shadow: 0 2.2cqw 4.5cqw rgba(0,0,0,.5); }
+  .pcA .card .pic { width: 100%; height: 100%; background: url(../app/src/main/assets/wallpapers/nature-07.jpg) center / cover; }
+  .pcA .card .hand { position: absolute; left: 2cqw; bottom: 1.3cqw; font: 400 3.2cqw/1 "Reenie Beanie", cursive; color: #2b3a55; }
+  .pcA .tape { position: absolute; left: 50%; top: -1.4cqw; width: 9cqw; height: 2.6cqw; transform: translateX(-50%) rotate(2deg); background: rgba(245, 232, 190, .78); box-shadow: 0 .2cqw .6cqw rgba(0,0,0,.15); }
+  .pcA .stamp { position: absolute; right: 3cqw; top: 3.6cqw; width: 11cqw; height: 11cqw; border-radius: 50%; border: .25cqw solid rgba(243,240,232,.75); color: rgba(243,240,232,.92); display: flex; flex-direction: column; align-items: center; justify-content: center; transform: rotate(-12deg); font: 700 .95cqw "Courier Prime", monospace; letter-spacing: .12em; text-align: center; }
+  .pcA .stamp b { font: 400 3cqw/1 "Young Serif", serif; letter-spacing: 0; margin: .3cqw 0; }
+  .pcA .side { position: absolute; left: 5cqw; top: 6.5cqw; bottom: 5cqw; width: 30cqw; display: flex; flex-direction: column; color: #f3f0e8; }
+  .pcA .side .time { font: 400 7.4cqw/1 "Young Serif", serif; }
+  .pcA .side .date { font: 400 1.5cqw "Courier Prime", monospace; opacity: .8; margin-top: .8cqw; }
+  .pcA .menu { margin-top: auto; display: flex; flex-direction: column; gap: .4cqw; }
+  .pcA .menu div { display: flex; align-items: center; gap: 1.1cqw; padding: .6cqw .9cqw; border-radius: .6cqw; font: 500 1.55cqw "Hanken Grotesk", sans-serif; color: rgba(243,240,232,.78); }
+  .pcA .menu div img { width: 2.5cqw; height: 2.5cqw; border-radius: .55cqw; }
+  .pcA .menu div.focus { background: #f4f0e6; color: #1f2326; box-shadow: 0 .8cqw 1.8cqw rgba(0,0,0,.35); }
+
+  /* =================== POSTCARD B: stack =================== */
+  .pcB { background: #e9e3d6; color: #1f2326; }
+  .pcB .card { position: absolute; background: #fbf8f1; padding: 1cqw 1cqw 4.5cqw; box-shadow: 0 1.4cqw 3cqw rgba(60,40,10,.25); }
+  .pcB .card .pic { width: 100%; height: 100%; background-size: cover; background-position: center; }
+  .pcB .c1 { right: 16cqw; top: 9cqw; width: 34cqw; aspect-ratio: 1.3; transform: rotate(-7deg); }
+  .pcB .c2 { right: 6cqw; top: 6cqw; width: 42cqw; aspect-ratio: 1.36; transform: rotate(3deg); }
+  .pcB .c2 .hand { position: absolute; left: 1.6cqw; bottom: 1cqw; font: 400 2.7cqw/1 "Reenie Beanie", cursive; color: #2b3a55; }
+  .pcB .side { position: absolute; left: 5cqw; top: 6cqw; bottom: 5cqw; width: 34cqw; display: flex; flex-direction: column; }
+  .pcB .side .time { font: 400 8cqw/1 "Young Serif", serif; color: #1f2326; }
+  .pcB .side .date { font: 400 1.5cqw "Courier Prime", monospace; color: #5c5a52; margin-top: .6cqw; }
+  .pcB .side .wx { font: 400 1.5cqw "Courier Prime", monospace; color: #5c5a52; display: flex; gap: .7cqw; align-items: center; margin-top: .3cqw; }
+  .pcB .side .wx svg { color: #e0a800; font-size: 1.8cqw; }
+  .pcB .tiles { margin-top: auto; display: grid; grid-template-columns: repeat(4, 6.2cqw); gap: 1.2cqw; }
+  .pcB .tiles .t { width: 6.2cqw; height: 6.2cqw; border-radius: 1.4cqw; overflow: hidden; box-shadow: 0 .5cqw 1.2cqw rgba(60,40,10,.2); }
+  .pcB .tiles .t.focus { box-shadow: 0 0 0 .25cqw #1f2326, 0 1cqw 2cqw rgba(60,40,10,.3); transform: rotate(-3deg) scale(1.08); }
+  .pcB .tiles + .lbl { font: 600 1.4cqw "Hanken Grotesk", sans-serif; margin-top: 1cqw; }
+
+  /* =================== TYPE A: newsstand =================== */
+  .typeA .shade { background: linear-gradient(90deg, rgba(8,10,14,.72) 0%, rgba(8,10,14,.25) 55%, rgba(8,10,14,0) 75%); }
+  .typeA .list { position: absolute; left: 4.4cqw; top: 3.4cqw; display: flex; flex-direction: column; font: 800 6.3cqw/.9 "Big Shoulders Display", sans-serif; text-transform: uppercase; letter-spacing: .005em; }
+  .typeA .list span { color: rgba(255,255,255,.34); }
+  .typeA .list span.focus { color: #fff; }
+  .typeA .list span.focus::after { content: " →"; font-weight: 500; }
+  .typeA .list span sup { font: 500 1.2cqw "Hanken Grotesk", sans-serif; vertical-align: top; position: relative; top: 1cqw; margin-left: .6cqw; text-transform: none; letter-spacing: 0; }
+  .typeA .side { position: absolute; right: 4.4cqw; bottom: 4cqw; text-align: right; }
+  .typeA .side .time { font: 900 9cqw/.85 "Big Shoulders Display", sans-serif; }
+  .typeA .side .meta { font: 500 1.45cqw "Hanken Grotesk", sans-serif; color: rgba(255,255,255,.85); margin-top: .8cqw; display: flex; gap: .7cqw; justify-content: flex-end; align-items: center; }
+
+  /* =================== TYPE B: masthead =================== */
+  .typeB .shade { background: rgba(8,10,14,.42); }
+  .typeB .mast { position: absolute; left: 4.4cqw; right: 4.4cqw; top: 3.4cqw; display: flex; justify-content: space-between; align-items: baseline; border-bottom: .12cqw solid rgba(255,255,255,.75); padding-bottom: .9cqw; }
+  .typeB .mast .name { font: 800 4.6cqw/1 "Bricolage Grotesque", sans-serif; letter-spacing: -.03em; }
+  .typeB .mast .issue { font: 300 1.3cqw "Bricolage Grotesque", sans-serif; text-align: right; color: rgba(255,255,255,.85); }
+  .typeB .headline { position: absolute; left: 4.4cqw; top: 14cqw; font: 300 2cqw/1.25 "Bricolage Grotesque", sans-serif; max-width: 40cqw; color: rgba(255,255,255,.9); }
+  .typeB .headline b { font-weight: 700; }
+  .typeB .words { position: absolute; left: 4.4cqw; right: 4.4cqw; bottom: 4cqw; display: flex; flex-wrap: wrap; gap: .4cqw 2.6cqw; font: 300 4.4cqw/1.05 "Bricolage Grotesque", sans-serif; letter-spacing: -.02em; }
+  .typeB .words span { color: rgba(255,255,255,.5); }
+  .typeB .words span.focus { color: #fff; font-weight: 800; text-decoration: underline; text-decoration-thickness: .25cqw; text-underline-offset: .7cqw; }
+
+  /* =================== NEW: GALLERY =================== */
+  .gallery { background: #e9e6df; }
+  .gallery .frame { position: absolute; left: 6cqw; top: 6cqw; width: 58cqw; aspect-ratio: 16 / 10.4; padding: 2.2cqw; background: #1b1d1f; box-shadow: 0 2cqw 3.6cqw rgba(30,25,15,.28); }
+  .gallery .frame .mat { width: 100%; height: 100%; padding: 2.6cqw; background: #f6f4ef; }
+  .gallery .frame .pic { width: 100%; height: 100%; background: url(../app/src/main/assets/wallpapers/nature-07.jpg) center / cover; }
+  .gallery .label { position: absolute; left: 70cqw; top: 26cqw; width: 22cqw; color: #222; font: 400 1.15cqw/1.5 "Hanken Grotesk", sans-serif; }
+  .gallery .label .title { font: 700 1.6cqw/1.25 "Libre Caslon Text", serif; }
+  .gallery .label .sub { font: italic 400 1.3cqw "Libre Caslon Text", serif; margin: .3cqw 0 1.2cqw; }
+  .gallery .label .time { font: 400 5cqw/1 "Libre Caslon Text", serif; margin-top: 1.4cqw; letter-spacing: -.01em; }
+  .gallery .label hr { border: 0; border-top: 1px solid #b9b3a6; margin: 1.2cqw 0; }
+  .gallery .rail { position: absolute; left: 6cqw; bottom: 3.4cqw; display: flex; gap: 2.6cqw; font: 500 1.35cqw "Hanken Grotesk", sans-serif; color: #6b665c; }
+  .gallery .rail span.focus { color: #111; border-bottom: .2cqw solid #111; padding-bottom: .3cqw; }
+
+  /* =================== NEW: DEPARTURES =================== */
+  .board { background: #0d0f10; font-family: "B612 Mono", monospace; color: #f2c94c; }
+  .board .photo { opacity: .22; filter: grayscale(.6); }
+  .board .head { position: absolute; left: 4cqw; right: 4cqw; top: 3.4cqw; display: flex; justify-content: space-between; align-items: center; }
+  .board .flaps { display: flex; gap: .3cqw; }
+  .board .flap { background: #1c1f21; color: #f5f2e8; font: 700 4.4cqw/1 "B612 Mono", monospace; padding: .5cqw .55cqw; border-radius: .35cqw; position: relative; box-shadow: inset 0 -.15cqw 0 rgba(0,0,0,.6); }
+  .board .flap::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: .1cqw; background: rgba(0,0,0,.65); }
+  .board .title { font: 700 1.5cqw "B612 Mono", monospace; letter-spacing: .3em; color: #f2c94c; }
+  .board table { position: absolute; left: 4cqw; right: 4cqw; top: 13cqw; border-collapse: collapse; font: 400 1.75cqw "B612 Mono", monospace; }
+  .board th { text-align: left; font-size: 1cqw; letter-spacing: .25em; color: rgba(242,201,76,.65); padding-bottom: .8cqw; font-weight: 400; }
+  .board td { padding: .75cqw 0; border-top: 1px solid rgba(255,255,255,.08); color: #f5f2e8; }
+  .board td.gate { color: #f2c94c; }
+  .board td.status { color: #7bd88f; }
+  .board tr.focus td { background: #f2c94c; color: #111; }
+  .board tr.focus td:first-child { padding-left: .8cqw; }
+  .board tr.focus td.status { color: #111; }
+  .board .wxrow { position: absolute; left: 4cqw; right: 4cqw; bottom: 3.6cqw; display: flex; gap: 2.6cqw; font: 400 1.25cqw "B612 Mono", monospace; color: rgba(245,242,232,.8); }
+  .board .wxrow b { color: #f2c94c; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Доработка тем Glass Home</h1>
+    <p>Для каждой темы: как сейчас (скриншот с телевизора) и два варианта доработки. В конце две новые темы. Везде твои приложения, погода Порту на сегодня и то же фото, так сравнивать честнее. Шрифты подобраны по правилам Impeccable: не «рефлекторные» и все под OFL, чтобы их можно было положить в приложение.</p>
+    <p>Ответь коротко, например: «Clock A, Glass A, Postcard B, Type A, плюс Gallery». Можно смешивать: «Clock A, но часы как в B».</p>
+    <nav><a href="#clock">Clock</a><a href="#glass">Glass</a><a href="#postcard">Postcard</a><a href="#type">Type</a><a href="#new">Новые темы</a></nav>
+  </header>
+
+  <!-- ===================================== CLOCK ===================================== -->
+  <section class="theme" id="clock">
+    <h2>Clock</h2>
+    <p>Идея: тихая галерея. Фото главное, время подписано крупно, как в музее.</p>
+
+    <div class="option"><h3><span class="tag now">Сейчас</span></h3>
+      <div class="tv"><img class="shot" src="../.tv/shots/theme-clock.png" alt="Clock theme now"></div></div>
+
+    <div class="option"><h3><span class="tag">A</span> Музейная подпись</h3>
+      <ul>
+        <li><b>Часы</b> в Gloock: контрастная антиква с характером, читается с дивана.</li>
+        <li><b>Погода</b> без коробки: неделя тонкими колонками прямо по фото, сегодня в подписи под часами.</li>
+        <li><b>Иконки</b> одного размера с одинаковой тенью, выбранная крупнее, с белым кольцом и названием над ней.</li>
+      </ul>
+      <div class="tv clockA"><div class="photo"></div><div class="shade"></div>
+        <div class="week" data-week="clock"></div>
+        <div class="time">12:15</div>
+        <div class="caption"><span>Saturday, 31 October</span><span class="sep"></span><span class="wxi wx-sun" data-icon="sun"></span><span>21° clear sky in Porto</span></div>
+        <div class="dock" data-dock="clockA"></div>
+        <div class="place">Western Alps in morning haze<br>near Grenoble, France</div>
+      </div></div>
+
+    <div class="option"><h3><span class="tag">B</span> Швейцарская сетка</h3>
+      <ul>
+        <li><b>Огромные тонкие часы</b> сверху слева, остальное собрано на одной линии-сетке внизу.</li>
+        <li><b>Погода, дата и место</b> разложены колонками, как в табличке у экспоната.</li>
+        <li><b>Название</b> выбранного приложения стоит рядом с иконкой.</li>
+      </ul>
+      <div class="tv clockB"><div class="photo"></div><div class="shade"></div>
+        <div class="time">12:15</div>
+        <div class="meta">
+          <div><small>Saturday</small><span class="big">31 October</span></div>
+          <div><small>Porto</small><span class="big"><span class="wx-sun" data-icon="sun"></span>21°</span></div>
+          <div><small>Next days</small>Sun 23° · Mon 23° · Tue 19°</div>
+          <div><small>Photo</small>Western Alps, France</div>
+        </div>
+        <div class="rule"></div>
+        <div class="dock" data-dock="clockB"></div>
+      </div></div>
+  </section>
+
+  <!-- ===================================== GLASS ===================================== -->
+  <section class="theme" id="glass">
+    <h2>Glass</h2>
+    <p>Идея: дорогое устройство. Стекло, глубина, точная иерархия, как в Apple TV и оригинальном Glass Home.</p>
+
+    <div class="option"><h3><span class="tag now">Сейчас</span></h3>
+      <div class="tv"><img class="shot" src="../.tv/shots/theme-glass.png" alt="Glass theme now"></div></div>
+
+    <div class="option"><h3><span class="tag">A</span> Оригинальный Glass Home, доведённый</h3>
+      <ul>
+        <li><b>Один шрифт Geist</b> на всё: тонкие часы, ровные цифры погоды. Сейчас там смешаны засечки и Roboto.</li>
+        <li><b>Док</b> по ширине содержимого, а не на весь экран. Иконки 128 px, выбранная поднимается с тенью.</li>
+        <li><b>Панель недели</b> на 7 дней, как ты хотел: вероятность дождя голубым, значки в цвете.</li>
+      </ul>
+      <div class="tv glassA"><div class="photo"></div><div class="shade"></div>
+        <div class="brand"><i></i>Glass Home</div>
+        <div class="time">12:15</div>
+        <div class="date">Saturday, 31 October</div>
+        <div class="wx"><div class="now"><span class="ic wx-sun" data-icon="sun"></span><span class="t">21°</span><span>Clear sky · H 21° L 11°</span></div><div class="panel" data-week="glass"></div></div>
+        <div class="dockbar" data-dock="glassA"></div>
+        <div class="label">YouTube</div>
+      </div></div>
+
+    <div class="option"><h3><span class="tag">B</span> Полка как в tvOS</h3>
+      <ul>
+        <li><b>Приложения</b> сверху большими карточками в цвет иконки, как верхняя полка Apple TV.</li>
+        <li><b>Низ свободен</b> для фото: только время и короткая неделя.</li>
+      </ul>
+      <div class="tv glassB"><div class="photo"></div><div class="shade"></div>
+        <div class="row" data-dock="glassB"></div>
+        <div class="focus-label">YouTube</div>
+        <div class="bottom"><div><div class="time">12:15</div><div class="date">Saturday, 31 October · Porto</div></div><div class="mini" data-week="mini"></div></div>
+      </div></div>
+  </section>
+
+  <!-- ===================================== POSTCARD ===================================== -->
+  <section class="theme" id="postcard">
+    <h2>Postcard</h2>
+    <p>Идея: тепло и лично, как распечатанное фото на холодильнике.</p>
+
+    <div class="option"><h3><span class="tag now">Сейчас</span></h3>
+      <div class="tv"><img class="shot" src="../.tv/shots/theme-postcard.png" alt="Postcard theme now"></div></div>
+
+    <div class="option"><h3><span class="tag">A</span> На холодильнике</h3>
+      <ul>
+        <li><b>Открытка</b> на скотче с рукописной подписью места.</li>
+        <li><b>Время и погода</b> в почтовом штемпеле.</li>
+        <li><b>Меню</b> читается всегда: у выбранной строки исправлен невидимый текст (сейчас это баг).</li>
+      </ul>
+      <div class="tv pcA"><div class="blur"></div>
+        <div class="card"><div class="tape"></div><div class="pic"></div><div class="hand">Western Alps, near Grenoble</div></div>
+        <div class="stamp">PORTO<b>21°</b>SAT 31 OCT</div>
+        <div class="side"><div class="time">12:15</div><div class="date">Saturday, 31 October</div><div class="menu" data-dock="menu"></div></div>
+      </div></div>
+
+    <div class="option"><h3><span class="tag">B</span> Светлый стол со стопкой фото</h3>
+      <ul>
+        <li><b>Светлая тема</b>: открытки лежат на бумажном столе, следующее фото выглядывает из-под текущего.</li>
+        <li><b>Приложения</b> плиткой 4×2, выбранная чуть повёрнута, будто её взяли в руку.</li>
+      </ul>
+      <div class="tv pcB">
+        <div class="card c1"><div class="pic" style="background-image:url(../app/src/main/assets/wallpapers/nature-03.jpg)"></div></div>
+        <div class="card c2"><div class="pic" style="background-image:url(../app/src/main/assets/wallpapers/nature-07.jpg)"></div><div class="hand">Western Alps, near Grenoble</div></div>
+        <div class="side"><div class="time">12:15</div><div class="date">Saturday, 31 October</div><div class="wx"><span data-icon="sun"></span>21° clear in Porto</div>
+          <div class="tiles" data-dock="tiles"></div><div class="lbl">YouTube</div></div>
+      </div></div>
+  </section>
+
+  <!-- ===================================== TYPE ===================================== -->
+  <section class="theme" id="type">
+    <h2>Type</h2>
+    <p>Идея: обложка журнала, собранная из слов. Самая лёгкая по памяти.</p>
+
+    <div class="option"><h3><span class="tag now">Сейчас</span></h3>
+      <div class="tv"><img class="shot" src="../.tv/shots/theme-type.png" alt="Type theme now"></div></div>
+
+    <div class="option"><h3><span class="tag">A</span> Газетный киоск</h3>
+      <ul>
+        <li><b>Приложения</b> столбиком узкими плакатными буквами, выбранное белое со стрелкой. Справа больше ничего не обрезается.</li>
+        <li><b>Время</b> огромным плакатным шрифтом справа внизу.</li>
+      </ul>
+      <div class="tv typeA"><div class="photo"></div><div class="shade"></div>
+        <div class="list"><span class="focus">YouTube</span><span>Netflix</span><span>Spotify</span><span>PlayStation 5<sup>on</sup></span><span>Surfshark</span><span>Play Store</span><span>Settings</span></div>
+        <div class="side"><div class="time">12:15</div><div class="meta">Sat 31 Oct · <span class="wx-sun" data-icon="sun"></span> 21° Porto</div></div>
+      </div></div>
+
+    <div class="option"><h3><span class="tag">B</span> Обложка с шапкой</h3>
+      <ul>
+        <li><b>Шапка</b> как у журнала: название, «номер» (дата) и линия.</li>
+        <li><b>Заголовок</b> из погоды и фото, приложения словами внизу с переносом строк, выбранное подчёркнуто.</li>
+      </ul>
+      <div class="tv typeB"><div class="photo"></div><div class="shade"></div>
+        <div class="mast"><span class="name">Home</span><span class="issue">Saturday 31 October 2026<br>12:15 · Porto 21°</span></div>
+        <div class="headline"><b>Clear sky over Porto,</b> 23° tomorrow. On the wall: the Western Alps in morning haze.</div>
+        <div class="words"><span class="focus">YouTube</span><span>Netflix</span><span>Spotify</span><span>PlayStation 5</span><span>Surfshark</span><span>Play Store</span><span>Settings</span></div>
+      </div></div>
+  </section>
+
+  <!-- ===================================== NEW ===================================== -->
+  <section class="theme" id="new">
+    <h2>Новые темы</h2>
+    <p>Две идеи, которых пока нет. Их можно добавить пятой и шестой темой.</p>
+
+    <div class="option"><h3><span class="tag">Новая</span> Gallery: фото в раме и музейная этикетка</h3>
+      <ul>
+        <li><b>Фото</b> висит в раме с паспарту на светлой стене. Рядом этикетка, как в музее: название места, автор, время и погода.</li>
+        <li><b>Приложения</b> текстовым рядом внизу, без иконок. Тихо и очень по-дизайнерски.</li>
+      </ul>
+      <div class="tv gallery">
+        <div class="frame"><div class="mat"><div class="pic"></div></div></div>
+        <div class="label"><div class="title">Western Alps in morning haze</div><div class="sub">seen from near Grenoble, France</div>Photograph · Dktue · CC0<hr>Porto · clear sky · 21°<br>Tomorrow 23°, then 19°<div class="time">12:15</div>Saturday, 31 October</div>
+        <div class="rail"><span class="focus">YouTube</span><span>Netflix</span><span>Spotify</span><span>PlayStation 5</span><span>Surfshark</span><span>Play Store</span><span>Settings</span></div>
+      </div></div>
+
+    <div class="option"><h3><span class="tag">Новая</span> Departures: табло вылетов</h3>
+      <ul>
+        <li><b>Время</b> перекидными цифрами, приложения строками табло: «направление», «гейт» (кнопка на пульте), статус. PS5 «ON STAND», если консоль включена.</li>
+        <li><b>Погода</b> строкой как на табло аэропорта. Шрифт B612 Mono сделан для кабин самолётов, это его родная стихия.</li>
+      </ul>
+      <div class="tv board"><div class="photo"></div>
+        <div class="head"><span class="title">DEPARTURES · PORTO</span><span class="flaps"><span class="flap">1</span><span class="flap">2</span><span class="flap">:</span><span class="flap">1</span><span class="flap">5</span></span></div>
+        <table>
+          <tr><th>DESTINATION</th><th>GATE</th><th>STATUS</th></tr>
+          <tr class="focus"><td>YOUTUBE</td><td class="gate">RED</td><td class="status">BOARDING</td></tr>
+          <tr><td>NETFLIX</td><td class="gate">GREEN</td><td class="status">ON TIME</td></tr>
+          <tr><td>SPOTIFY</td><td class="gate">YELLOW</td><td class="status">ON TIME</td></tr>
+          <tr><td>PLAYSTATION 5</td><td class="gate">HDMI 2</td><td class="status">ON STAND</td></tr>
+          <tr><td>SURFSHARK</td><td class="gate">—</td><td class="status">ON TIME</td></tr>
+        </table>
+        <div class="wxrow"><span><b>PORTO</b> 21° CLEAR</span><span>SUN 23°</span><span>MON 23°</span><span>TUE 19°</span><span>FRI 56% RAIN</span><span>SAT 31 OCT</span></div>
+      </div></div>
+  </section>
+</div>
+
+<script>
+  // Real dock and weather, drawn into the mockups.
+  var ICONS = {
+    youtube: 'icons/com.google.android.youtube.tv.png', netflix: 'icons/com.netflix.ninja.png', spotify: 'icons/com.spotify.tv.android.png',
+    ps5: '../.tv/official-icons/tiles/official-playstation.png', surfshark: 'icons/com.surfshark.vpnclient.android.png',
+    play: 'icons/com.android.vending.png', settings: 'icons/com.android.tv.settings.png'
+  };
+  var NAMES = { youtube: 'YouTube', netflix: 'Netflix', spotify: 'Spotify', ps5: 'PlayStation 5', surfshark: 'Surfshark', play: 'Play Store', settings: 'Settings' };
+  var ORDER = ['youtube', 'netflix', 'spotify', 'ps5', 'surfshark', 'play', 'settings'];
+  // Card colours for the tvOS shelf, taken from each icon.
+  var SHELF = { youtube: '#ff0033', netflix: '#141414', spotify: '#1db954', ps5: '#0b4fb3', surfshark: '#1c9ea0', play: '#f3f4f6', settings: '#3a4148' };
+  var WEEK = [['Sun','sun',23,12,0],['Mon','cloud',23,10,0],['Tue','cloud',19,9,0],['Wed','sun',17,8,3],['Thu','cloud',17,6,2],['Fri','rain',19,11,56],['Sat','storm',17,12,60]];
+  var SVG = {
+    sun: '<svg class="wx" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>',
+    cloud: '<svg class="wx" viewBox="0 0 24 24"><path d="M7 18h10a4 4 0 0 0 .4-7.98 5.5 5.5 0 0 0-10.6 1.2A3.4 3.4 0 0 0 7 18z"/></svg>',
+    rain: '<svg class="wx" viewBox="0 0 24 24"><path d="M7 15h10a4 4 0 0 0 .4-7.98 5.5 5.5 0 0 0-10.6 1.2A3.4 3.4 0 0 0 7 15z"/><path d="M8.5 18l-1 2.5M12.5 18l-1 2.5M16.5 18l-1 2.5"/></svg>',
+    storm: '<svg class="wx" viewBox="0 0 24 24"><path d="M7 15h10a4 4 0 0 0 .4-7.98 5.5 5.5 0 0 0-10.6 1.2A3.4 3.4 0 0 0 7 15z"/><path d="M12.5 15.5l-2 3.5h3l-2 3.5"/></svg>'
+  };
+  function icon(name) { return SVG[name] || SVG.cloud; }
+
+  document.querySelectorAll('[data-icon]').forEach(function (el) { el.innerHTML = icon(el.dataset.icon); });
+
+  document.querySelectorAll('[data-week]').forEach(function (el) {
+    var kind = el.dataset.week;
+    var html = '';
+    if (kind === 'mini') html += '<div class="today"><b>21°</b>Clear sky</div>';
+    WEEK.slice(0, kind === 'mini' ? 5 : 7).forEach(function (d) {
+      var rain = d[4] >= 10 ? d[4] + '%' : '';
+      html += '<div class="d"><span class="name">' + d[0] + '</span><span class="ic wx-' + d[1] + '">' + icon(d[1]) + '</span><span class="hi">' + d[2] + '°</span>' +
+        (kind === 'mini' ? '' : '<span class="lo">' + d[3] + '°</span>') + (kind === 'glass' ? '<span class="rain">' + rain + '</span>' : '') + '</div>';
+    });
+    el.innerHTML = html;
+  });
+
+  document.querySelectorAll('[data-dock]').forEach(function (el) {
+    var kind = el.dataset.dock;
+    var html = '';
+    var list = kind === 'tiles' ? ORDER.slice(0, 8) : ORDER;
+    list.forEach(function (key, index) {
+      var focus = index === 0 ? ' focus' : '';
+      if (kind === 'menu') {
+        html += '<div class="' + focus.trim() + '"><img src="' + ICONS[key] + '" alt="">' + NAMES[key] + '</div>';
+      } else if (kind === 'glassB') {
+        html += '<div class="t' + focus + '" style="background:' + SHELF[key] + '"><img src="' + ICONS[key] + '" alt=""></div>';
+      } else {
+        html += '<div class="t' + focus + '" style="position:relative"><img class="icon" src="' + ICONS[key] + '" alt="">' +
+          (kind === 'clockA' && index === 0 ? '<span class="label">YouTube</span>' : '') + '</div>';
+        if (kind === 'clockB' && index === 0) html += '<span class="label">YouTube</span>';
+      }
+    });
+    el.innerHTML = html;
+  });
+</script>
+</body>
+</html>

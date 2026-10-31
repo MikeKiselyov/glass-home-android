@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Glass Home - иконки устройств</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --page: #1a1d21;
+    --ink: #e9ecef;
+    --muted: #9aa3ad;
+    --line: #2c3238;
+    --pick: #8fd3c8;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 16px/1.5 Inter, system-ui, sans-serif; padding: 48px 32px 80px; }
+  .wrap { max-width: 1160px; margin: 0 auto; }
+  h1 { font-weight: 600; font-size: 30px; margin: 0 0 8px; letter-spacing: -0.01em; }
+  header p { color: var(--muted); margin: 0; max-width: 70ch; }
+  section { margin-top: 56px; }
+  .head { display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; margin-bottom: 18px; }
+  .head .num { color: var(--pick); font-weight: 600; font-size: 22px; }
+  .head h2 { margin: 0; font-size: 22px; font-weight: 600; }
+  .head p { margin: 0; color: var(--muted); flex: 1 1 380px; }
+  .set { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 22px; }
+  .set figure { margin: 0; text-align: center; }
+  .set svg { width: 112px; height: 112px; border-radius: 26px; display: block; margin: 0 auto 10px; box-shadow: 0 14px 30px rgba(0,0,0,.35); }
+  .set figcaption { color: var(--muted); font-size: 14px; }
+
+  /* The set on the real Clock dock, to judge it next to app icons. */
+  .dock-demo { position: relative; margin-top: 22px; border-radius: 12px; overflow: hidden; aspect-ratio: 16 / 4; background: url(../app/src/main/assets/wallpapers/nature-08.jpg) center 70% / cover; box-shadow: 0 0 0 1px var(--line); container-type: inline-size; }
+  .dock-demo::before { content: ""; position: absolute; inset: 0; background: linear-gradient(0deg, rgba(0,0,0,.55), rgba(0,0,0,0) 80%); }
+  .dock-demo .row { position: absolute; left: 4cqw; bottom: 3.5cqw; display: flex; align-items: center; gap: 2.2cqw; }
+  .dock-demo .row img, .dock-demo .row svg { width: 4.6cqw; height: 4.6cqw; border-radius: 1.1cqw; display: block; opacity: .8; }
+  .dock-demo .row .focus { width: 6cqw; height: 6cqw; opacity: 1; box-shadow: 0 0 0 .2cqw #fff; border-radius: 1.3cqw; }
+  .dock-demo .row .name { color: #fff; font: 600 1.45cqw Inter, sans-serif; margin-left: -1cqw; }
+
+  .custom { margin-top: 64px; padding-top: 28px; border-top: 1px solid var(--line); }
+  .custom h2 { font-size: 22px; font-weight: 600; margin: 0 0 10px; }
+  .custom li, .custom p { color: var(--muted); max-width: 74ch; }
+  .custom li b { color: var(--ink); font-weight: 500; }
+  .colorways { display: flex; gap: 18px; margin-top: 14px; flex-wrap: wrap; }
+  .colorways svg { width: 84px; height: 84px; border-radius: 20px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Иконки для HDMI-устройств</h1>
+    <p>Три стиля. В каждом набор: PlayStation, Xbox, Nintendo Switch, Apple TV, ТВ-стик и любое другое HDMI-устройство. Иконка подбирается сама по имени устройства (HDMI-CEC), её можно сменить. Логотипы брендов не использую, только силуэты и узнаваемые цвета.</p>
+  </header>
+
+  <!-- ===================== A. Glow ===================== -->
+  <section>
+    <div class="head"><span class="num">A</span><h2>Glow</h2><p>Тёмная «витрина»: консоль как предмет на подиуме, с фирменной подсветкой. В фокусе подсветка мягко пульсирует.</p></div>
+    <div class="set">
+      <figure>
+        <svg viewBox="0 0 108 108" aria-label="PlayStation">
+          <defs>
+            <radialGradient id="a1bg" cx="50%" cy="45%" r="78%"><stop offset="0" stop-color="#22408f"/><stop offset=".6" stop-color="#0b1638"/><stop offset="1" stop-color="#03050c"/></radialGradient>
+            <radialGradient id="a1glow"><stop offset="0" stop-color="#5aaeff" stop-opacity=".9"/><stop offset="1" stop-color="#5aaeff" stop-opacity="0"/></radialGradient>
+            <linearGradient id="a1shell" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#c3ccda"/></linearGradient>
+          </defs>
+          <rect width="108" height="108" fill="url(#a1bg)"/>
+          <ellipse cx="54" cy="44" rx="30" ry="18" fill="url(#a1glow)"/>
+          <ellipse cx="54" cy="90" rx="34" ry="3.5" fill="#000" opacity=".55"/>
+          <path d="M31 33C39 29.5 69 29.5 77 33C87 37 92.5 50 94.5 63C96.5 76 91 85 83.5 83.5C77.5 82.3 74 75 70 70.5L38 70.5C34 75 30.5 82.3 24.5 83.5C17 85 11.5 76 13.5 63C15.5 50 21 37 31 33Z" fill="url(#a1shell)"/>
+          <path d="M35 40C40 38 68 38 73 40L72 64C66 66.5 42 66.5 36 64Z" fill="#14161c"/>
+          <rect x="41" y="35" width="26" height="14" rx="3" fill="#23262e"/>
+          <path d="M40 36.5v11M68 36.5v11" stroke="#5aaeff" stroke-width="1.6" stroke-linecap="round"/>
+          <circle cx="44" cy="59" r="5.4" fill="#0b0c10" stroke="#3a3f4a" stroke-width="1.4"/>
+          <circle cx="64" cy="59" r="5.4" fill="#0b0c10" stroke="#3a3f4a" stroke-width="1.4"/>
+          <g fill="#5d6675"><rect x="25" y="44.5" width="3" height="9" rx="1"/><rect x="22" y="47.5" width="9" height="3" rx="1"/></g>
+          <g fill="#5d6675"><circle cx="83" cy="44.5" r="1.9"/><circle cx="79" cy="49" r="1.9"/><circle cx="87" cy="49" r="1.9"/><circle cx="83" cy="53.5" r="1.9"/></g>
+          <path d="M33 34.5C40 31.8 50 31 54 31" stroke="#fff" stroke-width="1.4" opacity=".8" fill="none" stroke-linecap="round"/>
+        </svg>
+        <figcaption>PlayStation (геймпад)</figcaption>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 108 108" aria-label="Xbox">
+          <defs>
+            <radialGradient id="a2bg" cx="50%" cy="30%" r="80%"><stop offset="0" stop-color="#16461d"/><stop offset=".6" stop-color="#07170a"/><stop offset="1" stop-color="#020503"/></radialGradient>
+            <linearGradient id="a2body" x1="0" x2="1"><stop offset="0" stop-color="#2a2f2c"/><stop offset=".25" stop-color="#151816"/><stop offset="1" stop-color="#0a0c0b"/></linearGradient>
+            <radialGradient id="a2vent"><stop offset="0" stop-color="#7dff8c"/><stop offset=".6" stop-color="#1fbf3a"/><stop offset="1" stop-color="#0b4d16"/></radialGradient>
+            <radialGradient id="a2halo"><stop offset="0" stop-color="#3ddc4f" stop-opacity=".7"/><stop offset="1" stop-color="#3ddc4f" stop-opacity="0"/></radialGradient>
+          </defs>
+          <rect width="108" height="108" fill="url(#a2bg)"/>
+          <ellipse cx="54" cy="18" rx="30" ry="12" fill="url(#a2halo)"/>
+          <ellipse cx="54" cy="93" rx="26" ry="3.5" fill="#000" opacity=".6"/>
+          <rect x="34" y="18" width="40" height="74" rx="3" fill="url(#a2body)"/>
+          <ellipse cx="54" cy="19" rx="18" ry="4.2" fill="#050605"/>
+          <ellipse cx="54" cy="19.4" rx="15" ry="3.2" fill="url(#a2vent)"/>
+          <g fill="#0a2a10" opacity=".7">
+            <circle cx="48" cy="19.2" r=".7"/><circle cx="51" cy="18.6" r=".7"/><circle cx="54" cy="18.4" r=".7"/><circle cx="57" cy="18.6" r=".7"/><circle cx="60" cy="19.2" r=".7"/>
+            <circle cx="49.5" cy="20.4" r=".7"/><circle cx="52.5" cy="20.2" r=".7"/><circle cx="55.5" cy="20.2" r=".7"/><circle cx="58.5" cy="20.4" r=".7"/>
+          </g>
+          <rect x="34" y="18" width="1.2" height="74" fill="#fff" opacity=".18"/>
+          <circle cx="40" cy="30" r="1.8" fill="#e8ffe9"/>
+          <circle cx="40" cy="30" r="4" fill="#7dff8c" opacity=".25"/>
+          <rect x="38" y="80" width="10" height="1.6" rx=".8" fill="#2f3532"/>
+        </svg>
+        <figcaption>Xbox</figcaption>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 108 108" aria-label="Nintendo Switch">
+          <defs>
+            <radialGradient id="a3bg" cx="50%" cy="50%" r="75%"><stop offset="0" stop-color="#2a2140"/><stop offset=".6" stop-color="#0e0b18"/><stop offset="1" stop-color="#040308"/></radialGradient>
+            <linearGradient id="a3screen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b5bdb"/><stop offset=".5" stop-color="#9c36b5"/><stop offset="1" stop-color="#f76707"/></linearGradient>
+            <radialGradient id="a3blue"><stop offset="0" stop-color="#00c3ff" stop-opacity=".6"/><stop offset="1" stop-color="#00c3ff" stop-opacity="0"/></radialGradient>
+            <radialGradient id="a3red"><stop offset="0" stop-color="#ff4b5c" stop-opacity=".6"/><stop offset="1" stop-color="#ff4b5c" stop-opacity="0"/></radialGradient>
+          </defs>
+          <rect width="108" height="108" fill="url(#a3bg)"/>
+          <circle cx="22" cy="54" r="22" fill="url(#a3blue)"/>
+          <circle cx="86" cy="54" r="22" fill="url(#a3red)"/>
+          <ellipse cx="54" cy="78" rx="38" ry="3" fill="#000" opacity=".6"/>
+          <path d="M26 37h6v36h-6a8 8 0 0 1-8-8V45a8 8 0 0 1 8-8z" fill="#00c3ff"/>
+          <path d="M76 37h6a8 8 0 0 1 8 8v20a8 8 0 0 1-8 8h-6z" fill="#ff4b5c"/>
+          <rect x="32" y="37" width="44" height="36" rx="2" fill="#1b1d22"/>
+          <rect x="35" y="40" width="38" height="30" rx="1" fill="url(#a3screen)"/>
+          <path d="M35 40h38L35 63z" fill="#fff" opacity=".12"/>
+          <circle cx="25" cy="47" r="3" fill="#0a5b74"/>
+          <circle cx="83" cy="63" r="3" fill="#7a1720"/>
+          <g fill="#7a1720"><circle cx="83" cy="44" r="1.2"/><circle cx="86" cy="47" r="1.2"/><circle cx="80" cy="47" r="1.2"/><circle cx="83" cy="50" r="1.2"/></g>
+          <g fill="#0a5b74"><rect x="23.8" y="58" width="2.4" height="7" rx=".6"/><rect x="21.5" y="60.3" width="7" height="2.4" rx=".6"/></g>
+        </svg>
+        <figcaption>Nintendo Switch</figcaption>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 108 108" aria-label="Apple TV">
+          <defs>
+            <radialGradient id="a4bg" cx="50%" cy="40%" r="80%"><stop offset="0" stop-color="#3a3f48"/><stop offset=".6" stop-color="#121418"/><stop offset="1" stop-color="#050607"/></radialGradient>
+            <linearGradient id="a4top" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4b5059"/><stop offset="1" stop-color="#1c1f24"/></linearGradient>
+            <linearGradient id="a4side" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#16181c"/><stop offset="1" stop-color="#08090a"/></linearGradient>
+          </defs>
+          <rect width="108" height="108" fill="url(#a4bg)"/>
+          <ellipse cx="54" cy="74" rx="34" ry="5" fill="#000" opacity=".6"/>
+          <path d="M22 52 L54 40 L86 52 L86 62 L54 74 L22 62Z" fill="url(#a4side)"/>
+          <path d="M22 52 L54 40 L86 52 L54 64Z" fill="url(#a4top)"/>
+          <path d="M22 52 L54 64 L54 74 L22 62Z" fill="#0d0e10"/>
+          <path d="M22 52 L54 40 L58 41.5 L27 53.5Z" fill="#fff" opacity=".18"/>
+          <circle cx="36" cy="63" r="1.1" fill="#fff"/>
+          <circle cx="36" cy="63" r="3" fill="#fff" opacity=".2"/>
+        </svg>
+        <figcaption>Apple TV</figcaption>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 108 108" aria-label="TV stick">
+          <defs>
+            <radialGradient id="a5bg" cx="50%" cy="45%" r="78%"><stop offset="0" stop-color="#3b1f6e"/><stop offset=".6" stop-color="#130a26"/><stop offset="1" stop-color="#05030b"/></radialGradient>
+            <linearGradient id="a5body" x1="0" x2="1"><stop offset="0" stop-color="#2c2e36"/><stop offset="1" stop-color="#121318"/></linearGradient>
+            <linearGradient id="a5plug" x1="0" x2="1"><stop offset="0" stop-color="#d9dde3"/><stop offset="1" stop-color="#8a9099"/></linearGradient>
+            <radialGradient id="a5glow"><stop offset="0" stop-color="#b197fc" stop-opacity=".7"/><stop offset="1" stop-color="#b197fc" stop-opacity="0"/></radialGradient>
+          </defs>
+          <rect width="108" height="108" fill="url(#a5bg)"/>
+          <circle cx="54" cy="54" r="34" fill="url(#a5glow)"/>
+          <g transform="rotate(-35 54 54)">
+            <rect x="46" y="22" width="16" height="12" rx="1.5" fill="url(#a5plug)"/>
+            <rect x="48.5" y="25" width="11" height="4" rx=".8" fill="#4b5059"/>
+            <rect x="42" y="33" width="24" height="54" rx="7" fill="url(#a5body)"/>
+            <rect x="42" y="33" width="2" height="54" rx="1" fill="#fff" opacity=".18"/>
+            <circle cx="54" cy="78" r="1.6" fill="#e5dbff"/>
+            <circle cx="54" cy="78" r="4" fill="#b197fc" opacity=".35"/>
+          </g>
+        </svg>
+        <figcaption>ТВ-стик</figcaption>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 108 108" aria-label="HDMI">
+          <defs>
+            <radialGradient id="a6bg" cx="50%" cy="45%" r="78%"><stop offset="0" stop-color="#0f4a4f"/><stop offset=".6" stop-color="#06191b"/><stop offset="1" stop-color="#020707"/></radialGradient>
+            <linearGradient id="a6metal" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#eef1f4"/><stop offset="1" stop-color="#9aa3ad"/></linearGradient>
+            <radialGradient id="a6glow"><stop offset="0" stop-color="#63e6be" stop-opacity=".75"/><stop offset="1" stop-color="#63e6be" stop-opacity="0"/></radialGradient>
+          </defs>
+          <rect width="108" height="108" fill="url(#a6bg)"/>
+          <ellipse cx="54" cy="36" rx="30" ry="16" fill="url(#a6glow)"/>
+          <path d="M33 30h42v10l-5 7H38l-5-7z" fill="url(#a6metal)"/>
+          <path d="M37 33h34v5l-3 4H40l-3-4z" fill="#1e2a2c"/>
+          <g fill="#63e6be"><rect x="41" y="35" width="2" height="2"/><rect x="45" y="35" width="2" height="2"/><rect x="49" y="35" width="2" height="2"/><rect x="53" y="35" width="2" height="2"/><rect x="57" y="35" width="2" height="2"/><rect x="61" y="35" width="2" height="2"/><rect x="65" y="35" width="2" height="2"/></g>
+          <rect x="36" y="47" width="36" height="22" rx="4" fill="#15191b"/>
+          <rect x="36" y="47" width="36" height="3" fill="#2b3134"/>
+          <path d="M50 69h8v26h-8z" fill="#15191b"/>
+        </svg>
+        <figcaption>Другое HDMI</figcaption>
+      </figure>
+    </div>
+    <div class="dock-demo">
+      <div class="row">
+        <img src="icons/com.google.android.youtube.tv.png" alt=""><img src="icons/com.netflix.ninja.png" alt=""><img src="icons/com.spotify.tv.android.png" alt="">
+        <svg class="focus" viewBox="0 0 108 108"><use href="#a1use"/></svg><span class="name">PlayStation 5</span>
+        <img src="icons/com.google.android.videos.png" alt=""><img src="icons/com.tcl.browser.png" alt=""><img src="icons/com.android.tv.settings.png" alt="">
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== B. Toy ===================== -->
+  <section>
+    <div class="head"><span class="num">B</span><h2>Toy</h2><p>Пастельные «стикеры»: пухлые силуэты с белой обводкой и тенью, немного игриво. Хорошо смотрится на светлых фото.</p></div>
+    <div class="set">
+      <figure>
+        <svg viewBox="0 0 108 108" aria-label="PlayStation">
+          <rect width="108" height="108" fill="#cfe0ff"/>
+          <circle cx="86" cy="22" r="3" fill="#fff"/><path d="M20 22l2 4 4 2-4 2-2 4-2-4-4-2 4-2z" fill="#fff"/>
+          <path d="M31 33C39 29.5 69 29.5 77 33C87 37 92.5 50 94.5 63C96.5 76 91 85 83.5 83.5C77.5 82.3 74 75 70 70.5L38 70.5C34 75 30.5 82.3 24.5 83.5C17 85 11.5 76 13.5 63C15.5 50 21 37 31 33Z" fill="#1d3a8a" opacity=".22" transform="translate(3 4)"/>
+          <g stroke="#1d3a8a" stroke-width="2.6" stroke-linejoin="round">
+            <path d="M31 33C39 29.5 69 29.5 77 33C87 37 92.5 50 94.5 63C96.5 76 91 85 83.5 83.5C77.5 82.3 74 75 70 70.5L38 70.5C34 75 30.5 82.3 24.5 83.5C17 85 11.5 76 13.5 63C15.5 50 21 37 31 33Z" fill="#fff"/>
+            <path d="M35 40C40 38 68 38 73 40L72 64C66 66.5 42 66.5 36 64Z" fill="#2b2f3a"/>
+            <rect x="41" y="35" width="26" height="14" rx="3" fill="#3d4352"/>
+          </g>
+          <path d="M40 37v9M68 37v9" stroke="#74c0fc" stroke-width="2.4" stroke-linecap="round"/>
+          <circle cx="44" cy="59" r="4.6" fill="#1d3a8a"/><circle cx="64" cy="59" r="4.6" fill="#1d3a8a"/>
+          <g fill="#ff8fa3"><circle cx="83" cy="44.5" r="2.2"/></g><g fill="#74c0fc"><circle cx="79" cy="49" r="2.2"/></g><g fill="#ffd43b"><circle cx="87" cy="49" r="2.2"/></g><g fill="#69db7c"><circle cx="83" cy="53.5" r="2.2"/></g>
+          <g fill="#1d3a8a"><rect x="24.5" y="44.5" width="3" height="9" rx="1"/><rect x="21.5" y="47.5" width="9" height="3" rx="1"/></g>
+        </svg>
+        <figcaption>PlayStation (геймпад)</figcaption>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 108 108" aria-label="Xbox">
+          <rect width="108" height="108" fill="#c9f2d0"/>
+          <path d="M84 78l2 4 4 2-4 2-2 4-2-4-4-2 4-2z" fill="#fff"/>
+          <rect x="39" y="22" width="36" height="66" rx="7" fill="#0b5c18" opacity=".25"/>
+          <g stroke="#123a19" stroke-width="2.6" stroke-linejoin="round">
+            <rect x="36" y="18" width="36" height="66" rx="7" fill="#2b2f2c"/>
+            <ellipse cx="54" cy="24" rx="13" ry="4.5" fill="#51cf66"/>
+          </g>
+          <circle cx="43" cy="34" r="2.6" fill="#fff"/>
+          <path d="M40 76h10" stroke="#5c635f" stroke-width="2.4" stroke-linecap="round"/>
+        </svg>
+        <figcaption>Xbox</figcaption>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 108 108" aria-label="Nintendo Switch">
+          <rect width="108" height="108" fill="#ffe0e4"/>
+          <g transform="translate(3 4)" opacity=".2" fill="#7a1720"><rect x="16" y="36" width="76" height="36" rx="10"/></g>
+          <g stroke="#3b1d24" stroke-width="2.6" stroke-linejoin="round">
+            <path d="M26 36h6v36h-6a10 10 0 0 1-10-10V46a10 10 0 0 1 10-10z" fill="#22b8f0"/>
+            <path d="M76 36h6a10 10 0 0 1 10 10v16a10 10 0 0 1-10 10h-6z" fill="#ff6b7a"/>
+            <rect x="32" y="36" width="44" height="36" rx="2" fill="#2a2d33"/>
+          </g>
+          <rect x="36" y="40" width="36" height="28" rx="2" fill="#fff4c2"/>
+          <g fill="#3b1d24"><circle cx="47" cy="51" r="2.2"/><circle cx="61" cy="51" r="2.2"/></g>
+          <path d="M48 58q6 5 12 0" stroke="#3b1d24" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+          <circle cx="44" cy="57" r="2" fill="#ff8fa3" opacity=".7"/><circle cx="64" cy="57" r="2" fill="#ff8fa3" opacity=".7"/>
+          <circle cx="24" cy="46" r="3.2" fill="#0b5f80"/><circle cx="84" cy="62" r="3.2" fill="#7a1720"/>
+        </svg>
+        <figcaption>Nintendo Switch</figcaption>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 108 108" aria-label="Apple TV">
+          <rect width="108" height="108" fill="#e8e5ff"/>
+          <path d="M80 26l2 4 4 2-4 2-2 4-2-4-4-2 4-2z" fill="#fff"/>
+          <rect x="27" y="47" width="54" height="24" rx="10" fill="#3f3a8a" opacity=".22"/>
+          <g stroke="#26233f" stroke-width="2.6" stroke-linejoin="round">
+            <rect x="24" y="43" width="54" height="24" rx="10" fill="#2f3138"/>
+            <rect x="82" y="36" width="10" height="34" rx="5" fill="#d8dbe2"/>
+          </g>
+          <circle cx="87" cy="44" r="2.6" fill="#26233f"/>
+          <circle cx="34" cy="59" r="1.8" fill="#fff"/>
+          <path d="M30 47h40" stroke="#fff" stroke-opacity=".25" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <figcaption>Apple TV</figcaption>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 108 108" aria-label="TV stick">
+          <rect width="108" height="108" fill="#ffe9c7"/>
+          <path d="M24 26l2 4 4 2-4 2-2 4-2-4-4-2 4-2z" fill="#fff"/><path d="M84 80l1.5 3 3 1.5-3 1.5-1.5 3-1.5-3-3-1.5 3-1.5z" fill="#fff"/>
+          <g transform="rotate(-35 54 54)">
+            <rect x="45" y="38" width="24" height="52" rx="10" fill="#a0611b" opacity=".22"/>
+            <g stroke="#4a2c0a" stroke-width="2.6" stroke-linejoin="round">
+              <rect x="46" y="20" width="16" height="13" rx="2" fill="#dfe3e8"/>
+              <rect x="42" y="32" width="24" height="54" rx="10" fill="#7048e8"/>
+            </g>
+            <circle cx="54" cy="76" r="2.4" fill="#fff"/>
+          </g>
+        </svg>
+        <figcaption>ТВ-стик</figcaption>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 108 108" aria-label="HDMI">
+          <rect width="108" height="108" fill="#d6f4f1"/>
+          <path d="M82 70l-6 12h6l-4 10" stroke="#f59f00" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <g stroke="#0d3b37" stroke-width="2.6" stroke-linejoin="round">
+            <path d="M32 26h44v12l-6 8H38l-6-8z" fill="#eef1f4"/>
+            <rect x="36" y="46" width="36" height="24" rx="6" fill="#20c997"/>
+            <path d="M50 70h8v22h-8z" fill="#20c997"/>
+          </g>
+          <path d="M38 30h32v5l-3 4H41l-3-4z" fill="#0d3b37"/>
+        </svg>
+        <figcaption>Другое HDMI</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ===================== C. Line ===================== -->
+  <section>
+    <div class="head"><span class="num">C</span><h2>Line</h2><p>Фирменный цвет устройства и тонкий белый контур. Строго и аккуратно, ближе всего к иконкам приложений.</p></div>
+    <div class="set">
+      <figure>
+        <svg viewBox="0 0 108 108" aria-label="PlayStation">
+          <defs><linearGradient id="c1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1e88e5"/><stop offset="1" stop-color="#0a2a7a"/></linearGradient></defs>
+          <rect width="108" height="108" fill="url(#c1)"/>
+          <g fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round">
+            <path d="M31 33C39 29.5 69 29.5 77 33C87 37 92.5 50 94.5 63C96.5 76 91 85 83.5 83.5C77.5 82.3 74 75 70 70.5L38 70.5C34 75 30.5 82.3 24.5 83.5C17 85 11.5 76 13.5 63C15.5 50 21 37 31 33Z"/>
+            <rect x="41" y="35" width="26" height="14" rx="3"/>
+            <circle cx="44" cy="59" r="4.6"/><circle cx="64" cy="59" r="4.6"/>
+          </g>
+          <path d="M38.5 37v9M69.5 37v9" stroke="#9fd2ff" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+        <figcaption>PlayStation (геймпад)</figcaption>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 108 108" aria-label="Xbox">
+          <defs><linearGradient id="c2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2fb344"/><stop offset="1" stop-color="#0b4f0b"/></linearGradient></defs>
+          <rect width="108" height="108" fill="url(#c2)"/>
+          <g fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round">
+            <rect x="37" y="20" width="34" height="68" rx="4"/>
+            <ellipse cx="54" cy="27" rx="11" ry="3.5"/>
+          </g>
+          <circle cx="43.5" cy="37" r="2.2" fill="#fff"/>
+        </svg>
+        <figcaption>Xbox</figcaption>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 108 108" aria-label="Nintendo Switch">
+          <defs><linearGradient id="c3" x1="0" y1="0" x2="1" y2="1"><stop offset=".499" stop-color="#00b2e3"/><stop offset=".501" stop-color="#ff4554"/></linearGradient></defs>
+          <rect width="108" height="108" fill="url(#c3)"/>
+          <g fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round">
+            <path d="M28 38h4v32h-4a8 8 0 0 1-8-8V46a8 8 0 0 1 8-8z"/>
+            <path d="M76 38h4a8 8 0 0 1 8 8v16a8 8 0 0 1-8 8h-4z"/>
+            <rect x="32" y="38" width="44" height="32" rx="2"/>
+          </g>
+          <circle cx="27" cy="48" r="2.6" fill="#fff"/><circle cx="81" cy="60" r="2.6" fill="#fff"/>
+        </svg>
+        <figcaption>Nintendo Switch</figcaption>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 108 108" aria-label="Apple TV">
+          <defs><linearGradient id="c4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#55585f"/><stop offset="1" stop-color="#16171a"/></linearGradient></defs>
+          <rect width="108" height="108" fill="url(#c4)"/>
+          <g fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round">
+            <rect x="22" y="44" width="52" height="22" rx="9"/>
+            <rect x="80" y="34" width="10" height="36" rx="5"/>
+          </g>
+          <circle cx="85" cy="43" r="2.2" fill="#fff"/>
+        </svg>
+        <figcaption>Apple TV</figcaption>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 108 108" aria-label="TV stick">
+          <defs><linearGradient id="c5" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9775fa"/><stop offset="1" stop-color="#3b1c8c"/></linearGradient></defs>
+          <rect width="108" height="108" fill="url(#c5)"/>
+          <g transform="rotate(-35 54 54)" fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round">
+            <rect x="47" y="21" width="14" height="11" rx="1.5"/>
+            <rect x="43" y="32" width="22" height="52" rx="9"/>
+          </g>
+        </svg>
+        <figcaption>ТВ-стик</figcaption>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 108 108" aria-label="HDMI">
+          <defs><linearGradient id="c6" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d4a54"/><stop offset="1" stop-color="#12181c"/></linearGradient></defs>
+          <rect width="108" height="108" fill="url(#c6)"/>
+          <g fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round">
+            <path d="M33 28h42v11l-6 8H39l-6-8z"/>
+            <rect x="37" y="47" width="34" height="22" rx="5"/>
+            <path d="M50 69v20M58 69v20"/>
+          </g>
+        </svg>
+        <figcaption>Другое HDMI</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="custom">
+    <h2>Как будет устроена настройка иконок</h2>
+    <ul>
+      <li><b>Любая плитка, не только HDMI.</b> Долгое нажатие OK → «Сменить иконку». Там сетка: оригинальная иконка приложения, весь встроенный набор и твои картинки.</li>
+      <li><b>Свои картинки с телефона.</b> На том же сайте, куда грузятся фото, будет раздел «Иконки»: загружаешь PNG или фото, телефон обрезает его в квадрат, и оно появляется в сетке на телевизоре.</li>
+      <li><b>Цвет подсветки.</b> У иконок в стиле Glow цвет свечения меняется, как световая полоса у геймпада PS5: синий, красный, фиолетовый, белый:</li>
+    </ul>
+    <div class="colorways" aria-label="PlayStation icon with the light in four colors">
+      <svg viewBox="0 0 108 108">
+          <defs>
+            <radialGradient id="w1bg" cx="50%" cy="45%" r="78%"><stop offset="0" stop-color="#22408f"/><stop offset=".6" stop-color="#0b1638"/><stop offset="1" stop-color="#03050c"/></radialGradient>
+            <radialGradient id="w1glow"><stop offset="0" stop-color="#5aaeff" stop-opacity=".9"/><stop offset="1" stop-color="#5aaeff" stop-opacity="0"/></radialGradient>
+            <linearGradient id="w1shell" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#c3ccda"/></linearGradient>
+          </defs>
+          <rect width="108" height="108" fill="url(#w1bg)"/>
+          <ellipse cx="54" cy="44" rx="30" ry="18" fill="url(#w1glow)"/>
+          <ellipse cx="54" cy="90" rx="34" ry="3.5" fill="#000" opacity=".55"/>
+          <path d="M31 33C39 29.5 69 29.5 77 33C87 37 92.5 50 94.5 63C96.5 76 91 85 83.5 83.5C77.5 82.3 74 75 70 70.5L38 70.5C34 75 30.5 82.3 24.5 83.5C17 85 11.5 76 13.5 63C15.5 50 21 37 31 33Z" fill="url(#w1shell)"/>
+          <path d="M35 40C40 38 68 38 73 40L72 64C66 66.5 42 66.5 36 64Z" fill="#14161c"/>
+          <rect x="41" y="35" width="26" height="14" rx="3" fill="#23262e"/>
+          <path d="M40 36.5v11M68 36.5v11" stroke="#5aaeff" stroke-width="1.6" stroke-linecap="round"/>
+          <circle cx="44" cy="59" r="5.4" fill="#0b0c10" stroke="#3a3f4a" stroke-width="1.4"/>
+          <circle cx="64" cy="59" r="5.4" fill="#0b0c10" stroke="#3a3f4a" stroke-width="1.4"/>
+          <g fill="#5d6675"><rect x="25" y="44.5" width="3" height="9" rx="1"/><rect x="22" y="47.5" width="9" height="3" rx="1"/></g>
+          <g fill="#5d6675"><circle cx="83" cy="44.5" r="1.9"/><circle cx="79" cy="49" r="1.9"/><circle cx="87" cy="49" r="1.9"/><circle cx="83" cy="53.5" r="1.9"/></g>
+          <path d="M33 34.5C40 31.8 50 31 54 31" stroke="#fff" stroke-width="1.4" opacity=".8" fill="none" stroke-linecap="round"/>
+        </svg>
+      <svg viewBox="0 0 108 108">
+          <defs>
+            <radialGradient id="w2bg" cx="50%" cy="45%" r="78%"><stop offset="0" stop-color="#7a1f2b"/><stop offset=".6" stop-color="#2a0b10"/><stop offset="1" stop-color="#03050c"/></radialGradient>
+            <radialGradient id="w2glow"><stop offset="0" stop-color="#ff6b6b" stop-opacity=".9"/><stop offset="1" stop-color="#ff6b6b" stop-opacity="0"/></radialGradient>
+            <linearGradient id="w2shell" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#c3ccda"/></linearGradient>
+          </defs>
+          <rect width="108" height="108" fill="url(#w2bg)"/>
+          <ellipse cx="54" cy="44" rx="30" ry="18" fill="url(#w2glow)"/>
+          <ellipse cx="54" cy="90" rx="34" ry="3.5" fill="#000" opacity=".55"/>
+          <path d="M31 33C39 29.5 69 29.5 77 33C87 37 92.5 50 94.5 63C96.5 76 91 85 83.5 83.5C77.5 82.3 74 75 70 70.5L38 70.5C34 75 30.5 82.3 24.5 83.5C17 85 11.5 76 13.5 63C15.5 50 21 37 31 33Z" fill="url(#w2shell)"/>
+          <path d="M35 40C40 38 68 38 73 40L72 64C66 66.5 42 66.5 36 64Z" fill="#14161c"/>
+          <rect x="41" y="35" width="26" height="14" rx="3" fill="#23262e"/>
+          <path d="M40 36.5v11M68 36.5v11" stroke="#ff6b6b" stroke-width="1.6" stroke-linecap="round"/>
+          <circle cx="44" cy="59" r="5.4" fill="#0b0c10" stroke="#3a3f4a" stroke-width="1.4"/>
+          <circle cx="64" cy="59" r="5.4" fill="#0b0c10" stroke="#3a3f4a" stroke-width="1.4"/>
+          <g fill="#5d6675"><rect x="25" y="44.5" width="3" height="9" rx="1"/><rect x="22" y="47.5" width="9" height="3" rx="1"/></g>
+          <g fill="#5d6675"><circle cx="83" cy="44.5" r="1.9"/><circle cx="79" cy="49" r="1.9"/><circle cx="87" cy="49" r="1.9"/><circle cx="83" cy="53.5" r="1.9"/></g>
+          <path d="M33 34.5C40 31.8 50 31 54 31" stroke="#fff" stroke-width="1.4" opacity=".8" fill="none" stroke-linecap="round"/>
+        </svg>
+      <svg viewBox="0 0 108 108">
+          <defs>
+            <radialGradient id="w3bg" cx="50%" cy="45%" r="78%"><stop offset="0" stop-color="#55207a"/><stop offset=".6" stop-color="#1d0b2a"/><stop offset="1" stop-color="#03050c"/></radialGradient>
+            <radialGradient id="w3glow"><stop offset="0" stop-color="#cc5de8" stop-opacity=".9"/><stop offset="1" stop-color="#cc5de8" stop-opacity="0"/></radialGradient>
+            <linearGradient id="w3shell" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#c3ccda"/></linearGradient>
+          </defs>
+          <rect width="108" height="108" fill="url(#w3bg)"/>
+          <ellipse cx="54" cy="44" rx="30" ry="18" fill="url(#w3glow)"/>
+          <ellipse cx="54" cy="90" rx="34" ry="3.5" fill="#000" opacity=".55"/>
+          <path d="M31 33C39 29.5 69 29.5 77 33C87 37 92.5 50 94.5 63C96.5 76 91 85 83.5 83.5C77.5 82.3 74 75 70 70.5L38 70.5C34 75 30.5 82.3 24.5 83.5C17 85 11.5 76 13.5 63C15.5 50 21 37 31 33Z" fill="url(#w3shell)"/>
+          <path d="M35 40C40 38 68 38 73 40L72 64C66 66.5 42 66.5 36 64Z" fill="#14161c"/>
+          <rect x="41" y="35" width="26" height="14" rx="3" fill="#23262e"/>
+          <path d="M40 36.5v11M68 36.5v11" stroke="#cc5de8" stroke-width="1.6" stroke-linecap="round"/>
+          <circle cx="44" cy="59" r="5.4" fill="#0b0c10" stroke="#3a3f4a" stroke-width="1.4"/>
+          <circle cx="64" cy="59" r="5.4" fill="#0b0c10" stroke="#3a3f4a" stroke-width="1.4"/>
+          <g fill="#5d6675"><rect x="25" y="44.5" width="3" height="9" rx="1"/><rect x="22" y="47.5" width="9" height="3" rx="1"/></g>
+          <g fill="#5d6675"><circle cx="83" cy="44.5" r="1.9"/><circle cx="79" cy="49" r="1.9"/><circle cx="87" cy="49" r="1.9"/><circle cx="83" cy="53.5" r="1.9"/></g>
+          <path d="M33 34.5C40 31.8 50 31 54 31" stroke="#fff" stroke-width="1.4" opacity=".8" fill="none" stroke-linecap="round"/>
+        </svg>
+      <svg viewBox="0 0 108 108">
+          <defs>
+            <radialGradient id="w4bg" cx="50%" cy="45%" r="78%"><stop offset="0" stop-color="#40444d"/><stop offset=".6" stop-color="#15171c"/><stop offset="1" stop-color="#03050c"/></radialGradient>
+            <radialGradient id="w4glow"><stop offset="0" stop-color="#ffffff" stop-opacity=".9"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+            <linearGradient id="w4shell" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#c3ccda"/></linearGradient>
+          </defs>
+          <rect width="108" height="108" fill="url(#w4bg)"/>
+          <ellipse cx="54" cy="44" rx="30" ry="18" fill="url(#w4glow)"/>
+          <ellipse cx="54" cy="90" rx="34" ry="3.5" fill="#000" opacity=".55"/>
+          <path d="M31 33C39 29.5 69 29.5 77 33C87 37 92.5 50 94.5 63C96.5 76 91 85 83.5 83.5C77.5 82.3 74 75 70 70.5L38 70.5C34 75 30.5 82.3 24.5 83.5C17 85 11.5 76 13.5 63C15.5 50 21 37 31 33Z" fill="url(#w4shell)"/>
+          <path d="M35 40C40 38 68 38 73 40L72 64C66 66.5 42 66.5 36 64Z" fill="#14161c"/>
+          <rect x="41" y="35" width="26" height="14" rx="3" fill="#23262e"/>
+          <path d="M40 36.5v11M68 36.5v11" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round"/>
+          <circle cx="44" cy="59" r="5.4" fill="#0b0c10" stroke="#3a3f4a" stroke-width="1.4"/>
+          <circle cx="64" cy="59" r="5.4" fill="#0b0c10" stroke="#3a3f4a" stroke-width="1.4"/>
+          <g fill="#5d6675"><rect x="25" y="44.5" width="3" height="9" rx="1"/><rect x="22" y="47.5" width="9" height="3" rx="1"/></g>
+          <g fill="#5d6675"><circle cx="83" cy="44.5" r="1.9"/><circle cx="79" cy="49" r="1.9"/><circle cx="87" cy="49" r="1.9"/><circle cx="83" cy="53.5" r="1.9"/></g>
+          <path d="M33 34.5C40 31.8 50 31 54 31" stroke="#fff" stroke-width="1.4" opacity=".8" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+  </section>
+</div>
+<script>
+  // The dock demo reuses the Glow PlayStation icon drawn above.
+  (function () {
+    var source = document.querySelector('svg[aria-label="PlayStation"]');
+    var target = document.querySelector('.dock-demo svg.focus');
+    if (source && target) target.innerHTML = source.innerHTML;
+  }());
+</script>
+</body>
+</html>
