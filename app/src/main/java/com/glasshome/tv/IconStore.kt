@@ -92,7 +92,20 @@ class IconStore(private val context: Context) {
 
     /** Saves an uploaded image as a square PNG icon. False when it isn't a readable image. */
     fun addUser(source: File): Boolean {
-        val decoded = BitmapFactory.decodeFile(source.path) ?: return false
+        // Sizes first: a small file can claim a huge picture (a decode bomb).
+        val bounds = BitmapFactory.Options()
+        bounds.inJustDecodeBounds = true
+        BitmapFactory.decodeFile(source.path, bounds)
+        if (!ImageLimits.isAcceptable(bounds.outWidth, bounds.outHeight)) {
+            return false
+        }
+        val options = BitmapFactory.Options()
+        options.inSampleSize = ImageLimits.sampleSize(bounds.outWidth, bounds.outHeight, ICON_SIZE)
+        val decoded = try {
+            BitmapFactory.decodeFile(source.path, options)
+        } catch (error: OutOfMemoryError) {
+            null
+        } ?: return false
         val side = minOf(decoded.width, decoded.height)
         val left = (decoded.width - side) / 2
         val top = (decoded.height - side) / 2

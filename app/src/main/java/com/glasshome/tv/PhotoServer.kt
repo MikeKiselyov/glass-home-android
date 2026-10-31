@@ -9,16 +9,16 @@ import org.json.JSONObject
 import java.io.File
 import java.io.FileInputStream
 import java.net.Inet4Address
-import java.net.InetAddress
 import java.net.NetworkInterface
 import java.security.SecureRandom
 
 /**
  * The small website phones use to add photos: http://<tv>:8090.
  *
- * Only answers home-network addresses. A 6-digit code shown on the TV signs a
- * phone in (cookie, 30 days); 5 wrong codes lock that address out for 5 minutes.
- * POSTs need the X-Glass-Home header, which other sites can't send (CSRF).
+ * Only answers home-network addresses, and only under the TV's own name or IP
+ * (no DNS rebinding). A 6-digit code shown on the TV signs a phone in; the
+ * limits on guessing it live in [SignInGuard]. POSTs need the X-Glass-Home
+ * header, which other sites can't send (CSRF).
  */
 class PhotoServer(
     private val context: Context,
@@ -40,11 +40,10 @@ class PhotoServer(
     var onPhotoModeChanged: (() -> Unit)? = null
 
     private val prefs: SharedPreferences = context.getSharedPreferences("server", Context.MODE_PRIVATE)
-    private val random = SecureRandom()
-    private val failuresByAddress = HashMap<String, Int>()
-    private val lockedUntilByAddress = HashMap<String, Long>()
+    val signInGuard = SignInGuard(PrefsSignInStorage(prefs), SecureRandom()) { System.currentTimeMillis() }
 
-    val code: String = loadOrCreateCode()
+    val code: String
+        get() = signInGuard.code
 
     /** "http://glasshome.local:8090": answered by LocalName over mDNS. */
     fun friendlyAddress(): String {
@@ -75,7 +74,10 @@ class PhotoServer(
 
     override fun serve(session: IHTTPSession): Response {
         val remote = session.remoteIpAddress ?: ""
-        if (!isHomeNetwork(remote)) {
+        if (!RequestChecks.isHomeNetwork(remote)) {
+            return text(Response.Status.FORBIDDEN, I18n.t("server.home_only"))
+        }
+        if (!RequestChecks.isAllowedHost(session.headers["host"])) {
             return text(Response.Status.FORBIDDEN, I18n.t("server.home_only"))
         }
         val path = session.uri ?: "/"
@@ -168,35 +170,17 @@ class PhotoServer(
     }
 
     private fun login(session: IHTTPSession, remote: String): Response {
-        val now = System.currentTimeMillis()
-        val lockedUntil = synchronized(this) { lockedUntilByAddress[remote] ?: 0L }
-        if (now < lockedUntil) {
-            val minutes = (lockedUntil - now) / 60_000 + 1
-            return json(Response.Status.FORBIDDEN, JSONObject().put("error", "locked").put("minutes", minutes))
-        }
-
         session.parseBody(HashMap())
-        val entered = session.parameters["code"]?.firstOrNull()?.trim() ?: ""
-        if (entered != code) {
-            synchronized(this) {
-                val failures = (failuresByAddress[remote] ?: 0) + 1
-                failuresByAddress[remote] = failures
-                if (failures >= MAX_FAILURES) {
-                    failuresByAddress.remove(remote)
-                    lockedUntilByAddress[remote] = now + LOCKOUT_MS
-                }
-            }
+        val entered = session.parameters["code"]?.firstOrNull() ?: ""
+        val result = signInGuard.signIn(remote, entered)
+        if (result is SignInResult.Locked) {
+            return json(Response.Status.FORBIDDEN, JSONObject().put("error", "locked").put("minutes", result.minutes))
+        }
+        if (result !is SignInResult.SignedIn) {
             return json(Response.Status.UNAUTHORIZED, JSONObject().put("error", "wrong-code"))
         }
-
-        synchronized(this) { failuresByAddress.remove(remote) }
-        val token = newToken()
-        val tokens = HashSet(prefs.getStringSet("tokens", emptySet()) ?: emptySet())
-        tokens.add(token)
-        prefs.edit().putStringSet("tokens", tokens).apply()
-
         val response = json(Response.Status.OK, JSONObject().put("ok", true))
-        response.addHeader("Set-Cookie", "gh=$token; Max-Age=$SESSION_SECONDS; Path=/; HttpOnly; SameSite=Strict")
+        response.addHeader("Set-Cookie", "gh=${result.token}; Max-Age=${SignInGuard.SESSION_SECONDS}; Path=/; HttpOnly; SameSite=Strict")
         return response
     }
 
@@ -449,7 +433,11 @@ class PhotoServer(
             settings.shufflePhotos = shuffle == "1"
         }
 
-        val albumLink = parameters["albumLink"]?.firstOrNull()?.trim()
+        val pastedLink = parameters["albumLink"]?.firstOrNull()
+        var albumLink: String? = null
+        if (pastedLink != null) {
+            albumLink = AlbumLinks.extractLink(pastedLink)
+        }
         if (albumLink != null) {
             val acceptable = albumLink.isEmpty() || (albumLink.startsWith("https://") && albumLink.length < 500)
             if (!acceptable) {
@@ -555,46 +543,15 @@ class PhotoServer(
 
     // ---------- checks ----------
 
-    private fun isHomeNetwork(remote: String): Boolean {
-        return try {
-            val address = InetAddress.getByName(remote)
-            address.isSiteLocalAddress || address.isLoopbackAddress || address.isLinkLocalAddress
-        } catch (error: Exception) {
-            false
-        }
-    }
-
     private fun hasCsrfHeader(session: IHTTPSession): Boolean {
         return session.headers["x-glass-home"] == "1"
     }
 
     private fun isSignedIn(session: IHTTPSession): Boolean {
-        val token = session.cookies.read("gh") ?: return false
-        val tokens = prefs.getStringSet("tokens", emptySet()) ?: emptySet()
-        return tokens.contains(token)
+        return signInGuard.isSignedIn(session.cookies.read("gh"))
     }
 
     // ---------- helpers ----------
-
-    private fun loadOrCreateCode(): String {
-        val saved = prefs.getString("code", null)
-        if (saved != null) {
-            return saved
-        }
-        val newCode = String.format("%06d", random.nextInt(1_000_000))
-        prefs.edit().putString("code", newCode).apply()
-        return newCode
-    }
-
-    private fun newToken(): String {
-        val bytes = ByteArray(24)
-        random.nextBytes(bytes)
-        val builder = StringBuilder()
-        for (byte in bytes) {
-            builder.append(String.format("%02x", byte))
-        }
-        return builder.toString()
-    }
 
     private fun json(status: Response.Status, body: JSONObject): Response {
         return newFixedLengthResponse(status, "application/json", body.toString())
@@ -607,12 +564,28 @@ class PhotoServer(
     companion object {
         const val PORT = 8090
         private const val TAG = "GlassHome"
-        private const val MAX_FAILURES = 5
-        private const val LOCKOUT_MS = 5 * 60_000L
-        private const val SESSION_SECONDS = 30 * 24 * 3600
         private const val MAX_UPLOAD_BYTES = 60L * 1024 * 1024
         private const val MAX_PHOTOS = 300
         private const val MAX_ICONS = 100
         private val ALLOWED_INTERVALS = setOf(15, 30, 45, 60, 120, 300, 600)
+    }
+}
+
+/** The code and sessions in the server's SharedPreferences. */
+private class PrefsSignInStorage(private val prefs: SharedPreferences) : SignInStorage {
+    override fun loadCode(): String? {
+        return prefs.getString("code", null)
+    }
+
+    override fun saveCode(code: String) {
+        prefs.edit().putString("code", code).apply()
+    }
+
+    override fun loadTokens(): Set<String> {
+        return prefs.getStringSet("tokens", emptySet()) ?: emptySet()
+    }
+
+    override fun saveTokens(tokens: Set<String>) {
+        prefs.edit().putStringSet("tokens", HashSet(tokens)).apply()
     }
 }

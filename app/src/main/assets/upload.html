@@ -121,6 +121,17 @@
   .choice input { position: absolute; opacity: 0; pointer-events: none; }
   .choice.checked { border-color: var(--paper); box-shadow: inset 0 0 0 1px var(--paper); }
   .choice.focused { outline: 3px solid var(--ring); outline-offset: 2px; }
+
+  /* TV mode: the page on the TV itself, worked with the remote (SettingsActivity). */
+  .tv-only { display: none; }
+  body.tv .tv-only { display: block; }
+  body.tv .file-button, body.tv .photo-grid li .handle, body.tv .upload-row { display: none; }
+  body.tv { font-size: 18px; }
+  body.tv :focus { outline: 4px solid var(--ring); outline-offset: 3px; }
+  body.tv .choice.focused { outline-width: 4px; outline-offset: 3px; }
+  body.tv .choice input:focus { outline: none; }
+  body.tv .remove.armed { background: var(--danger); color: var(--paper-ink); }
+  body.tv .photo-grid li .remove.armed { width: auto; padding: 0 10px; }
   .choice .name { font-weight: 600; display: block; }
   .choice .note { color: var(--muted); font-size: 13px; display: block; margin-top: 2px; }
 
@@ -213,6 +224,7 @@
         <label class="button file-button"><span data-i18n="web.photos.add"></span><input id="files" type="file" accept="image/*" multiple></label>
         <span id="upload-status" class="status" role="status"></span>
       </div>
+      <p class="status tv-only" data-i18n="web.tv.photos_from_phone"></p>
       <div class="progress" id="upload-progress" hidden><span></span></div>
       <label class="toggle"><input type="checkbox" id="shuffle"> <span data-i18n="web.photos.shuffle"></span></label>
       <ul id="photo-grid" class="photo-grid" data-i18n-aria-label="web.photos.grid_label"></ul>
@@ -290,6 +302,7 @@
       <h2 data-i18n="web.icons.title"></h2>
       <p class="lead" data-i18n="web.icons.lead"></p>
       <label class="button file-button"><span data-i18n="web.icons.add"></span><input id="icon-files" type="file" accept="image/*" multiple></label>
+      <p class="status tv-only" data-i18n="web.tv.icons_from_phone"></p>
       <p id="icon-status" class="status" role="status"></p>
       <ul id="icon-grid" class="icon-grid"></ul>
     </section>
@@ -471,6 +484,7 @@
     photos.forEach(function (photo, index) {
       var item = document.createElement('li');
       item.dataset.name = photo.name;
+      item.dataset.key = photo.name;
 
       var image = document.createElement('img');
       image.src = '/api/thumb/' + encodeURIComponent(photo.name);
@@ -829,6 +843,7 @@
     var items = data.items || [];
     items.forEach(function (item, index) {
       var row = document.createElement('li');
+      row.dataset.key = item.key;
       if (item.hidden) row.className = 'hidden';
       var name = document.createElement('span');
       name.textContent = item.label;
@@ -924,12 +939,13 @@
     grid.textContent = '';
     (data.icons || []).slice().reverse().forEach(function (icon) {
       var item = document.createElement('li');
+      item.dataset.key = icon.name;
       var image = document.createElement('img');
       image.src = '/api/icon/' + encodeURIComponent(icon.name);
       image.alt = '';
       var remove = document.createElement('button');
       remove.type = 'button';
-      remove.className = 'quiet';
+      remove.className = 'quiet remove';
       remove.textContent = t('web.icons.delete');
       remove.addEventListener('click', function () {
         api('/api/icon-delete', form({ name: icon.name })).then(loadIcons);
@@ -1003,11 +1019,342 @@
       return Promise.all([loadSettings(), loadDock(), loadWeather(), loadIcons()]);
     }).then(function () {
       applyStaticText();
+      if (IS_TV) {
+        showTvStart();
+      }
     }).catch(function (error) {
       if (error && error.message === 'signin') return;
       showSignIn();
       $('signin-status').textContent = t('web.offline');
     });
+  }
+
+  // ---------- TV mode: the page on the TV itself, worked with the remote ----------
+  //
+  // Arrow keys move to the nearest control in that direction, OK (Enter) picks
+  // cards and flips switches, delete buttons want a second OK, and after the
+  // page redraws a list the focus goes back to the same place.
+
+  var IS_TV = navigator.userAgent.indexOf('GlassHomeTV') >= 0;
+
+  function isShown(element) {
+    if (element.disabled) {
+      return false;
+    }
+    var box = boxOf(element);
+    return box.width > 0 && box.height > 0;
+  }
+
+  // Radio buttons in theme cards are invisible: the card is what you see.
+  function boxOf(element) {
+    var shown = element;
+    if (element.type === 'radio' || element.type === 'checkbox') {
+      var label = element.closest('label');
+      if (label) {
+        shown = label;
+      }
+    }
+    return shown.getBoundingClientRect();
+  }
+
+  function controls() {
+    var all = document.querySelectorAll('a[href], button, input, select, textarea');
+    var result = [];
+    for (var index = 0; index < all.length; index++) {
+      if (isShown(all[index])) {
+        result.push(all[index]);
+      }
+    }
+    return result;
+  }
+
+  function inSectionNav(element) {
+    return element.closest('nav.sections') !== null;
+  }
+
+  // How far a candidate is along the arrow, and how far off to the side.
+  function distances(start, box, direction) {
+    var startX = start.left + start.width / 2;
+    var startY = start.top + start.height / 2;
+    var x = box.left + box.width / 2;
+    var y = box.top + box.height / 2;
+    if (direction === 'ArrowRight') {
+      return { along: box.left - start.right, sideways: Math.abs(y - startY) };
+    }
+    if (direction === 'ArrowLeft') {
+      return { along: start.left - box.right, sideways: Math.abs(y - startY) };
+    }
+    if (direction === 'ArrowDown') {
+      return { along: box.top - start.bottom, sideways: Math.abs(x - startX) };
+    }
+    return { along: start.top - box.bottom, sideways: Math.abs(x - startX) };
+  }
+
+  // The next control is the one most in line with the arrow: distance along it
+  // counts once, sideways distance twice. The section links at the top stay
+  // on screen while scrolling; they are only reached when nothing else is
+  // that way (or when the focus is already on them).
+  function nextControl(from, direction) {
+    var start = boxOf(from);
+    var fromNav = inSectionNav(from);
+    var best = null;
+    var bestScore = Infinity;
+    var bestInNav = null;
+    var bestInNavScore = Infinity;
+    var candidates = controls();
+    for (var index = 0; index < candidates.length; index++) {
+      var candidate = candidates[index];
+      if (candidate === from) {
+        continue;
+      }
+      var distance = distances(start, boxOf(candidate), direction);
+      if (distance.along < -1) {
+        continue;
+      }
+      var score = Math.max(distance.along, 0) + distance.sideways * 2;
+      if (inSectionNav(candidate) && !fromNav) {
+        if (score < bestInNavScore) {
+          bestInNavScore = score;
+          bestInNav = candidate;
+        }
+        continue;
+      }
+      if (score < bestScore) {
+        bestScore = score;
+        best = candidate;
+      }
+    }
+    if (best) {
+      return best;
+    }
+    return bestInNav;
+  }
+
+  // After the focus was lost, arrows start from what is on screen, not the section links.
+  function controlOnScreen() {
+    var all = controls();
+    for (var index = 0; index < all.length; index++) {
+      var box = boxOf(all[index]);
+      if (!inSectionNav(all[index]) && box.top >= 0 && box.bottom <= window.innerHeight) {
+        return all[index];
+      }
+    }
+    return all[0];
+  }
+
+  // ---------- keeping the focus when a list is drawn again ----------
+
+  // Where the focus was: a card or switch by its name and value, or a button
+  // by its list, its row's key (the app, photo or icon) and its place in the
+  // row. Moving an app redraws the list: the focus follows the app.
+  var tvFocus = null;
+
+  function rememberFocus(element) {
+    if (element.name) {
+      tvFocus = { name: element.name, value: element.value };
+      return;
+    }
+    var row = element.closest('li');
+    var list = row ? row.parentElement : null;
+    if (!row || !list || !list.id) {
+      tvFocus = null;
+      return;
+    }
+    var rows = Array.prototype.slice.call(list.children);
+    var buttons = Array.prototype.slice.call(row.querySelectorAll('button'));
+    tvFocus = { list: list.id, key: row.dataset.key, row: rows.indexOf(row), button: buttons.indexOf(element) };
+  }
+
+  function findRemembered() {
+    if (tvFocus.name) {
+      var inputs = document.querySelectorAll('input[name]');
+      for (var index = 0; index < inputs.length; index++) {
+        if (inputs[index].name === tvFocus.name && inputs[index].value === tvFocus.value) {
+          return inputs[index];
+        }
+      }
+      return null;
+    }
+    var list = document.getElementById(tvFocus.list);
+    if (!list || list.children.length === 0) {
+      return null;
+    }
+    var row = null;
+    for (var rowIndex = 0; rowIndex < list.children.length; rowIndex++) {
+      if (tvFocus.key && list.children[rowIndex].dataset.key === tvFocus.key) {
+        row = list.children[rowIndex];
+      }
+    }
+    // The row is gone (a deleted photo): take the one that moved into its place.
+    if (!row) {
+      row = list.children[Math.min(tvFocus.row, list.children.length - 1)];
+    }
+    // The same button in that row, or the nearest one that can be pressed
+    // ("earlier" is switched off once an app is first).
+    var buttons = row.querySelectorAll('button');
+    for (var distance = 0; distance < buttons.length; distance++) {
+      var after = buttons[tvFocus.button + distance];
+      if (after && isShown(after)) {
+        return after;
+      }
+      var before = buttons[tvFocus.button - distance];
+      if (before && isShown(before)) {
+        return before;
+      }
+    }
+    return null;
+  }
+
+  function restoreFocus() {
+    var active = document.activeElement;
+    var focusLost = !active || active === document.body || !document.body.contains(active);
+    if (!tvFocus || !focusLost) {
+      return;
+    }
+    var element = findRemembered();
+    if (element) {
+      moveFocus(element);
+    }
+  }
+
+  function afterRedraw() {
+    setTimeout(restoreFocus, 300);
+    setTimeout(restoreFocus, 1000);
+  }
+
+  // ---------- delete buttons ask for a second OK ----------
+
+  function isArmed(button) {
+    return button.dataset.armed === '1';
+  }
+
+  function arm(button) {
+    button.dataset.armed = '1';
+    button.dataset.label = button.textContent;
+    button.textContent = t('web.tv.confirm_delete');
+    button.classList.add('armed');
+    button.addEventListener('blur', function disarm() {
+      button.dataset.armed = '';
+      button.textContent = button.dataset.label;
+      button.classList.remove('armed');
+      button.removeEventListener('blur', disarm);
+    });
+  }
+
+  function moveFocus(element) {
+    element.focus({ preventScroll: true });
+    var target = element;
+    if (element.type === 'radio' || element.type === 'checkbox') {
+      target = element.closest('label') || element;
+    }
+    target.scrollIntoView({ block: 'center', behavior: 'auto' });
+  }
+
+  function isTextField(element) {
+    if (element.tagName === 'TEXTAREA') {
+      return true;
+    }
+    if (element.tagName !== 'INPUT') {
+      return false;
+    }
+    return ['text', 'url', 'search', 'number'].indexOf(element.type) >= 0;
+  }
+
+  // In a text field, left and right move the cursor until it reaches an end.
+  function arrowStaysInField(element, key) {
+    if (!isTextField(element)) {
+      return false;
+    }
+    if (key === 'ArrowLeft' && element.selectionStart > 0) {
+      return true;
+    }
+    if (key === 'ArrowRight' && element.selectionEnd < element.value.length) {
+      return true;
+    }
+    return false;
+  }
+
+  function onArrow(event, active) {
+    if (!active || active === document.body) {
+      var start = controlOnScreen();
+      if (start) {
+        moveFocus(start);
+      }
+      event.preventDefault();
+      return;
+    }
+    if (arrowStaysInField(active, event.key)) {
+      return;
+    }
+    var next = nextControl(active, event.key);
+    if (next) {
+      moveFocus(next);
+    }
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  function onOk(event, active) {
+    // Holding OK repeats the key: only a fresh press counts.
+    if (event.repeat) {
+      event.preventDefault();
+      return;
+    }
+    if (active.type === 'radio' || active.type === 'checkbox') {
+      rememberFocus(active);
+      active.click();
+      event.preventDefault();
+      afterRedraw();
+      return;
+    }
+    if (active.classList.contains('remove') && !isArmed(active)) {
+      arm(active);
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+    if (active.tagName === 'BUTTON') {
+      // The button's own click handler runs; the list it changes is drawn again.
+      rememberFocus(active);
+      afterRedraw();
+    }
+  }
+
+  function onTvKey(event) {
+    var active = document.activeElement;
+    var arrows = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+    if (arrows.indexOf(event.key) >= 0) {
+      onArrow(event, active);
+      return;
+    }
+    if (event.key === 'Enter' && active && active !== document.body) {
+      onOk(event, active);
+    }
+  }
+
+  // The page is built after it loads, so the address's #section can only be
+  // shown now; the focus goes to the first control there for the remote.
+  function showTvStart() {
+    var section = null;
+    if (location.hash) {
+      section = document.getElementById(location.hash.slice(1));
+    }
+    if (!section) {
+      return;
+    }
+    section.scrollIntoView({ block: 'start', behavior: 'auto' });
+    var all = controls();
+    for (var index = 0; index < all.length; index++) {
+      if (section.contains(all[index])) {
+        all[index].focus({ preventScroll: true });
+        return;
+      }
+    }
+  }
+
+  if (IS_TV) {
+    document.body.classList.add('tv');
+    document.addEventListener('keydown', onTvKey, true);
   }
 
   function start() {

@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Two slides that take turns (see Backdrop): a blurred backdrop and the photo. -->
+<!-- Decoration only: hidden from accessibility. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/photos"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:importantForAccessibility="noHideDescendants">
 
-    <FrameLayout
+    <com.glasshome.tv.ZoomFrame
         android:id="@+id/slide_a"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -23,9 +25,9 @@
             android:layout_height="match_parent"
             android:importantForAccessibility="no"
             android:scaleType="matrix" />
-    </FrameLayout>
+    </com.glasshome.tv.ZoomFrame>
 
-    <FrameLayout
+    <com.glasshome.tv.ZoomFrame
         android:id="@+id/slide_b"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -43,5 +45,5 @@
             android:layout_height="match_parent"
             android:importantForAccessibility="no"
             android:scaleType="matrix" />
-    </FrameLayout>
+    </com.glasshome.tv.ZoomFrame>
 </FrameLayout>

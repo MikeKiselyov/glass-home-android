@@ -16,9 +16,9 @@ class HomeSettings(context: Context) {
         get() = prefs.getInt("photo_interval", 45)
         set(value) = prefs.edit().putInt("photo_interval", value).apply()
 
-    /** "auto" (the TV's setting), "12" or "24". */
+    /** "auto" (the TV's setting), "12" or "24"; 24 hours unless changed. */
     var clockFormat: String
-        get() = prefs.getString("clock_format", "auto") ?: "auto"
+        get() = prefs.getString("clock_format", DEFAULT_CLOCK_FORMAT) ?: DEFAULT_CLOCK_FORMAT
         set(value) = prefs.edit().putString("clock_format", value).apply()
 
     var nightEnabled: Boolean
@@ -60,19 +60,19 @@ class HomeSettings(context: Context) {
         get() {
             val saved = prefs.getString("weather_style", null)
             if (saved != null) {
-                return valid(saved, WEATHER_STYLES, "week")
+                return valid(saved, WEATHER_STYLES, DEFAULT_WEATHER_STYLE)
             }
             // Settings from before weather styles: "corner" or "date".
             if (prefs.getString("weather_position", null) == "corner") {
                 return "corner"
             }
-            return "week"
+            return DEFAULT_WEATHER_STYLE
         }
         set(value) = prefs.edit().putString("weather_style", value).apply()
 
-    /** How the date is written: one of [DATE_FORMATS]. */
+    /** How the date is written: one of [DATE_FORMATS]; digits (31.10.2026) unless changed. */
     var dateFormat: String
-        get() = valid(prefs.getString("date_format", "words"), DATE_FORMATS, "words")
+        get() = valid(prefs.getString("date_format", DEFAULT_DATE_FORMAT), DATE_FORMATS, DEFAULT_DATE_FORMAT)
         set(value) = prefs.edit().putString("date_format", value).apply()
 
     /** Interface language: a file in assets/i18n (only "en" so far). */
@@ -127,5 +127,8 @@ class HomeSettings(context: Context) {
         val FONTS = listOf("instrument", "dmserif", "bebas", "spacemono", "modern")
         val WEATHER_STYLES = listOf("week", "line", "compact", "minimal", "corner", "forecast")
         val DATE_FORMATS = listOf("words", "long", "short", "dmy", "mdy", "iso")
+        const val DEFAULT_CLOCK_FORMAT = "24"
+        const val DEFAULT_DATE_FORMAT = "dmy"
+        const val DEFAULT_WEATHER_STYLE = "week"
     }
 }

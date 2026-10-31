@@ -3,21 +3,20 @@ package com.glasshome.tv
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
-import android.animation.PropertyValuesHolder
 import android.graphics.Bitmap
 import android.graphics.RenderEffect
 import android.graphics.Shader
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.view.View
-import android.view.animation.LinearInterpolator
 import android.widget.FrameLayout
 import android.widget.ImageView
 import java.util.concurrent.Executors
 
 /** One full-screen photo: a blurred backdrop (for portrait photos) and the photo itself. */
-class Slide(val frame: FrameLayout, val blurred: ImageView, val photo: ImageView) {
+class Slide(val frame: ZoomFrame, val blurred: ImageView, val photo: ImageView) {
     var photoBitmap: Bitmap? = null
     var blurredBitmap: Bitmap? = null
 
@@ -54,7 +53,21 @@ class Backdrop(
     private var running = false
     private var generation = 0
     private var fadeAnimator: Animator? = null
-    private var zoomAnimator: Animator? = null
+    private var zoomFrame: ZoomFrame? = null
+    private var zoomStartedAt = 0L
+    private var zoomDurationMs = 0L
+
+    private val zoomStep = object : Runnable {
+        override fun run() {
+            val frame = zoomFrame ?: return
+            val elapsed = SystemClock.uptimeMillis() - zoomStartedAt
+            val scale = SlowZoom.scaleAt(elapsed, zoomDurationMs, ZOOM)
+            frame.zoom = scale
+            if (elapsed < zoomDurationMs) {
+                handler.postDelayed(this, SlowZoom.STEP_MS)
+            }
+        }
+    }
     private var knownKeys: Set<String> = emptySet()
 
     /** Postcard theme: a full-screen view that shows a blurred copy of each photo. */
@@ -185,8 +198,7 @@ class Backdrop(
         back.photo.setImageBitmap(bitmap)
 
         back.frame.alpha = 0f
-        back.frame.scaleX = 1f
-        back.frame.scaleY = 1f
+        back.frame.zoom = 1f
         back.frame.bringToFront()
 
         cancelAnimations()
@@ -203,17 +215,14 @@ class Backdrop(
             }
         })
 
-        // The slow zoom runs for the whole time the photo is on screen.
-        val scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 1f, ZOOM)
-        val scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 1f, ZOOM)
-        val zoom = ObjectAnimator.ofPropertyValuesHolder(back.frame, scaleX, scaleY)
-        zoom.duration = intervalMs() + FADE_MS
-        zoom.interpolator = LinearInterpolator()
-
         fadeAnimator = fade
-        zoomAnimator = zoom
         fade.start()
-        zoom.start()
+
+        // The slow zoom runs for the whole time the photo is on screen, in steps (see SlowZoom).
+        zoomFrame = back.frame
+        zoomStartedAt = SystemClock.uptimeMillis()
+        zoomDurationMs = intervalMs() + FADE_MS
+        handler.post(zoomStep)
 
         front = back
     }
@@ -252,9 +261,9 @@ class Backdrop(
 
     private fun cancelAnimations() {
         fadeAnimator?.cancel()
-        zoomAnimator?.cancel()
         fadeAnimator = null
-        zoomAnimator = null
+        handler.removeCallbacks(zoomStep)
+        zoomFrame = null
     }
 
     companion object {

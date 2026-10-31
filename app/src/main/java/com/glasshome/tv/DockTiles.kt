@@ -118,6 +118,9 @@ class DockTiles(
         name.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15f)
         name.setTextColor(context.resources.getColorStateList(R.color.menu_text, context.theme))
         name.paint.isFakeBoldText = true
+        // The row takes focus, not the name: share the row's state so the name
+        // turns dark on the row's white focus background.
+        name.isDuplicateParentStateEnabled = true
         val nameParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         nameParams.marginStart = dp(10)
         row.addView(name, nameParams)
@@ -178,6 +181,7 @@ class DockTiles(
         if (item.isOn) {
             val dotSize = if (sizeDp < 32) 7 else 10
             val dot = View(context)
+            dot.tag = POWER_DOT
             dot.setBackgroundResource(R.drawable.power_dot)
             val dotParams = FrameLayout.LayoutParams(dp(dotSize), dp(dotSize), Gravity.BOTTOM or Gravity.END)
             dotParams.setMargins(0, 0, dp(2), dp(2))
@@ -206,5 +210,8 @@ class DockTiles(
         private const val GLASS_ICON = 62
         private const val MENU_ICON = 26
         private const val UNFOCUSED_ALPHA = 0.78f
+
+        /** Tag of the green dot on HDMI devices that are on. */
+        const val POWER_DOT = "power-dot"
     }
 }

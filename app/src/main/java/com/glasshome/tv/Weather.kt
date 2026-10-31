@@ -12,9 +12,9 @@ import kotlin.math.roundToInt
 class WeatherPlace(val name: String, val latitude: Double, val longitude: Double)
 
 /** One day of the forecast: [weekday] is 0 for Sunday, as in date.weekdays; [rainChance] in percent. */
-class DayForecast(val weekday: Int, val code: Int, val high: Int, val low: Int, val rainChance: Int)
+data class DayForecast(val weekday: Int, val code: Int, val high: Int, val low: Int, val rainChance: Int)
 
-class WeatherNow(
+data class WeatherNow(
     val temperature: Int,
     val code: Int,
     val isDay: Boolean,

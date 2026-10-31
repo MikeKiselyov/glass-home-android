@@ -21,6 +21,11 @@ class DockItem(
     val originalIcon: Drawable?,
     /** HDMI devices: switched on (the TV reports the input as connected and active). */
     val isOn: Boolean = false,
+    /**
+     * Changes when the icon does: the icon chosen for this tile, and for apps
+     * when the app was last updated (an update can bring a new icon).
+     */
+    val iconVersion: String = "",
 )
 
 /**
@@ -158,7 +163,8 @@ class AppCatalog(private val context: Context, private val icons: IconStore) {
             val label = LABELS[packageName] ?: resolveInfo.loadLabel(packageManager).toString()
             val original = packageManager.getApplicationIcon(resolveInfo.activityInfo.applicationInfo)
             val icon = icons.resolve(packageName, original, null)
-            result.add(DockItem(packageName, label, packageName, null, icon, original))
+            val iconVersion = (icons.chosenId(packageName) ?: "") + "|" + lastUpdate(packageName)
+            result.add(DockItem(packageName, label, packageName, null, icon, original, iconVersion = iconVersion))
         }
         return result
     }
@@ -190,9 +196,18 @@ class AppCatalog(private val context: Context, private val icons: IconStore) {
             val label = cecName ?: input.loadLabel(context).toString()
             val key = "input:" + input.id
             val icon = icons.resolve(key, null, IconStore.deviceType(label))
-            result.add(DockItem(key, label, null, input.id, icon, null, connected))
+            val iconVersion = icons.chosenId(key) ?: ""
+            result.add(DockItem(key, label, null, input.id, icon, null, connected, iconVersion))
         }
         return result
+    }
+
+    private fun lastUpdate(packageName: String): Long {
+        return try {
+            context.packageManager.getPackageInfo(packageName, 0).lastUpdateTime
+        } catch (notFound: Exception) {
+            0L
+        }
     }
 
     private fun hiddenKeys(): Set<String> {

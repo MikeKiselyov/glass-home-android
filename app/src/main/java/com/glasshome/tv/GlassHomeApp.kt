@@ -23,6 +23,13 @@ class GlassHomeApp : Application() {
     lateinit var settings: HomeSettings
         private set
 
+    /**
+     * The dock as the home screen last showed it. The home screen can be closed
+     * and built again on every Home press; this lets it show the dock at once.
+     */
+    @Volatile
+    var lastDock: List<DockItem>? = null
+
     /** Photos in the shared album after the last sync; -1 if the link failed, null before any sync. */
     @Volatile
     var albumCount: Int? = null
