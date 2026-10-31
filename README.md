@@ -1,8 +1,20 @@
-# Glass Home for Android TV
+<h1 align="center">Glass Home for Android TV</h1>
 
-A calm, fast home screen for Android TV and Google TV: a big serif clock over
-rotating nature photos, a quiet row of your apps, and nothing else. No ads, no
-recommendation rows, no tracking.
+<p align="center">
+  A calm, fast home screen for Android TV and Google TV: a big serif clock over<br>
+  rotating nature photos, a quiet row of your apps, and nothing else.<br>
+  No ads, no recommendation rows, no tracking.
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Android%20TV-8.0%2B-3ddc84" alt="Android TV 8.0 or later">
+  <img src="https://img.shields.io/badge/Google%20TV-yes-4285f4" alt="Works on Google TV">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT license"></a>
+</p>
+
+<p align="center">
+  <img src="docs/images/theme-clock.jpg" width="820" alt="The Clock theme: a large serif clock and the date over a photo of the Alps, the weather for the week top right and a row of app icons at the bottom">
+</p>
 
 It also comes with scripts that clean up a slow, ad-filled TV over adb: a
 backup first, then switching off ads, tracking and apps you don't use, all of
@@ -10,6 +22,16 @@ it reversible with one command.
 
 Based on [Glass Home for Samsung TVs](https://github.com/victaphu/glass-home-samsung-tv)
 by victaphu, rebuilt as a native Android app.
+
+## Contents
+
+- [What you get](#what-you-get)
+- [Themes](#themes)
+- [Set up from your phone](#set-up-from-your-phone) or [on the TV](#settings-on-the-tv)
+- [Speed and memory](#speed-and-memory)
+- [Set up](#set-up) (install on your TV)
+- [Using it](#using-it)
+- [Good to know](#good-to-know) and [Privacy](#privacy)
 
 ## What you get
 
@@ -39,15 +61,57 @@ by victaphu, rebuilt as a native Android app.
 
 ## Themes
 
-| Theme | Looks like | Memory on the home screen |
-|---|---|---|
-| Clock | big serif clock bottom left, small icons | THEME_MEMORY_CLOCK |
-| Glass | clock top right, frosted dock of large icons | THEME_MEMORY_GLASS |
-| Postcard | the photo as a postcard on a blurred copy, app menu on the left | THEME_MEMORY_POSTCARD |
-| Type | apps as large words, no icons | THEME_MEMORY_TYPE |
+Pick one on the phone website; the TV changes straight away.
 
-Measured with `dumpsys meminfo` on a 2 GB Google TV. With another app in
-front every theme drops its photos and uses about the same, around 50 MB.
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/theme-clock.jpg" alt="Clock theme: big serif clock bottom left, small icons"></td>
+    <td width="50%"><img src="docs/images/theme-glass.jpg" alt="Glass theme: clock top right, a frosted dock of large icons"></td>
+  </tr>
+  <tr>
+    <td><b>Clock</b>: big serif clock bottom left, small icons.</td>
+    <td><b>Glass</b>: clock top right, frosted dock of large icons.</td>
+  </tr>
+  <tr>
+    <td><img src="docs/images/theme-postcard.jpg" alt="Postcard theme: the photo as a tilted postcard, an app menu with icons and names on the left"></td>
+    <td><img src="docs/images/theme-type.jpg" alt="Type theme: apps as large words along the bottom, no icons"></td>
+  </tr>
+  <tr>
+    <td><b>Postcard</b>: the photo as a postcard on a blurred copy, app menu on the left.</td>
+    <td><b>Type</b>: apps as large words, no icons.</td>
+  </tr>
+</table>
+
+| Theme | Memory on the home screen |
+|---|---|
+| Clock | about 85 MB |
+| Glass | about 80 MB |
+| Postcard | about 120 MB |
+| Type | about 75 MB |
+
+Measured with `dumpsys meminfo` (total PSS, fresh start) on a 2 GB Google TV.
+Postcard keeps a blurred copy of the photo behind the card. With another app
+in front every theme drops its photos and uses about the same, around 50 MB.
+More numbers: [Speed and memory](#speed-and-memory).
+
+## Set up from your phone
+
+Hold **OK** on any app and choose **Set up from your phone**. Scan the code
+with your phone's camera: the TV's website opens and you're signed in. Or
+type `glasshome.local:8090` on a phone on the same Wi-Fi and enter the code.
+
+<p align="center">
+  <img src="docs/images/phone-panel.jpg" width="820" alt="The Set up from your phone panel on the TV: a QR code, the address glasshome.local:8090 and a 6-digit code">
+</p>
+
+On the website you add and order photos and icons, pick the theme, font, date
+and weather style, choose your city and reorder or hide apps in the dock.
+
+<p align="center">
+  <img src="docs/images/web-look.png" width="300" alt="The phone website, Look section: four theme cards, Clock selected">
+  &nbsp;&nbsp;
+  <img src="docs/images/web-dock.png" width="300" alt="The phone website, Dock section: apps in order with up, down and hide buttons">
+</p>
 
 ## Languages
 
@@ -73,6 +137,55 @@ additions to [debloat/packages.tsv](debloat/packages.tsv) for your TV brand.
 - To build: JDK 17+ and the Android SDK (platform 34). Or use a release APK.
 - On the TV: Developer options (Settings > System > About > tap Build 7 times)
   and Wireless debugging (Settings > System > Developer options).
+
+## Settings on the TV
+
+No phone at hand? Hold **OK** on any app and choose **Glass Home settings**, or press
+**Open settings on this TV** on the phone panel. The same website opens on the
+TV, already signed in. Arrows move between controls, **OK** picks, **Back**
+closes it. Adding photos and icons needs a phone (files come from there);
+everything else works with the remote.
+
+<p align="center">
+  <img src="docs/images/tv-settings.jpg" width="820" alt="The settings website on the TV: the Look section, the first clock font outlined by the focus ring">
+</p>
+
+## Speed and memory
+
+Measured on the TV it was built on (Smarttech Apollo Premium 4K, Google TV,
+Android 14, 4 cores, 2 GB RAM) with `scripts/measure.sh`, debug build as
+`scripts/deploy.sh` installs it, medians of 5 runs.
+
+| Theme | Cold start | Home | Idle CPU | Memory on screen | Behind another app |
+|---|---|---|---|---|---|
+| Clock | 1.4 s | 0.62 s | 2.5% | 76 MB | 54 MB |
+| Glass | 1.3 s | 0.55 s | 2.8% | 119 MB | 55 MB |
+| Postcard | 1.2 s | 0.56 s | 2.3% | 116 MB | 50 MB |
+| Type | 1.3 s | 0.54 s | 2.4% | 70 MB | 48 MB |
+
+- **Home** is pressing Home in another app. This TV ships with *Don't keep
+  activities* on (Developer options), so the home screen is built again every
+  time; the TV's own Settings app takes 0.29 s for the same.
+- **Idle CPU** is one core's share while the home screen just sits there. The
+  slow zoom on the photo moves in half-second steps you can't see, instead of
+  redrawing the screen 60 times a second (it used to cost about 20%).
+- While moving along the dock, 90% of frames take under 30-60 ms depending on
+  the theme.
+- The release APK is 6.6 MB.
+
+Next to Google TV's own home screen on the same TV, measured the same way
+(`scripts/measure-stock.sh`). The TV had already been cleaned up with
+`scripts/debloat.sh` (16 apps switched off), so this compares the two home
+screens, not a TV as it comes from the shop:
+
+| Home screen | Cold start | Home | Idle CPU | Memory on screen | Behind another app |
+|---|---|---|---|---|---|
+| Google TV | 0.34 s | 0.20 s | 32.6% | 108 MB | 82 MB |
+| Glass Home (Type) | 1.29 s | 0.59 s | 4.7% | 75 MB | 48 MB |
+
+Google TV's home screen opens faster; Glass Home uses about a seventh of the
+CPU while it sits on screen and less memory in front and behind. Start times
+count until the first frame is drawn.
 
 ## Set up
 
@@ -122,10 +235,15 @@ Open a terminal in this repository and try:
 ## Using it
 
 - **OK** opens a tile. **Hold OK** for its menu: move, hide, change icon, put
-  on a colour button, wallpaper, photos from your phone.
+  on a colour button, wallpaper, Glass Home settings, set up from your phone.
 - **Back** closes a menu; on the home screen it does nothing.
-- **Phone website**: hold OK on any tile > Add photos from your phone. The TV
-  shows its address and a code.
+- **Phone website**: hold OK on any tile > Set up from your phone. The TV
+  shows a QR code, its address and a code. **New code** there signs every
+  phone out.
+
+<p align="center">
+  <img src="docs/images/tile-menu.jpg" width="820" alt="The menu after holding OK on YouTube: move right, change icon, put on a colour button, hide from the dock, wallpaper, set up from your phone">
+</p>
 
 ### Official logos
 
@@ -163,6 +281,11 @@ The app talks to: Open-Meteo for weather (once you pick a city), your shared
 album's host (once you add a link), and nothing else. The phone website only
 answers devices on your home network, needs the code from the TV, and uses
 plain HTTP, so anyone on the same Wi-Fi could read the traffic.
+
+Guessing the code is limited: 5 wrong codes lock that phone out for 5 minutes,
+and 20 wrong codes from any phones lock sign-in for everyone and replace the
+code (each lockout in a row lasts twice as long). Phones stay signed in for 30
+days.
 
 ## Credits and licences
 
