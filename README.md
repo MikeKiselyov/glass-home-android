@@ -57,7 +57,8 @@ by victaphu, rebuilt as a native Android app.
   scan the QR code on the TV and you're in. Upload and order photos and icons,
   pick the theme, font and city, reorder the dock. Home network only, behind
   a code shown on the TV.
-- **Light**: about 35 MB of memory while another app is open.
+- **Light**: about 60 MB of memory while another app is open, half of what
+  Google TV's home screen keeps.
 
 ## Themes
 
@@ -163,30 +164,55 @@ phone (files come from there); everything else works with the remote.
 ## Speed and memory
 
 Measured on the TV it was built on (Smarttech Apollo Premium 4K, Google TV,
-Android 14, 4 cores, 2 GB RAM), medians of 5 runs, with *Don't keep
-activities* off (see [Good to know](#good-to-know)).
+Android 14, 4 cores, 2 GB RAM) after a **factory reset**, set up the way a
+buyer would: Google account, every default accepted, and the apps Google TV
+installs by itself. Three states, a reboot before each, the same script for
+all of them, Glass Home's release build with the default Clock theme:
 
-The release build, as `scripts/setup.sh` installs it (Type theme):
+| | Factory, Google TV | Clean-up, Google TV | Clean-up + Glass Home |
+|---|---|---|---|
+| Free memory on the TV | 542 MB | 535 MB | 557 MB |
+| Home screen memory, on screen | 126 MB | 130 MB | 79 MB |
+| Home screen memory, behind another app | 119 MB | 124 MB | 57 MB |
+| Google TV's launcher in memory | 130 MB | 135 MB | 94 MB |
+| Apps running | 41 | 25 | 24 |
+| Idle CPU, home screen (one core) | 0.2% | 0.1% | 1.9% |
+| Idle CPU, whole TV | 6.1% | 5.6% | 5.7% |
+| Home key to the home screen | - | - | 0.05 s |
+| Frames for the same arrow keys: drawn, slower than 60 per second | 228, 201 | 215, 182 | 25, 5 |
 
-| | Glass Home |
-|---|---|
-| Home key to Glass Home on screen | 0.05 s (Google TV doesn't start) |
-| Cold start | 0.52 s |
-| Idle CPU | 1.6% of one core |
-| Memory on screen | about 65 MB |
-| Behind another app | 33 MB |
+- **Clean-up** is `scripts/setup.sh --yes`: 8 packages switched off (ad
+  services, on-device ad personalisation, federated compute, ACR, feedback,
+  store demo, factory test) and animations at half length. It barely changes
+  memory or CPU; it removes the ad and tracking services and leaves fewer
+  apps running in the background.
+- **Free memory stays about the same** with Glass Home. Glass Home itself
+  takes half of what Google TV's home screen takes, but Google TV can't be
+  removed: it starts once when the TV boots and stays in memory next to
+  Glass Home (pressing Home never starts it again).
+- **Home key to the home screen** is from the key press to Glass Home's first
+  frame (`scripts/measure-home.sh`); Google TV doesn't start on the way. With
+  Home going to Google TV first (still a choice on the website) it is about
+  0.4 s.
+- **Frames**: Google TV animates its rows and draws most frames slower than
+  60 per second (typically 30 ms each). Glass Home moves the focus without
+  animating rows, so it has about a ninth of the frames to draw.
+- **Idle CPU** is the one place Glass Home costs more: the photo's slow zoom,
+  in half-second steps you can't see.
+- The factory state was measured 2 minutes after boot, so some of its 41 apps
+  were still starting up.
 
-- **Home key to screen** is from the key press to Glass Home's first frame,
-  with the key sent the way a remote sends it (`scripts/measure-home.sh`).
-  With Home going to Google TV first (the older way, still a choice on the
-  website) it was about 0.41 s, and Google TV started every time.
-- **Cold start** is the first start after the app was stopped, until the
-  first frame. The debug build takes 1.3 s: no ahead-of-time compiling and
-  2 MB more code.
-- **Idle CPU** is while the home screen just sits there: the photo changes
-  and its slow zoom moves in half-second steps you can't see.
+Measure your own TV the same way:
 
-Per theme, debug build (`scripts/measure.sh`, which needs a debug build):
+```sh
+scripts/compare.sh before    # the TV as it is, 3 runs, about 7 minutes
+scripts/setup.sh
+scripts/compare.sh after     # prints the before/after table
+```
+
+Glass Home's cold start is 0.5 s on the release build (1.3 s on a debug
+build, which skips ahead-of-time compiling). Per theme, debug build
+(`scripts/measure.sh`, which needs a debug build):
 
 | Theme | Cold start | Home | Idle CPU | Memory on screen | Behind another app |
 |---|---|---|---|---|---|
@@ -194,28 +220,6 @@ Per theme, debug build (`scripts/measure.sh`, which needs a debug build):
 | Glass | 1.32 s | 0.19 s | 3.3% | 71 MB | 59 MB |
 | Postcard | 1.22 s | 0.21 s | 3.0% | 112 MB | 63 MB |
 | Type | 1.30 s | 0.20 s | 3.2% | 69 MB | 57 MB |
-
-Next to Google TV's own home screen on the same TV, release build, measured
-the same way (`scripts/measure-stock.sh`). The TV had already been cleaned up
-with `scripts/debloat.sh` (16 apps switched off), so this compares the two
-home screens, not a TV as it comes from the shop:
-
-| Home screen | Cold start | Home | Idle CPU | Memory on screen | Behind another app | Typical frame / 90% of frames under |
-|---|---|---|---|---|---|---|
-| Google TV | 0.59 s | 0.18 s | 0.0% | 94 MB | 92 MB | 30 ms / 38 ms |
-| Glass Home (Type) | 0.52 s | 0.09 s | 3.4% | 79 MB | 37 MB | 16 ms / 29 ms |
-
-- **Frames** are while moving around with the arrow keys. Google TV animates
-  its rows and draws about 100 frames for the same keys, most of them slower
-  than 60 per second (73 of 101 over 16 ms). Glass Home draws about 17 and
-  none over 16 ms; 8 of them still missed Android's frame deadline, which
-  is why `measure-stock.sh` shows a higher "janky" share for Glass Home.
-- **Home** here is the app started directly; what a person sees after
-  pressing Home is the key-to-screen time above.
-- Google TV stays installed and starts once when the TV boots; Glass Home
-  comes in front of it and the Home key never opens it again. Android
-  unloads it from memory when it needs the room (about 95-135 MB), not on
-  a schedule.
 
 ## Set up
 

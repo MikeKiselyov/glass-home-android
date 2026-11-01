@@ -118,6 +118,18 @@ enter the code), and you can:
 - reorder or hide dock tiles,
 - set the photo interval, clock format and night mode.
 
+## Compare before and after (optional)
+
+To see what changed on your own TV, measure it before the set-up and after:
+
+```sh
+scripts/compare.sh before    # before step 4
+scripts/compare.sh after     # after it; prints one table
+```
+
+Each takes about 7 minutes (3 runs) and changes nothing on the TV. For a
+fair result reboot the TV before each, or don't reboot at all.
+
 ## Undo
 
 ```sh
