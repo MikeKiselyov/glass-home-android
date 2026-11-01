@@ -204,12 +204,12 @@ scripts/setup.sh
 scripts/compare.sh after     # prints the before/after table
 ```
 
-The table above is release 0.2.0. Since then (on `main`, in the next
-release) photos are held in graphics memory, the zoom steps less often and
-the settings on the TV run in a process of their own, which used to leave
-55 MB behind after every visit. Same TV, same script, 3 runs each:
+The table above is release 0.2.0. Since 0.3.0 photos are held in graphics
+memory, the zoom steps less often and the settings on the TV run in a
+process of their own, which used to leave 55 MB behind after every visit.
+Same TV, same script, 3 runs each:
 
-| | 0.2.0 | Now, slow zoom on | Now, still photos |
+| | 0.2.0 | 0.3.0, slow zoom on | 0.3.0, still photos |
 |---|---|---|---|
 | Glass Home, on screen / behind another app | 109 / 89 MB | 45 / 35 MB | 44 / 34 MB |
 | Idle CPU, Glass Home (one core) | 2.9% | 2.1% | 1.7% |
