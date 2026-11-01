@@ -57,8 +57,8 @@ by victaphu, rebuilt as a native Android app.
   scan the QR code on the TV and you're in. Upload and order photos and icons,
   pick the theme, font and city, reorder the dock. Home network only, behind
   a code shown on the TV.
-- **Light**: about 60 MB of memory while another app is open, half of what
-  Google TV's home screen keeps.
+- **Light**: about 35 MB of memory while another app is open; Google TV's
+  home screen keeps about 120 MB.
 
 ## Themes
 
@@ -83,17 +83,9 @@ Pick one on the phone website; the TV changes straight away.
   </tr>
 </table>
 
-| Theme | Memory on the home screen |
-|---|---|
-| Clock | about 85 MB |
-| Glass | about 80 MB |
-| Postcard | about 120 MB |
-| Type | about 80 MB |
-
-Measured with `dumpsys meminfo` (total PSS, fresh start) on a 2 GB Google TV.
-Postcard keeps a blurred copy of the photo behind the card. With another app
-in front every theme drops its photos and uses about the same, around 50 MB.
-More numbers: [Speed and memory](#speed-and-memory).
+Postcard keeps a blurred copy of the photo behind the card, so it uses a
+little more memory than the others. With another app in front every theme
+drops its photos. Numbers: [Speed and memory](#speed-and-memory).
 
 ## Set up from your phone
 
@@ -212,16 +204,21 @@ scripts/setup.sh
 scripts/compare.sh after     # prints the before/after table
 ```
 
-Glass Home's cold start is 0.5 s on the release build (1.3 s on a debug
-build, which skips ahead-of-time compiling). Per theme, debug build
-(`scripts/measure.sh`, which needs a debug build):
+The table above is release 0.2.0. Since then (on `main`, in the next
+release) photos are held in graphics memory, the zoom steps less often and
+the settings on the TV run in a process of their own, which used to leave
+55 MB behind after every visit. Same TV, same script, 3 runs each:
 
-| Theme | Cold start | Home | Idle CPU | Memory on screen | Behind another app |
-|---|---|---|---|---|---|
-| Clock | 1.44 s | 0.22 s | 2.4% | 78 MB | 74 MB |
-| Glass | 1.32 s | 0.19 s | 3.3% | 71 MB | 59 MB |
-| Postcard | 1.22 s | 0.21 s | 3.0% | 112 MB | 63 MB |
-| Type | 1.30 s | 0.20 s | 3.2% | 69 MB | 57 MB |
+| | 0.2.0 | Now, slow zoom on | Now, still photos |
+|---|---|---|---|
+| Glass Home, on screen / behind another app | 109 / 89 MB | 45 / 35 MB | 44 / 34 MB |
+| Idle CPU, Glass Home (one core) | 2.9% | 2.1% | 1.7% |
+| Cold start: first frame / tiles on screen | 0.49 s / - | 0.38 / 0.41 s | - |
+| Home key to the home screen | 0.06 s | 0.06 s | 0.06 s |
+
+The 0.2.0 column probably includes a settings visit left in memory (on the
+freshly reset TV it measured 79 / 57 MB). Per-theme numbers come from
+`scripts/measure.sh`, which needs a debug build.
 
 ## Set up
 
