@@ -24,6 +24,15 @@ class SettingsActivityTest {
     }
 
 
+    /** The website starts in the background: settings opened right after the app starts wait for it. */
+    @Test
+    fun waitsForTheWebsiteButNotForever() {
+        assertTrue(SettingsActivity.loadNow(true, 0))
+        assertFalse(SettingsActivity.loadNow(false, 0))
+        assertFalse(SettingsActivity.loadNow(false, 49))
+        assertTrue(SettingsActivity.loadNow(false, 50))
+    }
+
     @Test
     fun opensTheTvWebsite() {
         assertTrue(SettingsActivity.isTvWebsite("http://127.0.0.1:8090"))

@@ -39,7 +39,11 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // R8: smaller dex (most of it is the Kotlin library and NanoHTTPD) and
+            // faster code. Activities and services are kept through the manifest.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = if (keystoreFile.exists()) {
                 signingConfigs.getByName("release")
             } else {

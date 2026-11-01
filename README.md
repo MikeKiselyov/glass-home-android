@@ -29,7 +29,7 @@ by victaphu, rebuilt as a native Android app.
 - [Themes](#themes)
 - [Set up from your phone](#set-up-from-your-phone) or [on the TV](#settings-on-the-tv)
 - [Speed and memory](#speed-and-memory)
-- [Set up](#set-up) (install on your TV)
+- [Set up](#set-up) (install on your TV) and [going back](#going-back)
 - [Using it](#using-it)
 - [Good to know](#good-to-know) and [Privacy](#privacy)
 
@@ -57,7 +57,7 @@ by victaphu, rebuilt as a native Android app.
   scan the QR code on the TV and you're in. Upload and order photos and icons,
   pick the theme, font and city, reorder the dock. Home network only, behind
   a code shown on the TV.
-- **Light**: about 50 MB of memory while another app is open.
+- **Light**: about 35 MB of memory while another app is open.
 
 ## Themes
 
@@ -150,9 +150,9 @@ additions to [debloat/packages.tsv](debloat/packages.tsv) for your TV brand.
 
 ## Settings on the TV
 
-No phone at hand? Hold **OK** on any app and choose **Glass Home settings**, or press
-**Open settings on this TV** on the phone panel. The same website opens on the
-TV, already signed in, with the tabs down the left. Arrows move between
+No phone at hand? Open **Home settings**, the last tile on the dock in every
+theme (or hold **OK** on any app and choose **Glass Home settings**). The same
+website opens on the TV, already signed in, with the tabs down the left. Arrows move between
 controls, **OK** picks, **Back** closes it. Adding photos and icons needs a
 phone (files come from there); everything else works with the remote.
 
@@ -163,9 +163,30 @@ phone (files come from there); everything else works with the remote.
 ## Speed and memory
 
 Measured on the TV it was built on (Smarttech Apollo Premium 4K, Google TV,
-Android 14, 4 cores, 2 GB RAM) with `scripts/measure.sh`, debug build as
-`scripts/deploy.sh` installs it, medians of 5 runs, with *Don't keep
+Android 14, 4 cores, 2 GB RAM), medians of 5 runs, with *Don't keep
 activities* off (see [Good to know](#good-to-know)).
+
+The release build, as `scripts/setup.sh` installs it (Type theme):
+
+| | Glass Home |
+|---|---|
+| Home key to Glass Home on screen | 0.05 s (Google TV doesn't start) |
+| Cold start | 0.52 s |
+| Idle CPU | 1.6% of one core |
+| Memory on screen | about 65 MB |
+| Behind another app | 33 MB |
+
+- **Home key to screen** is from the key press to Glass Home's first frame,
+  with the key sent the way a remote sends it (`scripts/measure-home.sh`).
+  With Home going to Google TV first (the older way, still a choice on the
+  website) it was about 0.41 s, and Google TV started every time.
+- **Cold start** is the first start after the app was stopped, until the
+  first frame. The debug build takes 1.3 s: no ahead-of-time compiling and
+  2 MB more code.
+- **Idle CPU** is while the home screen just sits there: the photo changes
+  and its slow zoom moves in half-second steps you can't see.
+
+Per theme, debug build (`scripts/measure.sh`, which needs a debug build):
 
 | Theme | Cold start | Home | Idle CPU | Memory on screen | Behind another app |
 |---|---|---|---|---|---|
@@ -174,63 +195,84 @@ activities* off (see [Good to know](#good-to-know)).
 | Postcard | 1.22 s | 0.21 s | 3.0% | 112 MB | 63 MB |
 | Type | 1.30 s | 0.20 s | 3.2% | 69 MB | 57 MB |
 
-- **Cold start** is the first start after the app was stopped; **Home** is
-  pressing Home in another app. Both count until the first frame is drawn.
-- **Idle CPU** is one core's share while the home screen just sits there: the
-  photo changes and its slow zoom moves in half-second steps you can't see
-  (redrawn 60 times a second it used to cost about 20%).
-- While moving along the dock, 90% of frames take under 20-60 ms depending on
-  the theme.
-- The release APK is 6.6 MB.
+Next to Google TV's own home screen on the same TV, release build, measured
+the same way (`scripts/measure-stock.sh`). The TV had already been cleaned up
+with `scripts/debloat.sh` (16 apps switched off), so this compares the two
+home screens, not a TV as it comes from the shop:
 
-Next to Google TV's own home screen on the same TV, measured the same way
-(`scripts/measure-stock.sh`). The TV had already been cleaned up with
-`scripts/debloat.sh` (16 apps switched off), so this compares the two home
-screens, not a TV as it comes from the shop:
+| Home screen | Cold start | Home | Idle CPU | Memory on screen | Behind another app | Typical frame / 90% of frames under |
+|---|---|---|---|---|---|---|
+| Google TV | 0.59 s | 0.18 s | 0.0% | 94 MB | 92 MB | 30 ms / 38 ms |
+| Glass Home (Type) | 0.52 s | 0.09 s | 3.4% | 79 MB | 37 MB | 16 ms / 29 ms |
 
-| Home screen | Cold start | Home | Idle CPU | Memory on screen | Behind another app |
-|---|---|---|---|---|---|
-| Google TV | 0.60 s | 0.17 s | 0.0% | 96 MB | 95 MB |
-| Glass Home (Type) | 1.34 s | 0.19 s | 4.2% | 67 MB | 55 MB |
-
-Google TV's home screen starts faster from cold and does nothing while it
-sits still; pressing Home takes about the same time with either. Glass Home
-uses about a third less memory on screen and 40 MB less behind other apps
-(Google TV also runs a second background process of its own).
+- **Frames** are while moving around with the arrow keys. Google TV animates
+  its rows and draws about 100 frames for the same keys, most of them slower
+  than 60 per second (73 of 101 over 16 ms). Glass Home draws about 17 and
+  none over 16 ms; 8 of them still missed Android's frame deadline, which
+  is why `measure-stock.sh` shows a higher "janky" share for Glass Home.
+- **Home** here is the app started directly; what a person sees after
+  pressing Home is the key-to-screen time above.
+- Google TV stays installed and starts once when the TV boots; Glass Home
+  comes in front of it and the Home key never opens it again. Android
+  unloads it from memory when it needs the room (about 95-135 MB), not on
+  a schedule.
 
 ## Set up
 
 **Step-by-step guide, including what to do when something goes wrong:
 [docs/INSTALL.md](docs/INSTALL.md).** The short version:
 
-All scripts find the TV on your network by themselves. Every change is
-written to `.tv/changes.log`, and `scripts/restore.sh` undoes all of it.
+1. On the TV: Settings > System > About > click **Build** 7 times, then
+   Settings > System > Developer options > **Wireless debugging** on.
+2. Pair the computer once (Wireless debugging > Pair device with pairing code):
 
-```sh
-# 1. Pair once: Wireless debugging > Pair device with pairing code
-scripts/tv-pair.sh 192.168.1.20:37000 123456
+   ```sh
+   scripts/tv-pair.sh 192.168.1.20:37000 123456
+   ```
 
-# 2. Back up the TV's current state (packages, settings, a screenshot)
-scripts/backup.sh
+3. Run the set-up. It backs up the TV first, installs Glass Home and asks
+   about each step; Enter takes the recommended answer.
 
-# 3. Build and install Glass Home
-scripts/deploy.sh
+   ```sh
+   scripts/setup.sh           # asks
+   scripts/setup.sh --yes     # recommended answers, no questions
+   ```
 
-# 4. Make the Home button open it
-scripts/set-home.sh
+| Step | Option | Recommended | What it does |
+|---|---|---|---|
+| Install | `--apk <file>` | build from source | Installs a downloaded APK instead of building (building needs JDK 17+ and the Android SDK) |
+| Home button | `--home on\|off` | on | Home opens Glass Home (see [Good to know](#good-to-know)) |
+| Now playing | `--now-playing on\|off` | on | Track and cover art while Spotify or YouTube Music plays |
+| Clean-up | `--clean ask\|junk\|none` | junk | Switches off ads, tracking and demo apps from [debloat/packages.tsv](debloat/packages.tsv); `ask` goes one by one, features you might use (voice search, Chromecast) are only switched off when you say so |
+| Animations | `--animations 0.5\|1\|keep` | 0.5 | System animations twice as fast |
+| Ad-blocking DNS | `--dns adguard\|keep` | keep | AdGuard's Private DNS for every app (not YouTube ads) |
+| Screensaver | `--screensaver keep\|colors\|off` | keep | Google's photo screensaver uses the network and memory while the TV is idle |
 
-# 5. Optional clean-up
-scripts/debloat.sh            # asks about every ad/tracking/unused app it finds
-scripts/private-dns.sh        # blocks ads and trackers with AdGuard DNS
-scripts/speed.sh              # snappier system animations
-scripts/enable-now-playing.sh # track and cover art on the home screen
+Each step is also its own script in [scripts](scripts) (`deploy.sh`,
+`set-home.sh`, `debloat.sh`, `speed.sh`, `private-dns.sh`,
+`enable-now-playing.sh`) if you'd rather run them one at a time. All of them
+find the TV on your network by themselves. Nothing is ever uninstalled: apps
+are switched off with `pm disable-user` and come back with `pm enable`.
 
-# Undo everything
-scripts/restore.sh            # --dry-run to see what it would do first
-```
+### Going back
 
-Nothing is ever uninstalled: apps are disabled with `pm disable-user` and come
-back with `pm enable`.
+- **A backup before every change.** `setup.sh` and `restore.sh` save the TV's
+  state to `.tv/backup/<date-time>/` first: every app and whether it is on,
+  all system settings, the Home app, a screenshot and a copy of the change
+  log. Old backups are never deleted.
+- **Every change is written down** in `.tv/changes.log` with the value it
+  replaced.
+- **One command undoes it all**, newest change first:
+
+  ```sh
+  scripts/restore.sh --dry-run    # shows what it would do
+  scripts/restore.sh              # does it; Glass Home stays installed
+  scripts/restore.sh --uninstall  # also removes Glass Home
+  ```
+
+- **Without the computer**: Settings > Accessibility > Glass Home off gives the
+  Home button back to Google TV; Settings > Apps > (app) > Enable brings back
+  anything that was switched off.
 
 ### Or let Claude Code do it
 
@@ -247,6 +289,8 @@ Open a terminal in this repository and try:
 
 - **OK** opens a tile. **Hold OK** for its menu: move, hide, change icon, put
   on a colour button, wallpaper, Glass Home settings, set up from your phone.
+- **Home settings**, the last tile, opens the settings on the TV. Hide or move
+  it like any tile.
 - **Back** closes a menu; on the home screen it does nothing.
 - **Phone website**: hold OK on any tile > Set up from your phone. The TV
   shows a QR code, its address and a code. **New code** there signs every
@@ -274,9 +318,18 @@ your TV and are never part of this repository or the APK.
 - **Google TV** ignores a third-party Home app while its own launcher is on.
   Disabling the launcher or the setup wizard is risky (on our test TV it cut
   the network and the TV forgot its Wi-Fi), so `set-home.sh` keeps both and
-  uses a small accessibility service that brings Glass Home to the front when
-  the stock home opens. The scripts refuse to disable a list of packages the
+  turns on a small accessibility service instead. It catches the Home key on
+  the remote and opens Glass Home, so Google TV's home screen doesn't start or
+  flash at all. Holding Home no longer opens the Google TV panel. Google TV
+  still opens once when the TV boots, and Glass Home comes in front of it.
+  If catching the key doesn't work on your TV, set **More > Home button >
+  After Google TV** on the website: Google TV opens first and Glass Home
+  comes in front of it. The scripts refuse to disable a list of packages the
   TV needs (`scripts/changelog.sh`).
+- **Force stop** on Glass Home (Settings > Apps) also switches its
+  accessibility service off; Android does that to every app. Home then opens
+  Google TV again until you run `scripts/set-home.sh` or turn it back on in
+  Settings > Accessibility > Glass Home.
 - **Developer options > Don't keep activities** should be off. With it on,
   Android closes every app the moment you leave it, so pressing Home builds
   the home screen again each time (0.6 s instead of 0.15 s on the test TV)
@@ -295,7 +348,13 @@ your TV and are never part of this repository or the APK.
 ## Privacy
 
 The app talks to: Open-Meteo for weather (once you pick a city), your shared
-album's host (once you add a link), and nothing else. The phone website only
+album's host (once you add a link), and nothing else.
+
+The accessibility service that makes Home open Glass Home sees the keys
+pressed on the remote, because that is how Android lets an app catch Home. It
+acts only on Home, keeps nothing and sends nothing; the only thing it writes
+to the system log is the time Home was pressed, for the speed numbers. It
+cannot read what is on screen. The phone website only
 answers devices on your home network, needs the code from the TV, and uses
 plain HTTP, so anyone on the same Wi-Fi could read the traffic.
 

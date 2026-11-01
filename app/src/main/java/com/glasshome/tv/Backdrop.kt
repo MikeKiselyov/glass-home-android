@@ -13,7 +13,6 @@ import android.os.SystemClock
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
-import java.util.concurrent.Executors
 
 /** One full-screen photo: a blurred backdrop (for portrait photos) and the photo itself. */
 class Slide(val frame: ZoomFrame, val blurred: ImageView, val photo: ImageView) {
@@ -46,7 +45,7 @@ class Backdrop(
     private val onShow: (Wallpaper) -> Unit,
 ) {
     private val handler = Handler(Looper.getMainLooper())
-    private val loader = Executors.newSingleThreadExecutor()
+    private val loader = Background.executor("glasshome-photos")
     private var front: Slide = first
     private var playlist: List<Wallpaper> = emptyList()
     private var position = -1

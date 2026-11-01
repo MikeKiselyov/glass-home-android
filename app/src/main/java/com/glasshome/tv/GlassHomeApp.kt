@@ -5,7 +5,6 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import java.io.IOException
-import java.util.concurrent.Executors
 
 /** Shared state for the launcher process; the photo website runs as long as the process does. */
 class GlassHomeApp : Application() {
@@ -39,7 +38,7 @@ class GlassHomeApp : Application() {
     var albumCount: Int? = null
         private set
 
-    private val albumExecutor = Executors.newSingleThreadExecutor()
+    private val albumExecutor = Background.executor("glasshome-album")
     private val handler = Handler(Looper.getMainLooper())
     private val albumTick = Runnable { syncAlbum() }
 
@@ -52,16 +51,20 @@ class GlassHomeApp : Application() {
         settings = HomeSettings(this)
         I18n.load(this, settings.language)
         server = PhotoServer(this, wallpapers, icons, weather, settings, catalog)
-        try {
-            server.start(SOCKET_TIMEOUT_MS, true)
-        } catch (error: IOException) {
-            Log.w("GlassHome", "Photo website could not start on port ${PhotoServer.PORT}", error)
-        }
-        LocalName(this).start()
         server.onAlbumChanged = { syncAlbum() }
         server.albumCount = { albumCount }
         server.currentPhoto = { currentPhotoKey }
-        syncAlbum()
+        // Off the UI thread: NanoHTTPD's start waits for its socket, and nothing
+        // on the first frame needs the website or the album.
+        albumExecutor.execute {
+            try {
+                server.start(SOCKET_TIMEOUT_MS, true)
+            } catch (error: IOException) {
+                Log.w("GlassHome", "Photo website could not start on port ${PhotoServer.PORT}", error)
+            }
+            LocalName(this).start()
+        }
+        handler.postDelayed(albumTick, ALBUM_FIRST_MS)
     }
 
     /** Downloads new photos from the shared album now, then again every 6 hours. */
@@ -80,5 +83,8 @@ class GlassHomeApp : Application() {
     companion object {
         private const val SOCKET_TIMEOUT_MS = 30_000
         private const val ALBUM_EVERY_MS = 6 * 3600_000L
+
+        /** The first album check after the TV starts, once the home screen is up. */
+        private const val ALBUM_FIRST_MS = 30_000L
     }
 }

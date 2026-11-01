@@ -39,6 +39,8 @@ PLACE_LONGITUDE=5.7245
 WIDTH=1600
 
 TV=${TV:-$("$root/scripts/tv-connect.sh")}
+. "$root/scripts/accessibility.sh"
+remember_accessibility
 ip=$(adb -s "$TV" shell ip -4 addr show wlan0 2>/dev/null | sed -n 's/.*inet \([0-9.]*\).*/\1/p' | head -1)
 if [ -z "$ip" ]; then
     ip=${TV%%:*}
@@ -276,6 +278,7 @@ adb -s "$TV" shell dumpsys activity activities | sed -n -E 's/.*(topResumedActiv
 touch "$work/state-saved"
 if [ "$mode" = all ]; then
     trap restore EXIT
+    trap 'exit 130' INT TERM
 fi
 
 # ---------- set the scene ----------
@@ -302,6 +305,7 @@ for theme in clock glass postcard type; do
     shot "theme-$theme"
     # Measure a fresh process, so earlier themes don't count.
     adb -s "$TV" shell am force-stop "$PACKAGE"
+    put_accessibility_back
     adb -s "$TV" shell am start -n "$PACKAGE/.MainActivity" >/dev/null
     sleep 10
     pss=$(adb -s "$TV" shell dumpsys meminfo "$PACKAGE" | sed -n 's/.*TOTAL PSS: *\([0-9]*\).*/\1/p' | head -1)

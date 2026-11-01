@@ -31,6 +31,16 @@ class HomeSettingsTest {
     }
 
     @Test
+    fun homeIsCaughtBeforeGoogleTvUnlessChanged() {
+        val settings = HomeSettings(context)
+        assertEquals("catch", settings.homeButton)
+        settings.homeButton = "after"
+        assertEquals("after", HomeSettings(context).homeButton)
+        settings.homeButton = "nonsense"
+        assertEquals("catch", HomeSettings(context).homeButton)
+    }
+
+    @Test
     fun aChoiceMadeOnTheWebsiteIsKept() {
         val settings = HomeSettings(context)
         settings.clockFormat = "12"

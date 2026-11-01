@@ -16,7 +16,7 @@ Commands are for macOS and Linux. On Windows, run them in WSL or Git Bash.
    terminal in its folder.
 3. To build the app yourself you also need **JDK 17+** and the **Android SDK**
    (platform 34). If you'd rather not, download `glass-home.apk` from the
-   Releases page and skip the build in step 5.
+   Releases page and run the set-up with `--apk glass-home.apk` in step 4.
 
 ## 2. Turn on Developer options on the TV
 
@@ -43,53 +43,59 @@ Commands are for macOS and Linux. On Windows, run them in WSL or Git Bash.
 You pair once. Later, every script finds the TV by itself, even after its
 address or port changes. Older TVs without pairing: `adb connect <tv-address>:5555`.
 
-## 4. Back up
+## 4. Run the set-up
 
 ```sh
-scripts/backup.sh
+scripts/setup.sh
 ```
 
-This saves the list of apps and their state, the system settings, the current
-Home app and a screenshot to `.tv/backup/`. It changes nothing on the TV.
+It goes through these steps and asks before each one; Enter takes the
+recommended answer in [brackets]. `scripts/setup.sh --yes` takes all the
+recommended answers without asking, and every answer can be given as an
+option instead (`scripts/setup.sh --help` lists them, the README has a table).
 
-## 5. Install Glass Home
+1. **Backup.** The TV's state goes to `.tv/backup/<date-time>/`: every app and
+   whether it is on, all system settings, the Home app, a screenshot and a
+   copy of the change log. It changes nothing on the TV. A new backup is made
+   every time; old ones are kept.
+2. **Install.** Builds the release APK and installs it, then compiles it
+   ahead of time on the TV so it starts quickly from the first day. With a
+   downloaded APK: `scripts/setup.sh --apk glass-home.apk`.
+3. **Home button** (recommended: on). Google TV and most Android TVs keep
+   their own launcher on Home whichever app you choose. Glass Home turns on a
+   small accessibility service that catches the Home key and opens Glass Home,
+   so the stock home screen doesn't start or flash. Holding Home no longer
+   opens the Google TV panel. On other TVs Glass Home is simply made the
+   default Home app. The stock launcher and the setup wizard are never
+   disabled: disabling the setup wizard is what made our test TV drop off the
+   network and forget its Wi-Fi, so the scripts refuse to touch it.
+4. **Now playing** (on): lets Glass Home show the track and cover art while
+   Spotify or YouTube Music plays.
+5. **Clean-up** (junk): switches off ads, tracking and demo apps found on this
+   TV ([debloat/packages.tsv](../debloat/packages.tsv)). Answer `ask` to go one
+   by one; "features" you might use (voice search, Chromecast, Google's
+   screensaver) are only switched off when you say so.
+6. **Animations** (0.5): system animations twice as fast.
+7. **Ad-blocking DNS** (keep): AdGuard's Private DNS for every app. YouTube
+   ads come from the same servers as the videos, so DNS can't remove those.
+8. **Screensaver** (keep): `colors` or `off` stops Google's photo
+   screensaver from using the network and memory while the TV is idle.
+
+Open Glass Home once to check it looks right: press Home.
+
+### Or step by step
+
+Each step is its own script, if you'd rather run them one at a time:
 
 ```sh
-scripts/deploy.sh                      # builds and installs
-# or, with a downloaded APK:
-adb install glass-home.apk
+scripts/backup.sh              # 1
+scripts/deploy.sh --release    # 2 (without --release: a debug build, for development)
+scripts/set-home.sh            # 3
+scripts/enable-now-playing.sh  # 4
+scripts/debloat.sh             # 5
+scripts/speed.sh               # 6
+scripts/private-dns.sh         # 7
 ```
-
-Open it once from the TV's app list to check it looks right.
-
-## 6. Make Home open Glass Home
-
-```sh
-scripts/set-home.sh
-```
-
-- **Google TV and most Android TVs**: the stock launcher stays installed and
-  enabled. Glass Home turns on a small accessibility service that brings it
-  to the front as soon as the stock home screen opens. You may see the stock
-  screen for a split second.
-- **Other TVs**: Glass Home is set as the default Home app.
-
-The script never disables the stock launcher or the setup wizard. Disabling
-the setup wizard is what made our test TV drop off the network and forget its
-Wi-Fi, so it is on a list of packages the scripts refuse to touch.
-
-## 7. Clean up (optional)
-
-```sh
-scripts/debloat.sh             # asks about every ad, tracking or unused app found on this TV
-scripts/private-dns.sh         # ad and tracker blocking for all apps (AdGuard DNS)
-scripts/speed.sh               # quicker system animations
-scripts/enable-now-playing.sh  # show the playing track on the home screen
-```
-
-`debloat.sh` disables, never uninstalls. "Junk" (ads, tracking, demo apps)
-defaults to yes; "features" you might use (voice search, Chromecast, the Google
-screensaver) default to no.
 
 Some settings can't be changed safely over adb. Do these by hand if you like:
 
@@ -97,9 +103,11 @@ Some settings can't be changed safely over adb. Do these by hand if you like:
 - Settings > Privacy > **Ads**: turn off personalisation, or delete the
   advertising ID.
 
-## 8. Set up from your phone
+## 5. Set up from your phone or on the TV
 
-On the TV, hold **OK** on any tile and choose **Set up from your phone**.
+On the TV, open **Home settings**, the last tile on the dock, to change
+everything with the remote. Or hold **OK** on any tile and choose **Set up from
+your phone**.
 Scan the QR code with your phone's camera (or open `glasshome.local:8090` and
 enter the code), and you can:
 
@@ -118,6 +126,15 @@ scripts/restore.sh             # undoes every change, newest first
 scripts/restore.sh --uninstall # ...and removes Glass Home too
 ```
 
+`restore.sh` makes a backup of the state before it starts, then reads
+`.tv/changes.log` from the newest change back: switched-off apps are switched
+on, each setting gets back the value it had, the Home button goes back to the
+stock launcher. The log is then kept as `.tv/changes.log.restored-<date-time>`.
+
+If something looks wrong afterwards, compare the TV with a backup: each
+folder in `.tv/backup/` has `packages-disabled.txt`, `settings-*.txt` and
+`home-activity.txt` as plain text.
+
 ## When something goes wrong
 
 **The scripts can't find the TV.** Wireless debugging often switches itself
@@ -129,7 +146,14 @@ again, then turn Wireless debugging back on. If you disabled anything by hand
 outside these scripts, run `scripts/restore.sh` once you're connected.
 
 **Home shows the stock screen.** Check Settings > Accessibility > Glass Home is
-on, or run `scripts/set-home.sh` again. System updates can switch it off.
+on, or run `scripts/set-home.sh` again. A system update can switch it off, and so
+does **Force stop** on Glass Home in Settings > Apps (Android does that to every
+app with an accessibility service).
+
+**Home still shows Google TV for a moment.** Some TVs handle the Home key
+before accessibility services see it. Glass Home then still comes in front as
+soon as Google TV opens. On the website, More > Home button > After Google TV
+makes that the only way.
 
 **Fixing it without a computer.** Settings > Apps > See all apps > Show
 system apps: anything disabled can be enabled again there. Settings >

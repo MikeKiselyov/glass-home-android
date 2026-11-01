@@ -93,6 +93,9 @@ class AppCatalog(private val context: Context, private val icons: IconStore) {
     }
 
     fun open(item: DockItem): Boolean {
+        if (item.key == SETTINGS_KEY) {
+            return start(Intent(context, SettingsActivity::class.java))
+        }
         val packageName = item.packageName
         if (packageName != null) {
             val packageManager = context.packageManager
@@ -110,6 +113,7 @@ class AppCatalog(private val context: Context, private val icons: IconStore) {
         val items = ArrayList<DockItem>()
         items.addAll(apps())
         items.addAll(connectedInputs())
+        items.add(settingsTile())
 
         val savedOrder = (prefs.getString("order", "") ?: "").split(",")
         items.sortWith { first, second ->
@@ -167,6 +171,18 @@ class AppCatalog(private val context: Context, private val icons: IconStore) {
             result.add(DockItem(packageName, label, packageName, null, icon, original, iconVersion = iconVersion))
         }
         return result
+    }
+
+    /**
+     * Glass Home's own settings (the phone website, on the TV), so the remote
+     * alone is enough to change the theme and the rest. Last on the dock unless
+     * moved; it can be hidden like any tile.
+     */
+    private fun settingsTile(): DockItem {
+        val original = context.getDrawable(R.drawable.icon)
+        val icon = icons.resolve(SETTINGS_KEY, original, null)
+        val iconVersion = icons.chosenId(SETTINGS_KEY) ?: ""
+        return DockItem(SETTINGS_KEY, I18n.t("tv.settings_tile"), context.packageName, null, icon, original, iconVersion = iconVersion)
     }
 
     /** HDMI ports with something plugged in, named by HDMI-CEC when the device reports a name. */
@@ -236,9 +252,13 @@ class AppCatalog(private val context: Context, private val icons: IconStore) {
             "com.netflix.ninja",
             "com.spotify.tv.android",
         )
+        /** The dock tile that opens Glass Home's settings on the TV. */
+        const val SETTINGS_KEY = "glasshome:settings"
+
         private val LAST = listOf(
             "com.android.vending",
             "com.android.tv.settings",
+            SETTINGS_KEY,
         )
         private val EXCLUDED = setOf(
             "com.mediatek.androidbox",

@@ -58,6 +58,22 @@ class Weather(context: Context) {
             .apply()
     }
 
+    /**
+     * True when the last reading is recent enough to show without asking again:
+     * Home is pressed many times an hour, the weather changes slower.
+     */
+    /** When the last reading was taken (System.currentTimeMillis), 0 if never. */
+    fun cachedAt(): Long {
+        return prefs.getLong("cached_at", 0L)
+    }
+
+    fun isFresh(): Boolean {
+        if (!prefs.contains("cached_code")) {
+            return false
+        }
+        return isFresh(prefs.getLong("cached_at", 0L), System.currentTimeMillis())
+    }
+
     /** The last reading if it is less than [MAX_CACHE_AGE_MS] old. */
     fun cached(): WeatherNow? {
         val cachedAt = prefs.getLong("cached_at", 0L)
@@ -224,5 +240,25 @@ class Weather(context: Context) {
         private const val TAG = "GlassHome"
         private const val TIMEOUT_MS = 8_000
         private const val MAX_CACHE_AGE_MS = 3 * 3600_000L
+
+        /** A reading younger than this is not fetched again when Home is pressed. */
+        const val FRESH_MS = 25 * 60_000L
+
+        /** When to fetch next after a fresh reading: [every] after it was taken, not after now. */
+        fun nextFetchIn(cachedAt: Long, now: Long, every: Long): Long {
+            val wait = cachedAt + every - now
+            if (wait < 0) {
+                return 0
+            }
+            if (wait > every) {
+                return every
+            }
+            return wait
+        }
+
+        fun isFresh(cachedAt: Long, now: Long): Boolean {
+            val age = now - cachedAt
+            return age >= 0 && age < FRESH_MS
+        }
     }
 }

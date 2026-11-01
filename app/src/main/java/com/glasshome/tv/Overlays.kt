@@ -15,7 +15,6 @@ import android.widget.HorizontalScrollView
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import java.util.concurrent.Executors
 
 /**
  * Panels over the home screen: the tile menu (hold OK), the wallpaper picker
@@ -32,7 +31,7 @@ class Overlays(
     var onDockChanged: () -> Unit = {}
 
     private val handler = Handler(Looper.getMainLooper())
-    private val thumbLoader = Executors.newSingleThreadExecutor()
+    private val thumbLoader = Background.executor("glasshome-thumbs")
     private val thumbs = ArrayList<Bitmap>()
     private var generation = 0
     private var showingPhoneInfo = false

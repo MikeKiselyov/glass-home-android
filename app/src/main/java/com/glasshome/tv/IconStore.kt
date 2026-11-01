@@ -179,7 +179,12 @@ class IconStore(private val context: Context) {
             return null
         }
         return try {
-            context.assets.open("icons/$name").use { input -> BitmapFactory.decodeStream(input) }
+            val bounds = BitmapFactory.Options()
+            bounds.inJustDecodeBounds = true
+            context.assets.open("icons/$name").use { input -> BitmapFactory.decodeStream(input, null, bounds) }
+            val options = BitmapFactory.Options()
+            options.inSampleSize = sampleFor(bounds.outWidth, tileIconPixels())
+            context.assets.open("icons/$name").use { input -> BitmapFactory.decodeStream(input, null, options) }
         } catch (missing: java.io.IOException) {
             null
         }
@@ -193,7 +198,17 @@ class IconStore(private val context: Context) {
         if (!file.isFile) {
             return null
         }
-        return BitmapFactory.decodeFile(file.path)
+        val bounds = BitmapFactory.Options()
+        bounds.inJustDecodeBounds = true
+        BitmapFactory.decodeFile(file.path, bounds)
+        val options = BitmapFactory.Options()
+        options.inSampleSize = sampleFor(bounds.outWidth, tileIconPixels())
+        return BitmapFactory.decodeFile(file.path, options)
+    }
+
+    /** The largest icon the dock draws (Glass theme, focused), in pixels on this screen. */
+    private fun tileIconPixels(): Int {
+        return (LARGEST_TILE_ICON_DP * context.resources.displayMetrics.density).toInt()
     }
 
     private fun isSafeName(name: String): Boolean {
@@ -205,6 +220,26 @@ class IconStore(private val context: Context) {
         const val GROUP_MINE = "mine"
         const val DEVICE_HDMI = "hdmi"
         private const val ICON_SIZE = 312
+
+        /** Glass theme's tile icon; the other themes draw smaller. */
+        private const val LARGEST_TILE_ICON_DP = 62
+
+        /**
+         * How much to shrink an icon while decoding it: icons are stored at 312 px
+         * and drawn at 26-62 dp. Halves while the result stays at least [needed]
+         * pixels wide, so the icon is never drawn blurry. Each halving keeps a
+         * quarter of the memory.
+         */
+        fun sampleFor(width: Int, needed: Int): Int {
+            var sample = 1
+            if (needed <= 0) {
+                return sample
+            }
+            while (width / (sample * 2) >= needed) {
+                sample *= 2
+            }
+            return sample
+        }
         private val DRAWN_STYLES = listOf("glow", "toy", "line")
 
         /** Guesses the device from its HDMI-CEC name: "PlayStation 5" -> "playstation". */
