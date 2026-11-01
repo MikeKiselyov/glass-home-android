@@ -27,6 +27,22 @@ class ZoomFrame @JvmOverloads constructor(
             invalidate()
         }
 
+    /**
+     * The photos fade in by alpha every interval. With overlapping children the
+     * whole full-screen slide is first drawn into an off-screen layer each
+     * frame of the fade; with only the photo visible (most photos, which fill
+     * the screen) it is simply drawn see-through, which looks the same.
+     */
+    override fun hasOverlappingRendering(): Boolean {
+        var visible = 0
+        for (index in 0 until childCount) {
+            if (getChildAt(index).visibility == VISIBLE) {
+                visible += 1
+            }
+        }
+        return visible > 1
+    }
+
     override fun dispatchDraw(canvas: Canvas) {
         if (zoom == 1f) {
             super.dispatchDraw(canvas)

@@ -80,6 +80,11 @@ class HomeSettings(context: Context) {
         get() = prefs.getString("language", "en") ?: "en"
         set(value) = prefs.edit().putString("language", value).apply()
 
+    /** What the Home button does on Google TV: one of [HomeButton.MODES]. */
+    var homeButton: String
+        get() = valid(prefs.getString("home_button", HomeButton.CATCH), HomeButton.MODES, HomeButton.CATCH)
+        set(value) = prefs.edit().putString("home_button", value).apply()
+
     var albumLink: String
         get() = prefs.getString("album_link", "") ?: ""
         set(value) = prefs.edit().putString("album_link", value).apply()

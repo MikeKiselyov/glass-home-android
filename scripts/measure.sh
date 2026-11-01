@@ -20,6 +20,8 @@ PORT=8090
 runs=${1:-5}
 
 TV=${TV:-$("$root/scripts/tv-connect.sh")}
+. "$root/scripts/accessibility.sh"
+remember_accessibility
 base="http://${TV%%:*}:$PORT"
 work="$root/.tv/measure"
 mkdir -p "$work"
@@ -59,6 +61,7 @@ start_time() {
 
 cold_start() {
     shell am force-stop "$PACKAGE"
+    put_accessibility_back
     sleep 2
     start_time
 }
@@ -123,6 +126,7 @@ restore() {
     rm -f "$jar"
 }
 trap restore EXIT
+trap 'exit 130' INT TERM
 
 # ---------- per theme ----------
 

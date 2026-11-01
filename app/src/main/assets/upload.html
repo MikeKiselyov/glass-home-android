@@ -352,6 +352,14 @@
 
       <!-- ===== More: weather, shared album, icons ===== -->
       <div class="tab-panel" id="panel-more" data-tab="more" role="tabpanel" aria-labelledby="tab-more">
+      <section id="home-button-section">
+        <h2 data-i18n="web.home.title"></h2>
+        <div class="rows">
+          <div class="row"><span data-i18n="web.home.label"></span><div class="segments" id="home-button" role="radiogroup" data-i18n-aria-label="web.home.label"></div></div>
+        </div>
+        <p class="hint" data-i18n="web.home.lead"></p>
+      </section>
+
       <section id="weather">
         <h2 data-i18n="web.weather.title"></h2>
         <p class="hint" id="weather-now"></p>
@@ -411,6 +419,10 @@
     { id: '24', key: 'web.look.clock_24_short' },
     { id: '12', key: 'web.look.clock_12_short' },
     { id: 'auto', key: 'web.look.clock_auto_short' }
+  ];
+  var HOME_BUTTON_MODES = [
+    { id: 'catch', key: 'web.home.catch' },
+    { id: 'after', key: 'web.home.after' }
   ];
   var FONTS = [
     { id: 'instrument', name: 'Instrument Serif', family: '"Instrument Serif", serif', weight: 400 },
@@ -890,6 +902,12 @@
       clockFormat.appendChild(choice('clockFormat', format.id, '', t(format.key), settings.clockFormat === format.id));
     });
 
+    var homeButton = $('home-button');
+    homeButton.textContent = '';
+    HOME_BUTTON_MODES.forEach(function (mode) {
+      homeButton.appendChild(choice('homeButton', mode.id, '', t(mode.key), settings.homeButton === mode.id));
+    });
+
     var fonts = $('fonts');
     fonts.textContent = '';
     FONTS.forEach(function (font) {
@@ -914,7 +932,7 @@
     });
   }
 
-  ['themes', 'clock-format', 'fonts', 'dates', 'weather-styles'].forEach(function (id) {
+  ['themes', 'clock-format', 'home-button', 'fonts', 'dates', 'weather-styles'].forEach(function (id) {
     $(id).addEventListener('change', function (event) {
       if (event.target.type !== 'radio') return;
       saveSetting(event.target.name, event.target.value).then(function () { toast(t('web.saved')); });

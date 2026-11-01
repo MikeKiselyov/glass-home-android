@@ -40,8 +40,13 @@ run() {
 adb connect "$TV" >/dev/null 2>&1 || true
 adb -s "$TV" get-state >/dev/null
 
-# Newest change first.
-tail -r "$log" | while read -r action first second third; do
+if [ "$dry_run" = false ]; then
+    # The state before undoing, too: if the undo itself goes wrong, this is what it was.
+    TV="$TV" "$root/scripts/backup.sh"
+fi
+
+# Newest change first. (awk rather than "tail -r", which Linux doesn't have.)
+awk '{ line[NR] = $0 } END { for (number = NR; number > 0; number--) print line[number] }' "$log" | while read -r action first second third; do
     case "$action" in
         disable)
             run pm enable "$first"

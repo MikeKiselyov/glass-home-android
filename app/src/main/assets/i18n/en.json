@@ -43,6 +43,7 @@
   "tv.brand": "Glass Home",
   "tv.type_hint": "Hold OK to move, hide or change",
   "tv.could_not_open": "Couldn't open {app}",
+  "tv.settings_tile": "Home settings",
   "tv.button_empty": "Nothing on the {color} button yet. Hold OK on a tile to assign one.",
   "tv.color.red": "red",
   "tv.color.green": "green",
@@ -122,6 +123,11 @@
   "web.locked": "Too many wrong codes. Try again in {minutes} min.",
   "web.offline": "Can’t reach the TV. Check that this phone is on the home Wi-Fi.",
   "web.saved": "Changed on the TV",
+  "web.home.title": "Home button",
+  "web.home.label": "Home opens",
+  "web.home.catch": "Glass Home at once",
+  "web.home.after": "After Google TV",
+  "web.home.lead": "At once: Google TV doesn't start and its screen doesn't flash; holding Home no longer opens the Google TV panel. After Google TV: Google TV opens first and Glass Home comes in front of it. Only on TVs set up with scripts/set-home.sh.",
   "web.footer": "Glass Home answers only on your home network. This phone stays signed in for 30 days.",
 
 

@@ -10,6 +10,9 @@ import android.media.tv.TvInputManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
+import android.util.Log
+import android.view.Choreographer
 import android.text.format.DateFormat
 import android.util.TypedValue
 import android.view.KeyEvent
@@ -22,7 +25,6 @@ import android.widget.Toast
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
-import java.util.concurrent.Executors
 
 /**
  * The home screen. Four themes share this logic and differ in layout and dock
@@ -62,8 +64,8 @@ class MainActivity : Activity() {
 
     private var items: List<DockItem> = emptyList()
     private val handler = Handler(Looper.getMainLooper())
-    private val weatherLoader = Executors.newSingleThreadExecutor()
-    private val dockLoader = Executors.newSingleThreadExecutor()
+    private val weatherLoader = Background.executor("glasshome-weather")
+    private val dockLoader = Background.executor("glasshome-dock")
     private val codeChanged: () -> Unit = { runOnUiThread { overlays.codeChanged() } }
     private var dockGeneration = 0
 
@@ -224,6 +226,10 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         hideSystemBars()
+        // For scripts/measure-home.sh: the first frame after Glass Home came in front.
+        Choreographer.getInstance().postFrameCallback {
+            Log.i(HomeOverrideService.TIMING_TAG, "home shown " + SystemClock.uptimeMillis())
+        }
     }
 
     /** Another app is in front: drop the photos so the launcher holds almost no memory. */
@@ -470,6 +476,13 @@ class MainActivity : Activity() {
         val cached = weather.cached()
         if (cached != null) {
             showWeather(cached)
+        }
+        // Back on the home screen (redrawUnchanged false) with a recent reading:
+        // no network, the regular tick fetches the next one.
+        if (!redrawUnchanged && cached != null && weather.isFresh()) {
+            val wait = Weather.nextFetchIn(weather.cachedAt(), System.currentTimeMillis(), WEATHER_EVERY_MS)
+            handler.postDelayed(weatherTick, wait)
+            return
         }
         weatherLoader.execute {
             val fresh = weather.fetch()

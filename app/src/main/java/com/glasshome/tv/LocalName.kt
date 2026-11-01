@@ -27,8 +27,7 @@ class LocalName(private val context: Context) {
             return
         }
         running = true
-        val thread = Thread({ serve() }, "glasshome-mdns")
-        thread.isDaemon = true
+        val thread = Background.factory("glasshome-mdns").newThread { serve() }
         thread.start()
     }
 

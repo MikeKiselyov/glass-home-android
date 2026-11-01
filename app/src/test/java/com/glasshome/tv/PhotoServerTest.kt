@@ -197,4 +197,19 @@ class PhotoServerTest {
         val response = server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/weather", cookie = cookie, form = form))
         assertEquals(NanoHTTPD.Response.Status.OK, response.status)
     }
+
+    /** The Home button choice on the website reaches the setting the accessibility service reads. */
+    @Test
+    fun homeButtonChoiceIsSavedAndUnknownValuesAreIgnored() {
+        val cookie = sessionCookie(signIn(server.code))
+        val context = RuntimeEnvironment.getApplication()
+        server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/settings", cookie = cookie, form = mapOf("homeButton" to "after")))
+        assertEquals("after", HomeSettings(context).homeButton)
+        server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/settings", cookie = cookie, form = mapOf("homeButton" to "nonsense")))
+        assertEquals("after", HomeSettings(context).homeButton)
+
+        val response = server.serve(FakeSession(NanoHTTPD.Method.GET, "/api/settings", cookie = cookie))
+        val body = response.data.bufferedReader().readText()
+        assertTrue(body.contains("\"homeButton\":\"after\""))
+    }
 }

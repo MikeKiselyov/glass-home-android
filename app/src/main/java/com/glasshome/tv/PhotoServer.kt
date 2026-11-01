@@ -385,6 +385,7 @@ class PhotoServer(
         val body = JSONObject()
             .put("photoInterval", settings.photoIntervalSeconds)
             .put("clockFormat", settings.clockFormat)
+            .put("homeButton", settings.homeButton)
             // What the TV shows now; with "auto" that is the TV's own setting.
             .put("clock24", uses24Hours())
             .put("nightEnabled", settings.nightEnabled)
@@ -417,6 +418,10 @@ class PhotoServer(
         val clockFormat = parameters["clockFormat"]?.firstOrNull()
         if (clockFormat == "auto" || clockFormat == "12" || clockFormat == "24") {
             settings.clockFormat = clockFormat
+        }
+        val homeButton = parameters["homeButton"]?.firstOrNull()
+        if (homeButton != null && HomeButton.MODES.contains(homeButton)) {
+            settings.homeButton = homeButton
         }
         val nightEnabled = parameters["nightEnabled"]?.firstOrNull()
         if (nightEnabled != null) {
