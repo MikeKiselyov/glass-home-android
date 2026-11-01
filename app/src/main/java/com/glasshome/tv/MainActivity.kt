@@ -66,6 +66,7 @@ class MainActivity : Activity() {
     private val handler = Handler(Looper.getMainLooper())
     private val weatherLoader = Background.executor("glasshome-weather")
     private val dockLoader = Background.executor("glasshome-dock")
+    private var reportedFullyDrawn = false
     private val codeChanged: () -> Unit = { runOnUiThread { overlays.codeChanged() } }
     private var dockGeneration = 0
 
@@ -698,12 +699,13 @@ class MainActivity : Activity() {
         if (dock.childCount == 0) {
             // A new screen (the TV may close the home screen in the background):
             // show the dock from last time at once, then check it like below.
+            // The very first start has no dock yet: the clock, the date and the
+            // photo come first and the tiles a moment later, rather than the
+            // whole screen waiting for every app's name and icon.
             val last = app.lastDock
-            if (last == null) {
-                rebuildDock()
-                return
+            if (last != null) {
+                showDock(last)
             }
-            showDock(last)
         }
         dockGeneration += 1
         val generation = dockGeneration
@@ -712,6 +714,11 @@ class MainActivity : Activity() {
             runOnUiThread {
                 if (generation == dockGeneration && !isDestroyed && !DockItems.sameTiles(fresh, items)) {
                     showDock(fresh)
+                }
+                if (!reportedFullyDrawn && !isDestroyed) {
+                    // "Fully drawn" in the log: the start until the tiles are there too.
+                    reportedFullyDrawn = true
+                    reportFullyDrawn()
                 }
             }
         }

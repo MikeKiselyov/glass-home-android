@@ -163,20 +163,22 @@ class Backdrop(
                     forAmbient = blurredCopy(bitmap)
                 }
             }
+            // Last: from here on the photo can be drawn but not read.
+            val shown = if (bitmap != null) GpuBitmap.move(bitmap) else null
             handler.post {
                 if (requestGeneration != generation || !running) {
-                    bitmap?.recycle()
+                    shown?.recycle()
                     blurred?.recycle()
                     forAmbient?.recycle()
                     return@post
                 }
-                if (bitmap == null || framing == null) {
+                if (shown == null || framing == null) {
                     // An unreadable file: skip it rather than stop the show.
                     handler.removeCallbacks(advance)
                     handler.postDelayed(advance, SKIP_MS)
                     return@post
                 }
-                crossfadeTo(bitmap, framing, blurred)
+                crossfadeTo(shown, framing, blurred)
                 showAmbient(forAmbient)
                 onShow(wallpaper)
                 handler.removeCallbacks(advance)
