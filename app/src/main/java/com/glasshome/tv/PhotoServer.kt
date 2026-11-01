@@ -398,6 +398,7 @@ class PhotoServer(
             .put("language", I18n.language)
             .put("languages", JSONArray(availableLanguages()))
             .put("shufflePhotos", settings.shufflePhotos)
+            .put("photoMotion", settings.photoMotion)
             .put("photoMode", store.mode)
             .put("pinnedPhoto", store.pinnedKey ?: "")
             .put("albumLink", settings.albumLink)
@@ -471,6 +472,10 @@ class PhotoServer(
         }
         if (photoModeChanged) {
             onPhotoModeChanged?.invoke()
+        }
+        val motion = parameters["photoMotion"]?.firstOrNull()
+        if (motion != null) {
+            settings.photoMotion = motion == "1"
         }
         val shuffle = parameters["shufflePhotos"]?.firstOrNull()
         if (shuffle != null) {

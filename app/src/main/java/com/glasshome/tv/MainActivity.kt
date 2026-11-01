@@ -144,6 +144,7 @@ class MainActivity : Activity() {
             slideB,
             { app.settings.photoIntervalSeconds * 1000L },
             { app.settings.shufflePhotos },
+            { app.settings.photoMotion },
         ) { wallpaper ->
             app.currentPhotoKey = wallpaper.key
             showCaption(wallpaper)

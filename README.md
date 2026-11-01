@@ -111,7 +111,8 @@ be seen before you look up. Below it, four tabs:
 
 - **Look**: theme, clock (24 h, 12 h or the TV's setting), clock font, date,
   weather style and night mode.
-- **Photos**: add photos, shuffle or your own order, how long each one stays.
+- **Photos**: add photos, shuffle or your own order, how long each one stays,
+  slow zoom on or off.
 - **Apps**: the dock in order, hide or show, and the colour buttons.
 - **More**: the weather city, a shared iCloud or Google Photos album, icons.
 
@@ -198,7 +199,8 @@ all of them, Glass Home's release build with the default Clock theme:
   60 per second (typically 30 ms each). Glass Home moves the focus without
   animating rows, so it has about a ninth of the frames to draw.
 - **Idle CPU** is the one place Glass Home costs more: the photo's slow zoom,
-  in half-second steps you can't see.
+  in steps too small to see. **Photos > Slow zoom** off on the website keeps
+  the photos still and the TV idler.
 - The factory state was measured 2 minutes after boot, so some of its 41 apps
   were still starting up.
 

@@ -40,6 +40,11 @@ class HomeSettings(context: Context) {
         get() = prefs.getBoolean("shuffle_photos", true)
         set(value) = prefs.edit().putBoolean("shuffle_photos", value).apply()
 
+    /** false: photos stay still (no slow zoom), which keeps the TV idler. */
+    var photoMotion: Boolean
+        get() = prefs.getBoolean("photo_motion", true)
+        set(value) = prefs.edit().putBoolean("photo_motion", value).apply()
+
     /** Home screen layout: one of [THEMES]. */
     var theme: String
         get() = valid(prefs.getString("theme", "clock"), THEMES, "clock")
