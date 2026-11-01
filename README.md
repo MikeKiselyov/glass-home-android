@@ -367,6 +367,12 @@ and 20 wrong codes from any phones lock sign-in for everyone and replace the
 code (each lockout in a row lasts twice as long). Phones stay signed in for 30
 days.
 
+## Releases
+
+APKs on the [Releases](https://github.com/MikeKiselyov/glass-home-android/releases)
+page are signed with one permanent key, so each release installs over the
+previous one. How releases are made: [docs/RELEASING.md](docs/RELEASING.md).
+
 ## Credits and licences
 
 - Code: MIT, see [LICENSE](LICENSE). Based on Glass Home for Samsung TVs by
