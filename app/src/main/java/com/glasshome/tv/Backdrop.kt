@@ -42,6 +42,7 @@ class Backdrop(
     private val second: Slide,
     private val intervalMs: () -> Long,
     private val shuffle: () -> Boolean,
+    private val motion: () -> Boolean,
     private val onShow: (Wallpaper) -> Unit,
 ) {
     private val handler = Handler(Looper.getMainLooper())
@@ -55,6 +56,10 @@ class Backdrop(
     private var zoomFrame: ZoomFrame? = null
     private var zoomStartedAt = 0L
     private var zoomDurationMs = 0L
+    private var zoomStepMs = SlowZoom.STEP_MS
+
+    /** Where the faces are in each photo: found once, not again every time it comes round. */
+    private val framings = FramingCache()
 
     private val zoomStep = object : Runnable {
         override fun run() {
@@ -63,7 +68,7 @@ class Backdrop(
             val scale = SlowZoom.scaleAt(elapsed, zoomDurationMs, ZOOM)
             frame.zoom = scale
             if (elapsed < zoomDurationMs) {
-                handler.postDelayed(this, SlowZoom.STEP_MS)
+                handler.postDelayed(this, zoomStepMs)
             }
         }
     }
@@ -146,7 +151,11 @@ class Backdrop(
             var blurred: Bitmap? = null
             var forAmbient: Bitmap? = null
             if (bitmap != null) {
-                framing = PhotoFraming.of(bitmap)
+                framing = framings.get(wallpaper.key)
+                if (framing == null) {
+                    framing = PhotoFraming.of(bitmap)
+                    framings.put(wallpaper.key, framing)
+                }
                 if (framing.fitWhole) {
                     blurred = blurredCopy(bitmap)
                 }
@@ -154,20 +163,22 @@ class Backdrop(
                     forAmbient = blurredCopy(bitmap)
                 }
             }
+            // Last: from here on the photo can be drawn but not read.
+            val shown = if (bitmap != null) GpuBitmap.move(bitmap) else null
             handler.post {
                 if (requestGeneration != generation || !running) {
-                    bitmap?.recycle()
+                    shown?.recycle()
                     blurred?.recycle()
                     forAmbient?.recycle()
                     return@post
                 }
-                if (bitmap == null || framing == null) {
+                if (shown == null || framing == null) {
                     // An unreadable file: skip it rather than stop the show.
                     handler.removeCallbacks(advance)
                     handler.postDelayed(advance, SKIP_MS)
                     return@post
                 }
-                crossfadeTo(bitmap, framing, blurred)
+                crossfadeTo(shown, framing, blurred)
                 showAmbient(forAmbient)
                 onShow(wallpaper)
                 handler.removeCallbacks(advance)
@@ -218,10 +229,15 @@ class Backdrop(
         fade.start()
 
         // The slow zoom runs for the whole time the photo is on screen, in steps (see SlowZoom).
-        zoomFrame = back.frame
-        zoomStartedAt = SystemClock.uptimeMillis()
-        zoomDurationMs = intervalMs() + FADE_MS
-        handler.post(zoomStep)
+        if (motion()) {
+            zoomFrame = back.frame
+            zoomStartedAt = SystemClock.uptimeMillis()
+            zoomDurationMs = intervalMs() + FADE_MS
+            zoomStepMs = SlowZoom.stepMs(zoomDurationMs, ZOOM, back.frame.resources.displayMetrics.widthPixels)
+            handler.post(zoomStep)
+        } else {
+            zoomFrame = null
+        }
 
         front = back
     }

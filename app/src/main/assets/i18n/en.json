@@ -137,6 +137,8 @@
   "web.photos.lead": "Your photos play on the TV before the built-in nature ones. Portrait photos are shown whole; landscape ones are framed around faces.",
   "web.photos.add": "Add photos",
   "web.photos.shuffle": "Shuffle (off: in the order below)",
+  "web.photos.motion": "Slow zoom on photos (off: still photos, a quieter TV)",
+  "web.photos.motion_saved": "From the next photo",
   "web.photos.shuffling": "Shuffling",
   "web.photos.in_order": "Playing in your order",
   "web.photos.grid_label": "Your photos. Drag the handle to reorder.",

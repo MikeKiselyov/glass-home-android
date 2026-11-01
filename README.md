@@ -31,7 +31,7 @@ by victaphu, rebuilt as a native Android app.
 - [Speed and memory](#speed-and-memory)
 - [Set up](#set-up) (install on your TV) and [going back](#going-back)
 - [Using it](#using-it)
-- [Good to know](#good-to-know) and [Privacy](#privacy)
+- [Good to know](#good-to-know), [More room on a Google TV](#more-room-on-a-google-tv) and [Privacy](#privacy)
 
 ## What you get
 
@@ -111,7 +111,8 @@ be seen before you look up. Below it, four tabs:
 
 - **Look**: theme, clock (24 h, 12 h or the TV's setting), clock font, date,
   weather style and night mode.
-- **Photos**: add photos, shuffle or your own order, how long each one stays.
+- **Photos**: add photos, shuffle or your own order, how long each one stays,
+  slow zoom on or off.
 - **Apps**: the dock in order, hide or show, and the colour buttons.
 - **More**: the weather city, a shared iCloud or Google Photos album, icons.
 
@@ -198,7 +199,8 @@ all of them, Glass Home's release build with the default Clock theme:
   60 per second (typically 30 ms each). Glass Home moves the focus without
   animating rows, so it has about a ninth of the frames to draw.
 - **Idle CPU** is the one place Glass Home costs more: the photo's slow zoom,
-  in half-second steps you can't see.
+  in steps too small to see. **Photos > Slow zoom** off on the website keeps
+  the photos still and the TV idler.
 - The factory state was measured 2 minutes after boot, so some of its 41 apps
   were still starting up.
 
@@ -353,6 +355,23 @@ your TV and are never part of this repository or the APK.
   can change at any time. iCloud shared albums use Apple's web API.
 - **YouTube ads** come from the same servers as the videos, so DNS blocking
   can't remove them.
+
+## More room on a Google TV
+
+What else kept memory on the test TV after the set-up, and what can be done
+about it. Check yours with `adb shell dumpsys meminfo` (the "Total PSS by
+process" list).
+
+| What | Memory | Can it go? |
+|---|---|---|
+| Google Assistant (`com.google.android.katniss`) | about 65 MB | If you don't use the microphone button: `scripts/debloat.sh` offers it as a feature |
+| Chromecast built-in (`com.google.android.apps.mediashell`) | about 25 MB | If you don't cast from a phone: `scripts/debloat.sh` |
+| Apps Google TV installs during set-up (Apple TV, Max, Disney+, Prime Video...) | not running until used | Hold OK on the tile > Uninstall |
+| Google TV's own home screen | about 120 MB | No: switching it off breaks the TV. It stays in memory next to Glass Home |
+| Netflix and other apps you used | until Android needs the room | Nothing to do: Android unloads them when it needs the memory |
+
+A plain screensaver (`scripts/setup.sh --screensaver colors`) keeps Google's
+photo screensaver off the network while the TV is idle.
 
 ## Privacy
 

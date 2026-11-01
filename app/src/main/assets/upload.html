@@ -331,6 +331,7 @@
         <div class="progress" id="upload-progress" hidden><span></span></div>
         <div class="rows">
           <div class="row"><label for="shuffle" data-i18n="web.photos.shuffle"></label><span class="switch"><input type="checkbox" id="shuffle"><span></span></span></div>
+          <div class="row"><label for="motion" data-i18n="web.photos.motion"></label><span class="switch"><input type="checkbox" id="motion"><span></span></span></div>
           <div class="row"><label for="interval" data-i18n="web.look.interval"></label>
             <select id="interval">
               <option value="15" data-i18n="web.interval.15"></option><option value="30" data-i18n="web.interval.30"></option><option value="45" data-i18n="web.interval.45"></option>
@@ -825,6 +826,12 @@
     event.target.value = '';
   });
 
+  $('motion').addEventListener('change', function (event) {
+    saveSetting('photoMotion', event.target.checked ? '1' : '0').then(function () {
+      toast(t('web.photos.motion_saved'));
+    });
+  });
+
   $('shuffle').addEventListener('change', function (event) {
     saveSetting('shufflePhotos', event.target.checked ? '1' : '0').then(function () {
       toast(event.target.checked ? t('web.photos.shuffling') : t('web.photos.in_order'));
@@ -957,6 +964,7 @@
     }
     settings = data;
     $('shuffle').checked = !!data.shufflePhotos;
+    $('motion').checked = data.photoMotion !== false;
     $('interval').value = String(data.photoInterval);
     $('night-enabled').checked = !!data.nightEnabled;
     $('night-from').value = String(data.nightFrom);

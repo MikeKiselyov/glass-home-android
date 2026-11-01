@@ -2,6 +2,7 @@ package com.glasshome.tv
 
 import android.app.Application
 import android.content.ComponentName
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -31,6 +32,26 @@ class SettingsActivityTest {
         assertFalse(SettingsActivity.loadNow(false, 0))
         assertFalse(SettingsActivity.loadNow(false, 49))
         assertTrue(SettingsActivity.loadNow(false, 50))
+    }
+
+    /** A WebView stays in its process for good: settings get a process of their own that ends on close. */
+    @Test
+    fun runsInItsOwnProcess() {
+        val context = RuntimeEnvironment.getApplication()
+        val info = context.packageManager.getActivityInfo(ComponentName(context, SettingsActivity::class.java), 0)
+        assertEquals("com.glasshome.tv:settings", info.processName)
+        assertTrue(GlassHomeApp.isSettingsProcess("com.glasshome.tv:settings"))
+        assertFalse(GlassHomeApp.isSettingsProcess("com.glasshome.tv"))
+    }
+
+    /** The sign-in is made where the website runs and handed over with the intent. */
+    @Test
+    fun theSessionTravelsWithTheIntent() {
+        val context = RuntimeEnvironment.getApplication()
+        val intent = SettingsActivity.intent(context, "token-123")
+        assertEquals(SettingsActivity::class.java.name, intent.component?.className)
+        assertEquals("token-123", SettingsActivity.sessionOf(intent))
+        assertEquals(null, SettingsActivity.sessionOf(SettingsActivity.intent(context, null)))
     }
 
     @Test

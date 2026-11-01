@@ -399,7 +399,7 @@ class Overlays(
     /** The phone website on the TV itself, worked with the remote. */
     fun openSettings() {
         close()
-        activity.startActivity(Intent(activity, SettingsActivity::class.java))
+        activity.startActivity(app.settingsIntent(activity))
     }
 
     /** The code changed (a reset, or too many wrong guesses): show the new one. */

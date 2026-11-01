@@ -42,9 +42,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.GlassHome">
 
-        <!-- The phone website, shown on the TV and worked with the remote. -->
+        <!-- The phone website, shown on the TV and worked with the remote. Its own process:
+             a WebView stays loaded in a process for good (about 55 MB), so the process
+             ends when settings close and the home screen stays light. -->
         <activity
             android:name=".SettingsActivity"
+            android:process=":settings"
             android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|screenLayout|smallestScreenSize|uiMode|density"
             android:exported="false"
             android:screenOrientation="landscape" />

@@ -1,6 +1,8 @@
 package com.glasshome.tv
 
 import android.app.Application
+import android.content.Context
+import android.content.Intent
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -44,6 +46,11 @@ class GlassHomeApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        if (isSettingsProcess(currentProcessName())) {
+            // Settings on the TV: only a WebView. The website, the photos and the
+            // rest belong to the home screen's process.
+            return
+        }
         wallpapers = WallpaperStore(this)
         icons = IconStore(this)
         catalog = AppCatalog(this, icons)
@@ -67,6 +74,26 @@ class GlassHomeApp : Application() {
         handler.postDelayed(albumTick, ALBUM_FIRST_MS)
     }
 
+    /** Opens the settings on the TV, signed in with a session made here, where the website runs. */
+    fun settingsIntent(context: Context): Intent {
+        if (!::server.isInitialized) {
+            // Not the home screen's process (or not started): settings ask for the code instead.
+            return SettingsActivity.intent(context, null)
+        }
+        return SettingsActivity.intent(context, server.signInGuard.newLocalSession())
+    }
+
+    private fun currentProcessName(): String {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            return getProcessName()
+        }
+        return try {
+            java.io.File("/proc/self/cmdline").readText().trim { character -> character <= ' ' }
+        } catch (unreadable: IOException) {
+            packageName
+        }
+    }
+
     /** Downloads new photos from the shared album now, then again every 6 hours. */
     fun syncAlbum() {
         handler.removeCallbacks(albumTick)
@@ -81,6 +108,10 @@ class GlassHomeApp : Application() {
     }
 
     companion object {
+        fun isSettingsProcess(processName: String): Boolean {
+            return processName.endsWith(":settings")
+        }
+
         private const val SOCKET_TIMEOUT_MS = 30_000
         private const val ALBUM_EVERY_MS = 6 * 3600_000L
 

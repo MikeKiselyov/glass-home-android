@@ -2,10 +2,13 @@ package com.glasshome.tv
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.Process
 import android.webkit.CookieManager
 import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebResourceRequest
@@ -26,7 +29,6 @@ class SettingsActivity : Activity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val app = application as GlassHomeApp
 
         webView = WebView(this)
         webView.setBackgroundColor(Color.parseColor("#14181B"))
@@ -37,12 +39,15 @@ class SettingsActivity : Activity() {
 
         val cookies = CookieManager.getInstance()
         cookies.setAcceptCookie(true)
-        val token = app.server.signInGuard.newLocalSession()
-        cookies.setCookie(ADDRESS, "gh=$token; Path=/; HttpOnly; SameSite=Strict")
-        cookies.flush()
+        // Made by the home screen's process, where the website and its sign-in live.
+        val token = intent.getStringExtra(EXTRA_SESSION)
+        if (token != null) {
+            cookies.setCookie(ADDRESS, "gh=$token; Path=/; HttpOnly; SameSite=Strict")
+            cookies.flush()
+        }
 
         webView.requestFocus()
-        loadWhenServerIsUp(app, 0)
+        loadWhenServerIsUp(0)
     }
 
     /**
@@ -50,14 +55,38 @@ class SettingsActivity : Activity() {
      * after (the app was restarted with settings on screen), wait for it a
      * little rather than show a "connection refused" page.
      */
-    private fun loadWhenServerIsUp(app: GlassHomeApp, attempt: Int) {
+    private fun loadWhenServerIsUp(attempt: Int) {
         if (isDestroyed) {
             return
         }
-        if (!loadNow(app.server.isAlive, attempt)) {
-            handler.postDelayed({ loadWhenServerIsUp(app, attempt + 1) }, WAIT_STEP_MS)
-            return
+        // The website runs in the home screen's process: try its port, off the UI thread.
+        Thread {
+            val up = serverAnswers()
+            runOnUiThread {
+                if (isDestroyed) {
+                    return@runOnUiThread
+                }
+                if (!loadNow(up, attempt)) {
+                    handler.postDelayed({ loadWhenServerIsUp(attempt + 1) }, WAIT_STEP_MS)
+                    return@runOnUiThread
+                }
+                load()
+            }
+        }.start()
+    }
+
+    private fun serverAnswers(): Boolean {
+        return try {
+            java.net.Socket().use { socket ->
+                socket.connect(java.net.InetSocketAddress("127.0.0.1", PhotoServer.PORT), 200)
+            }
+            true
+        } catch (closed: java.io.IOException) {
+            false
         }
+    }
+
+    private fun load() {
         // Look first: themes and fonts are what people change on the TV; photos come from a phone.
         webView.loadUrl("$ADDRESS/#look")
     }
@@ -68,6 +97,11 @@ class SettingsActivity : Activity() {
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
         webView.destroy()
+        if (isFinishing) {
+            // This process only ever holds settings: end it, and the WebView's
+            // memory goes with it. The home screen's process is not touched.
+            handler.post { Process.killProcess(Process.myPid()) }
+        }
         super.onDestroy()
     }
 
@@ -85,6 +119,21 @@ class SettingsActivity : Activity() {
 
     companion object {
         const val ADDRESS = "http://127.0.0.1:" + PhotoServer.PORT
+
+        private const val EXTRA_SESSION = "com.glasshome.tv.SESSION"
+
+        /** Settings on the TV, signed in with [session] (a local session from the website's process). */
+        fun intent(context: Context, session: String?): Intent {
+            val intent = Intent(context, SettingsActivity::class.java)
+            if (session != null) {
+                intent.putExtra(EXTRA_SESSION, session)
+            }
+            return intent
+        }
+
+        fun sessionOf(intent: Intent): String? {
+            return intent.getStringExtra(EXTRA_SESSION)
+        }
 
         private const val WAIT_STEP_MS = 100L
 

@@ -212,4 +212,16 @@ class PhotoServerTest {
         val body = response.data.bufferedReader().readText()
         assertTrue(body.contains("\"homeButton\":\"after\""))
     }
+
+    /** Still photos (no slow zoom) is a switch on the website's Photos tab. */
+    @Test
+    fun photoMotionCanBeSwitchedOff() {
+        val cookie = sessionCookie(signIn(server.code))
+        val context = RuntimeEnvironment.getApplication()
+        assertTrue(HomeSettings(context).photoMotion)
+        server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/settings", cookie = cookie, form = mapOf("photoMotion" to "0")))
+        assertEquals(false, HomeSettings(context).photoMotion)
+        val body = server.serve(FakeSession(NanoHTTPD.Method.GET, "/api/settings", cookie = cookie)).data.bufferedReader().readText()
+        assertTrue(body.contains("\"photoMotion\":false"))
+    }
 }
