@@ -292,7 +292,12 @@ Open a terminal in this repository and try:
 ## Using it
 
 - **OK** opens a tile. **Hold OK** for its menu: move, hide, change icon, put
-  on a colour button, wallpaper, Glass Home settings, set up from your phone.
+  on a colour button, uninstall, app info, wallpaper, Glass Home settings,
+  set up from your phone.
+- **Uninstall** is there for apps you (or Google TV) installed; Android asks
+  before removing anything. Apps built into the TV can't be removed: **App
+  info** opens the system page where they can be switched off, stopped or
+  have their updates removed.
 - **Home settings**, the last tile, opens the settings on the TV. Hide or move
   it like any tile.
 - **Back** closes a menu; on the home screen it does nothing.

@@ -79,6 +79,18 @@ class Overlays(
             close()
             onDockChanged()
         }
+        if (app.catalog.canUninstall(item)) {
+            addAction(panel, I18n.t("menu.uninstall")) {
+                close()
+                app.catalog.uninstall(item)
+            }
+        }
+        if (app.catalog.hasAppInfo(item)) {
+            addAction(panel, I18n.t("menu.app_info")) {
+                close()
+                app.catalog.openAppInfo(item)
+            }
+        }
         addAction(panel, I18n.t("menu.wallpaper")) { openWallpaperPicker() }
         addAction(panel, I18n.t("menu.tv_settings")) { openSettings() }
         addAction(panel, I18n.t("menu.phone")) { openPhoneInfo() }

@@ -4,6 +4,10 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.Settings
 import android.graphics.drawable.Drawable
 import android.media.tv.TvContract
 import android.media.tv.TvInputInfo
@@ -107,6 +111,45 @@ class AppCatalog(private val context: Context, private val icons: IconStore) {
         val inputId = item.inputId ?: return false
         val intent = Intent(Intent.ACTION_VIEW, TvContract.buildChannelUriForPassthroughInput(inputId))
         return start(intent)
+    }
+
+    /**
+     * True for apps the viewer installed (or the TV maker's ones that are not
+     * part of the system): Android shows its own "Uninstall?" question for them.
+     * Apps built into the system can only be switched off, in App info.
+     */
+    fun canUninstall(item: DockItem): Boolean {
+        val packageName = appPackage(item) ?: return false
+        return try {
+            val info = context.packageManager.getApplicationInfo(packageName, 0)
+            info.flags and ApplicationInfo.FLAG_SYSTEM == 0
+        } catch (notFound: PackageManager.NameNotFoundException) {
+            false
+        }
+    }
+
+    /** True for app tiles; HDMI devices and Glass Home's own settings tile have no app to show. */
+    fun hasAppInfo(item: DockItem): Boolean {
+        return appPackage(item) != null
+    }
+
+    /** Asks Android to uninstall the app; Android shows the question and does it. */
+    fun uninstall(item: DockItem): Boolean {
+        val packageName = appPackage(item) ?: return false
+        return start(Intent(Intent.ACTION_DELETE, Uri.parse("package:$packageName")))
+    }
+
+    /** The system's App info screen: force stop, clear data, switch off, uninstall updates. */
+    fun openAppInfo(item: DockItem): Boolean {
+        val packageName = appPackage(item) ?: return false
+        return start(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName")))
+    }
+
+    private fun appPackage(item: DockItem): String? {
+        if (item.key == SETTINGS_KEY || item.inputId != null) {
+            return null
+        }
+        return item.packageName
     }
 
     private fun allItems(): List<DockItem> {
