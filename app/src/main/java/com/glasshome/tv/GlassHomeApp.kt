@@ -30,6 +30,10 @@ class GlassHomeApp : Application() {
     @Volatile
     var lastDock: List<DockItem>? = null
 
+    /** The photo on the screen now; the website's live preview shows it. */
+    @Volatile
+    var currentPhotoKey: String? = null
+
     /** Photos in the shared album after the last sync; -1 if the link failed, null before any sync. */
     @Volatile
     var albumCount: Int? = null
@@ -56,6 +60,7 @@ class GlassHomeApp : Application() {
         LocalName(this).start()
         server.onAlbumChanged = { syncAlbum() }
         server.albumCount = { albumCount }
+        server.currentPhoto = { currentPhotoKey }
         syncAlbum()
     }
 

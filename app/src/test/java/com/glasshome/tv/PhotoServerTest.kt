@@ -180,4 +180,21 @@ class PhotoServerTest {
         }
         assertEquals(NanoHTTPD.Response.Status.FORBIDDEN, server.serve(session).status)
     }
+
+    /** A place name is shown on other phones and on the TV: markup in it is refused. */
+    @Test
+    fun weatherPlaceWithMarkupIsRefused() {
+        val cookie = sessionCookie(signIn(server.code))
+        val form = mapOf("name" to "<img src=x onerror=alert(1)>", "latitude" to "45.1", "longitude" to "5.7")
+        val response = server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/weather", cookie = cookie, form = form))
+        assertEquals(NanoHTTPD.Response.Status.BAD_REQUEST, response.status)
+    }
+
+    @Test
+    fun ordinaryPlaceNamesAreKept() {
+        val cookie = sessionCookie(signIn(server.code))
+        val form = mapOf("name" to "Saint-Martin-d'Hères, Auvergne-Rhône-Alpes, France", "latitude" to "45.16", "longitude" to "5.77")
+        val response = server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/weather", cookie = cookie, form = form))
+        assertEquals(NanoHTTPD.Response.Status.OK, response.status)
+    }
 }

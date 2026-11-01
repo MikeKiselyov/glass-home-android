@@ -162,7 +162,18 @@ dump_screen() {
 }
 
 # tap_text "Set up from your phone": taps the middle of the view showing that text.
+# uiautomator often misses the first time while a menu slides in: try a few times.
 tap_text() {
+    for attempt in 1 2 3 4; do
+        if tap_text_once "$1"; then
+            return 0
+        fi
+        sleep 2
+    done
+    return 1
+}
+
+tap_text_once() {
     dump_screen || return 1
     point=$(python3 - "$work/ui.xml" "$1" <<'PY'
 import re
@@ -310,11 +321,9 @@ sleep 2
 shot "tile-menu"
 
 if tap_text "Glass Home settings"; then
-    sleep 5
-    # Two steps down from the first control: the focus ring lands on a theme card.
-    key KEYCODE_DPAD_DOWN
-    sleep 1
-    key KEYCODE_DPAD_DOWN
+    sleep 6
+    # One step right from the first theme: the focus ring on Glass, the current theme filled.
+    key KEYCODE_DPAD_RIGHT
     sleep 1
     shot "tv-settings"
     key KEYCODE_BACK

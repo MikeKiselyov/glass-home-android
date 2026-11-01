@@ -33,6 +33,13 @@ next to the weather and on the phone website).
 Instrument Serif Project Authors, under the
 [SIL Open Font License 1.1](licenses/OFL-InstrumentSerif.txt).
 
+The settings website uses
+[Bricolage Grotesque](https://github.com/ateliertriay/bricolage) by the
+Bricolage Grotesque Project Authors
+([OFL 1.1](licenses/OFL-BricolageGrotesque.txt)) and
+[Atkinson Hyperlegible](https://www.brailleinstitute.org/freefont/) by the
+Braille Institute of America ([OFL 1.1](licenses/OFL-AtkinsonHyperlegible.txt)).
+
 ## Original project
 
 The design, the bundled photos and the idea of a phone website for uploads come
