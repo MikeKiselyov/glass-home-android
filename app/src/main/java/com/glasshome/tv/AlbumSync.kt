@@ -15,20 +15,24 @@ import java.security.MessageDigest
  *   Google Photos: https://photos.app.goo.gl/<id>                 (best effort: reads the share page)
  * New photos are downloaded as album-*.jpg next to uploaded ones; photos that
  * left the album are removed. Blocking: run off the main thread.
+ *
+ * Every address is checked by [AlbumLinks] before it is opened, redirects
+ * included, and every reply has a size limit. Album links carry the album's
+ * access token, so they never go into the log.
  */
 class AlbumSync(private val store: WallpaperStore, private val cacheDir: File) {
 
     /** Returns the number of photos now in the album on the TV, or -1 if the link failed. */
     fun sync(link: String): Int {
-        val trimmed = link.trim()
+        val trimmed = AlbumLinks.extractLink(link)
         if (trimmed.isEmpty()) {
             store.removeAlbumPhotosExcept(emptySet())
             return 0
         }
-        val photoUrls = when {
-            trimmed.contains("icloud.com/sharedalbum") -> iCloudPhotos(trimmed)
-            trimmed.contains("photos.app.goo.gl") || trimmed.contains("photos.google.com") -> googlePhotos(trimmed)
-            else -> null
+        val photoUrls = when (AlbumLinks.kind(trimmed)) {
+            AlbumLinks.Kind.ICLOUD -> iCloudPhotos(trimmed)
+            AlbumLinks.Kind.GOOGLE -> googlePhotos(trimmed)
+            null -> null
         }
         if (photoUrls == null) {
             return -1
@@ -63,6 +67,9 @@ class AlbumSync(private val store: WallpaperStore, private val cacheDir: File) {
         // A 330 reply names the server that holds this album.
         val redirectHost = stream?.optString("X-Apple-MMe-Host", "") ?: ""
         if (redirectHost.isNotEmpty()) {
+            if (!AlbumLinks.isICloudStreamHost(redirectHost)) {
+                return null
+            }
             host = redirectHost
             stream = postJson("https://$host/$token/sharedstreams/webstream", JSONObject().put("streamCtag", JSONObject.NULL))
         }
@@ -125,6 +132,7 @@ class AlbumSync(private val store: WallpaperStore, private val cacheDir: File) {
         var connection: HttpURLConnection? = null
         return try {
             connection = URL(address).openConnection() as HttpURLConnection
+            connection.instanceFollowRedirects = false
             connection.requestMethod = "POST"
             connection.doOutput = true
             connection.connectTimeout = TIMEOUT_MS
@@ -136,55 +144,89 @@ class AlbumSync(private val store: WallpaperStore, private val cacheDir: File) {
             if (stream == null) {
                 return null
             }
-            val text = stream.bufferedReader().use { reader -> reader.readText() }
-            JSONObject(text)
+            JSONObject(readText(stream))
         } catch (error: Exception) {
-            Log.w(TAG, "Album request failed: $address", error)
+            Log.w(TAG, "Album request failed: " + error.javaClass.simpleName)
             null
         } finally {
             connection?.disconnect()
         }
     }
 
-    private fun getText(address: String): String? {
-        var connection: HttpURLConnection? = null
-        return try {
-            connection = URL(address).openConnection() as HttpURLConnection
-            connection.instanceFollowRedirects = true
-            connection.connectTimeout = TIMEOUT_MS
-            connection.readTimeout = TIMEOUT_MS
-            connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14) GlassHome")
-            if (connection.responseCode != 200) {
+    /** A Google share page, following its redirects only between Google's pages. */
+    private fun getText(link: String): String? {
+        var address = link
+        for (hop in 0..MAX_REDIRECTS) {
+            if (!AlbumLinks.isGooglePage(address)) {
                 return null
             }
-            connection.inputStream.bufferedReader().use { reader -> reader.readText() }
-        } catch (error: Exception) {
-            Log.w(TAG, "Album page failed: $address", error)
-            null
-        } finally {
-            connection?.disconnect()
+            var connection: HttpURLConnection? = null
+            try {
+                connection = URL(address).openConnection() as HttpURLConnection
+                connection.instanceFollowRedirects = false
+                connection.connectTimeout = TIMEOUT_MS
+                connection.readTimeout = TIMEOUT_MS
+                connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14) GlassHome")
+                val code = connection.responseCode
+                if (code in 300..399) {
+                    val location = connection.getHeaderField("Location") ?: return null
+                    address = URL(URL(address), location).toString()
+                    continue
+                }
+                if (code != 200) {
+                    return null
+                }
+                return readText(connection.inputStream)
+            } catch (error: Exception) {
+                Log.w(TAG, "Album page failed: " + error.javaClass.simpleName)
+                return null
+            } finally {
+                connection?.disconnect()
+            }
         }
+        return null
     }
 
-    private fun downloadTo(address: String, target: File): Boolean {
-        var connection: HttpURLConnection? = null
-        return try {
-            connection = URL(address).openConnection() as HttpURLConnection
-            connection.connectTimeout = TIMEOUT_MS
-            connection.readTimeout = TIMEOUT_MS
-            if (connection.responseCode != 200) {
+    /** A photo file, following redirects only between the photo servers. */
+    private fun downloadTo(link: String, target: File): Boolean {
+        var address = link
+        for (hop in 0..MAX_REDIRECTS) {
+            if (!AlbumLinks.isPhotoDownload(address)) {
                 return false
             }
-            connection.inputStream.use { input ->
-                FileOutputStream(target).use { output -> input.copyTo(output) }
+            var connection: HttpURLConnection? = null
+            try {
+                connection = URL(address).openConnection() as HttpURLConnection
+                connection.instanceFollowRedirects = false
+                connection.connectTimeout = TIMEOUT_MS
+                connection.readTimeout = TIMEOUT_MS
+                val code = connection.responseCode
+                if (code in 300..399) {
+                    val location = connection.getHeaderField("Location") ?: return false
+                    address = URL(URL(address), location).toString()
+                    continue
+                }
+                if (code != 200) {
+                    return false
+                }
+                connection.inputStream.use { input ->
+                    FileOutputStream(target).use { output -> AlbumLinks.copyLimited(input, output, MAX_PHOTO_BYTES) }
+                }
+                return true
+            } catch (error: Exception) {
+                Log.w(TAG, "Album photo download failed: " + error.javaClass.simpleName)
+                return false
+            } finally {
+                connection?.disconnect()
             }
-            true
-        } catch (error: Exception) {
-            Log.w(TAG, "Album photo download failed", error)
-            false
-        } finally {
-            connection?.disconnect()
         }
+        return false
+    }
+
+    private fun readText(input: java.io.InputStream): String {
+        val bytes = java.io.ByteArrayOutputStream()
+        input.use { stream -> AlbumLinks.copyLimited(stream, bytes, MAX_TEXT_BYTES) }
+        return bytes.toString("UTF-8")
     }
 
     private fun shortHash(text: String): String {
@@ -200,5 +242,8 @@ class AlbumSync(private val store: WallpaperStore, private val cacheDir: File) {
         private const val TAG = "GlassHome"
         private const val TIMEOUT_MS = 15_000
         private const val MAX_PHOTOS = 200
+        private const val MAX_REDIRECTS = 5
+        private const val MAX_TEXT_BYTES = 5L * 1024 * 1024
+        private const val MAX_PHOTO_BYTES = 40L * 1024 * 1024
     }
 }

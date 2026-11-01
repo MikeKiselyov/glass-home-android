@@ -56,9 +56,17 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 dependencies {
     implementation("org.nanohttpd:nanohttpd:2.3.1")
     implementation("io.nayuki:qrcodegen:1.8.0")
+
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.robolectric:robolectric:4.13")
+    testImplementation("com.google.zxing:core:3.5.3")
 }

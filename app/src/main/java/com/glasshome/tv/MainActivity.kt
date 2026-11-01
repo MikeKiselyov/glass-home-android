@@ -63,6 +63,13 @@ class MainActivity : Activity() {
     private var items: List<DockItem> = emptyList()
     private val handler = Handler(Looper.getMainLooper())
     private val weatherLoader = Executors.newSingleThreadExecutor()
+    private val dockLoader = Executors.newSingleThreadExecutor()
+    private val codeChanged: () -> Unit = { runOnUiThread { overlays.codeChanged() } }
+    private var dockGeneration = 0
+
+    /** What the weather views show now, so an unchanged forecast is not built again. */
+    private data class ShownWeather(val now: WeatherNow, val style: String, val place: String, val language: String)
+    private var shownWeather: ShownWeather? = null
     private val weatherTick = Runnable { refreshWeather() }
     private val photosChanged = Runnable { backdrop.reload(showNow = false) }
     private var focusedKey: String? = null
@@ -150,6 +157,7 @@ class MainActivity : Activity() {
             focusDock()
         }
         overlays.onWallpaperChanged = { backdrop.reload(showNow = true) }
+        app.server.signInGuard.onCodeChanged = codeChanged
         overlays.onDockChanged = { rebuildDock() }
 
         // A batch of uploads arrives as many changes: refresh once, a moment after the last.
@@ -201,9 +209,11 @@ class MainActivity : Activity() {
         clockFilter.addAction(Intent.ACTION_TIMEZONE_CHANGED)
         registerReceiver(clockReceiver, clockFilter)
         renderClock()
-        rebuildDock()
+        // The dock and the weather from last time are still on screen: check
+        // them without holding up the first frame, and redraw only what changed.
+        refreshDockQuietly()
         backdrop.start()
-        refreshWeather()
+        refreshWeather(redrawUnchanged = false)
         nowPlaying.start()
         tvInputManager?.registerCallback(inputCallback, handler)
     }
@@ -230,7 +240,13 @@ class MainActivity : Activity() {
         app.server.onIconsChanged = null
         app.server.onWeatherChanged = null
         app.server.onSettingsChanged = null
+        // The sign-in guard lives as long as the app: don't let it keep this
+        // screen. A newer home screen may already have set its own.
+        if (app.server.signInGuard.onCodeChanged === codeChanged) {
+            app.server.signInGuard.onCodeChanged = null
+        }
         weatherLoader.shutdown()
+        dockLoader.shutdown()
         super.onDestroy()
     }
 
@@ -304,12 +320,7 @@ class MainActivity : Activity() {
     // ---------- theme and fonts ----------
 
     private fun layoutFor(theme: String): Int {
-        return when (theme) {
-            "glass" -> R.layout.home_glass
-            "postcard" -> R.layout.home_postcard
-            "type" -> R.layout.home_type
-            else -> R.layout.home_clock
-        }
+        return THEME_LAYOUTS[theme] ?: R.layout.home_clock
     }
 
     private fun applyFonts() {
@@ -336,9 +347,9 @@ class MainActivity : Activity() {
             else -> DateFormat.is24HourFormat(this)
         }
         val pattern = if (use24Hours) "H:mm" else "h:mm"
-        timeView.text = DateFormat.format(pattern, now)
+        setTextIfChanged(timeView, DateFormat.format(pattern, now).toString())
 
-        dateView.text = formatDate(now, app.settings.dateFormat)
+        setTextIfChanged(dateView, formatDate(now, app.settings.dateFormat).toString())
 
         applyNightMode(app.settings.isNight(now))
     }
@@ -430,11 +441,23 @@ class MainActivity : Activity() {
 
     // ---------- weather ----------
 
-    /** Shows the cached reading at once, then fetches a fresh one; repeats every 30 minutes. */
-    private fun refreshWeather() {
+    /**
+     * Shows the cached weather at once, then fetches fresh weather in the
+     * background; repeats every 30 minutes. With [redrawUnchanged] false,
+     * weather already on screen is left alone.
+     */
+    private fun refreshWeather(redrawUnchanged: Boolean = true) {
+        // A change from the phone can arrive just after this screen was closed.
+        if (isDestroyed) {
+            return
+        }
+        if (redrawUnchanged) {
+            shownWeather = null
+        }
         handler.removeCallbacks(weatherTick)
         val weather = app.weather
         if (!weather.enabled || weather.place() == null) {
+            shownWeather = null
             weatherView.visibility = View.GONE
             weatherCorner?.visibility = View.GONE
             weatherWeek?.visibility = View.GONE
@@ -464,6 +487,11 @@ class MainActivity : Activity() {
      */
     private fun showWeather(now: WeatherNow) {
         val place = app.weather.place() ?: return
+        val shown = ShownWeather(now, app.settings.weatherStyle, place.name, I18n.language)
+        if (shown == shownWeather) {
+            return
+        }
+        shownWeather = shown
         // "Porto, Portugal" -> "Porto"
         val city = place.name.substringBefore(",")
         val spoken = I18n.t("weather.line", "temperature" to now.temperature, "description" to now.description, "city" to city) +
@@ -543,39 +571,23 @@ class MainActivity : Activity() {
         findViewById<TextView>(R.id.weather_week_place).text = placeName.substringBefore(",")
         findViewById<TextView>(R.id.weather_week_credit).text = I18n.t("weather.week_credit")
 
-        val columns: LinearLayout = findViewById(R.id.weather_week_days)
-        columns.removeAllViews()
         val weekdays = I18n.list("date.weekdays_short")
+        val days = ArrayList<WeekDay>()
         for (day in now.days.take(WEEK_DAYS)) {
-            val column = LinearLayout(this)
-            column.orientation = LinearLayout.VERTICAL
-            column.gravity = android.view.Gravity.CENTER_HORIZONTAL
-
-            column.addView(weekText(weekdays.getOrElse(day.weekday) { "" }, 12f, 0xD9FFFFFF.toInt()))
-            val dayIcon = ImageView(this)
-            dayIcon.setImageResource(WeatherIcons.forCode(day.code, true))
-            dayIcon.setColorFilter(WeatherIcons.colorFor(day.code, true))
-            dayIcon.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-            val iconParams = LinearLayout.LayoutParams(dp(22), dp(22))
-            iconParams.setMargins(0, dp(3), 0, dp(3))
-            column.addView(dayIcon, iconParams)
-            column.addView(weekText("${day.high}°", 16f, 0xFFFFFFFF.toInt()))
-            column.addView(weekText("${day.low}°", 12f, 0xB3FFFFFF.toInt()))
-            val rain = if (day.rainChance > 0) I18n.t("weather.rain_chance", "percent" to day.rainChance) else " "
-            column.addView(weekText(rain, 10f, 0xB3FFFFFF.toInt()))
-
-            columns.addView(column, LinearLayout.LayoutParams(dp(WEEK_COLUMN_WIDTH), ViewGroup.LayoutParams.WRAP_CONTENT))
+            var rain = " "
+            if (day.rainChance > 0) {
+                rain = I18n.t("weather.rain_chance", "percent" to day.rainChance)
+            }
+            days.add(WeekDay(
+                weekday = weekdays.getOrElse(day.weekday) { "" },
+                iconResource = WeatherIcons.forCode(day.code, true),
+                iconColor = WeatherIcons.colorFor(day.code, true),
+                high = "${day.high}°",
+                low = "${day.low}°",
+                rain = rain,
+            ))
         }
-    }
-
-    private fun weekText(text: String, sizeDp: Float, color: Int): TextView {
-        val view = TextView(this)
-        view.text = text
-        view.typeface = android.graphics.Typeface.create("sans-serif-light", android.graphics.Typeface.NORMAL)
-        view.setTextColor(color)
-        view.setTextSize(TypedValue.COMPLEX_UNIT_DIP, sizeDp)
-        view.gravity = android.view.Gravity.CENTER_HORIZONTAL
-        return view
+        findViewById<WeekForecastView>(R.id.weather_week_days).setDays(days)
     }
 
     /** An icon before the text, as tall as the text and in its colour. */
@@ -656,7 +668,41 @@ class MainActivity : Activity() {
     // ---------- dock ----------
 
     private fun rebuildDock() {
-        items = app.catalog.dockItems()
+        dockGeneration += 1
+        showDock(app.catalog.dockItems())
+    }
+
+    /**
+     * Reads the dock in the background and rebuilds the tiles only when an
+     * app or an HDMI device came, went, was renamed or switched on or off.
+     * Changes made through Glass Home itself rebuild straight away instead.
+     */
+    private fun refreshDockQuietly() {
+        if (dock.childCount == 0) {
+            // A new screen (the TV may close the home screen in the background):
+            // show the dock from last time at once, then check it like below.
+            val last = app.lastDock
+            if (last == null) {
+                rebuildDock()
+                return
+            }
+            showDock(last)
+        }
+        dockGeneration += 1
+        val generation = dockGeneration
+        dockLoader.execute {
+            val fresh = app.catalog.dockItems()
+            runOnUiThread {
+                if (generation == dockGeneration && !isDestroyed && !DockItems.sameTiles(fresh, items)) {
+                    showDock(fresh)
+                }
+            }
+        }
+    }
+
+    private fun showDock(fresh: List<DockItem>) {
+        items = fresh
+        app.lastDock = fresh
         dock.removeAllViews()
         val wordFont = Fonts.clock(this, app.settings.clockFont)
         for (item in items) {
@@ -700,17 +746,35 @@ class MainActivity : Activity() {
 
     @Suppress("DEPRECATION")
     private fun hideSystemBars() {
-        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN or
+        val flags = View.SYSTEM_UI_FLAG_FULLSCREEN or
             View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
             View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+        // Setting the same flags again still lays the whole screen out again.
+        if (window.decorView.systemUiVisibility != flags) {
+            window.decorView.systemUiVisibility = flags
+        }
+    }
+
+    /** A new text, even an equal one, makes a large serif TextView measure itself again. */
+    private fun setTextIfChanged(view: TextView, text: String) {
+        if (view.text.toString() != text) {
+            view.text = text
+        }
     }
 
     companion object {
+        /** The layout of each theme in HomeSettings.THEMES. */
+        val THEME_LAYOUTS = mapOf(
+            "clock" to R.layout.home_clock,
+            "glass" to R.layout.home_glass,
+            "postcard" to R.layout.home_postcard,
+            "type" to R.layout.home_type,
+        )
+
         private const val WEATHER_EVERY_MS = 30 * 60_000L
         private const val PHOTOS_SETTLE_MS = 3_000L
         private const val FORECAST_DAYS = 3
         private const val WEEK_DAYS = 7
-        private const val WEEK_COLUMN_WIDTH = 46
         private const val NIGHT_SHADE_ALPHA = 0.45f
         private const val NIGHT_TEXT_ALPHA = 0.7f
         private const val MUSIC_TINT_ALPHA = 0.45f

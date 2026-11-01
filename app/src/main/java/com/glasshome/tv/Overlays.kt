@@ -1,6 +1,7 @@
 package com.glasshome.tv
 
 import android.app.Activity
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.os.Handler
@@ -14,7 +15,6 @@ import android.widget.HorizontalScrollView
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import io.nayuki.qrcodegen.QrCode
 import java.util.concurrent.Executors
 
 /**
@@ -35,6 +35,7 @@ class Overlays(
     private val thumbLoader = Executors.newSingleThreadExecutor()
     private val thumbs = ArrayList<Bitmap>()
     private var generation = 0
+    private var showingPhoneInfo = false
 
     val isOpen: Boolean
         get() = container.visibility == View.VISIBLE
@@ -44,6 +45,7 @@ class Overlays(
             return
         }
         generation += 1
+        showingPhoneInfo = false
         container.removeAllViews()
         container.visibility = View.GONE
         for (thumb in thumbs) {
@@ -79,6 +81,7 @@ class Overlays(
             onDockChanged()
         }
         addAction(panel, I18n.t("menu.wallpaper")) { openWallpaperPicker() }
+        addAction(panel, I18n.t("menu.tv_settings")) { openSettings() }
         addAction(panel, I18n.t("menu.phone")) { openPhoneInfo() }
         val hiddenCount = app.catalog.hiddenCount()
         if (hiddenCount > 0) {
@@ -303,15 +306,34 @@ class Overlays(
 
     // ---------- photos from the phone ----------
 
+    /** What the "set up from your phone" panel shows. */
+    class PhoneInfo(
+        val signInLink: String?,
+        val friendlyAddress: String,
+        val ipAddress: String?,
+        val code: String,
+        val onNewCode: () -> Unit,
+    )
+
     fun openPhoneInfo() {
         val server = app.server
+        showPhoneInfo(PhoneInfo(
+            signInLink = server.signInLink(),
+            friendlyAddress = server.friendlyAddress(),
+            ipAddress = server.address(),
+            code = server.code,
+            onNewCode = { server.signInGuard.resetCode() },
+        ))
+    }
+
+    fun showPhoneInfo(info: PhoneInfo) {
         val panel = newPanel(I18n.t("phone.title"))
 
         val row = LinearLayout(activity)
         row.orientation = LinearLayout.HORIZONTAL
         row.gravity = Gravity.CENTER_VERTICAL
 
-        val link = server.signInLink()
+        val link = info.signInLink
         if (link != null) {
             val qr = ImageView(activity)
             qr.setImageBitmap(qrBitmap(link))
@@ -333,10 +355,10 @@ class Overlays(
             steps.addView(newText(I18n.t("phone.no_wifi"), 15f, 0xFFFFFFFF.toInt()))
         }
 
-        val address = newText(server.friendlyAddress().removePrefix("http://"), 24f, 0xFFFFFFFF.toInt())
+        val address = newText(info.friendlyAddress.removePrefix("http://"), 24f, 0xFFFFFFFF.toInt())
         address.typeface = activity.resources.getFont(R.font.instrument_serif_regular)
         steps.addView(address)
-        val ip = server.address()
+        val ip = info.ipAddress
         if (ip != null) {
             steps.addView(newText(I18n.t("phone.or_ip", "address" to ip.removePrefix("http://")), 12f, 0x99FFFFFF.toInt()))
         }
@@ -344,29 +366,47 @@ class Overlays(
         val codeLabel = newText(I18n.t("phone.code"), 13f, 0xB3FFFFFF.toInt())
         codeLabel.setPadding(0, dp(12), 0, 0)
         steps.addView(codeLabel)
-        val code = newText(server.code, 24f, 0xFFFFFFFF.toInt())
+        val code = newText(info.code, 24f, 0xFFFFFFFF.toInt())
         code.typeface = activity.resources.getFont(R.font.instrument_serif_regular)
         code.letterSpacing = 0.12f
         steps.addView(code)
         row.addView(steps)
 
+        // Space before the buttons as padding, not a spacer view: a narrow spacer
+        // is the only child of the panel without MATCH_PARENT, so the panel would
+        // take its 1px width and squeeze the QR code into a line.
+        row.setPadding(0, 0, 0, dp(14))
         panel.addView(row)
-        val spacer = View(activity)
-        panel.addView(spacer, LinearLayout.LayoutParams(1, dp(14)))
+        // Done first: it has the focus, so a stray OK never signs phones out.
         addAction(panel, I18n.t("menu.done")) { close() }
+        addAction(panel, I18n.t("phone.open_here")) { openSettings() }
+        addAction(panel, I18n.t("phone.new_code")) { info.onNewCode() }
         show(panel, Gravity.CENTER)
+        showingPhoneInfo = true
+    }
+
+    /** The phone website on the TV itself, worked with the remote. */
+    fun openSettings() {
+        close()
+        activity.startActivity(Intent(activity, SettingsActivity::class.java))
+    }
+
+    /** The code changed (a reset, or too many wrong guesses): show the new one. */
+    fun codeChanged() {
+        if (showingPhoneInfo) {
+            openPhoneInfo()
+        }
     }
 
     /** Black modules on white with the quiet zone QR readers need. */
     private fun qrBitmap(text: String): Bitmap {
-        val qr = QrCode.encodeText(text, QrCode.Ecc.MEDIUM)
-        val border = 2
-        val side = qr.size + border * 2
+        val modules = QrModules.of(text, border = 2)
+        val side = modules.size
         val bitmap = Bitmap.createBitmap(side, side, Bitmap.Config.ARGB_8888)
         for (y in 0 until side) {
             for (x in 0 until side) {
-                val dark = qr.getModule(x - border, y - border)
-                bitmap.setPixel(x, y, if (dark) 0xFF000000.toInt() else 0xFFFFFFFF.toInt())
+                val color = if (modules[y][x]) 0xFF000000.toInt() else 0xFFFFFFFF.toInt()
+                bitmap.setPixel(x, y, color)
             }
         }
         // Scaled up without smoothing, so the modules stay sharp.

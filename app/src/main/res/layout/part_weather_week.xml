@@ -56,11 +56,10 @@
         android:paddingEnd="12dp"
         android:paddingBottom="8dp">
 
-        <LinearLayout
+        <com.glasshome.tv.WeekForecastView
             android:id="@+id/weather_week_days"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal" />
+            android:layout_height="wrap_content" />
 
         <LinearLayout
             android:layout_width="match_parent"
