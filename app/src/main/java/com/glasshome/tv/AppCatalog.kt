@@ -98,7 +98,11 @@ class AppCatalog(private val context: Context, private val icons: IconStore) {
 
     fun open(item: DockItem): Boolean {
         if (item.key == SETTINGS_KEY) {
-            return start(Intent(context, SettingsActivity::class.java))
+            val app = context.applicationContext as? GlassHomeApp
+            if (app != null) {
+                return start(app.settingsIntent(context))
+            }
+            return start(SettingsActivity.intent(context, null))
         }
         val packageName = item.packageName
         if (packageName != null) {
