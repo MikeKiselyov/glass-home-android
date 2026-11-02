@@ -72,7 +72,7 @@ class GlassHomeApp : Application() {
         server.albumCount = { albumCount }
         server.currentPhoto = { currentPhotoKey }
         server.updater = updater
-        val linkOpener = LinkOpener(this)
+        val linkOpener = LinkOpener(this) { HomeScreenState.inFront || LinkOpener.serviceOn(this) }
         server.openLink = { link -> linkOpener.open(link) }
         // Off the UI thread: NanoHTTPD's start waits for its socket, and nothing
         // on the first frame needs the website or the album.

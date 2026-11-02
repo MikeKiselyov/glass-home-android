@@ -240,6 +240,7 @@
   "web.open.opened": "Opened on the TV.",
   "web.open.bad_link": "That doesn’t look like a web link. It should start with http:// or https://",
   "web.open.no_app": "No app on the TV opens web links. Install a browser from Google Play on the TV, TV Bro for example.",
+  "web.open.service_off": "The TV can’t open apps over another one now: turn on Glass Home in the TV’s Settings > Accessibility, or go to the Glass Home screen first.",
   "web.open.no_answer": "The TV didn’t answer. Check that this phone is on the home Wi-Fi, then press Open again.",
   "web.album.title": "Shared album",
   "web.album.lead": "Paste a public iCloud shared album link (with Public Website on) or a Google Photos share link. The TV checks for new photos every 6 hours.",

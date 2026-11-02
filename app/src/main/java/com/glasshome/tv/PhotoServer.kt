@@ -168,7 +168,7 @@ class PhotoServer(
     private fun page(): Response {
         val html = context.assets.open("upload.html").use { input -> input.bufferedReader().readText() }
         val response = newFixedLengthResponse(Response.Status.OK, "text/html; charset=utf-8", html)
-        response.addHeader("Content-Security-Policy", "default-src 'self'; img-src 'self' blob: data:; font-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'")
+        response.addHeader("Content-Security-Policy", "default-src 'self'; frame-ancestors 'none'; img-src 'self' blob: data:; font-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'")
         // Check for a newer page every time: after an app update the phone must not keep the old one.
         response.addHeader("Cache-Control", "no-cache")
         return response
@@ -665,19 +665,36 @@ class PhotoServer(
     /** Set by GlassHomeApp: opens a link on the TV ([LinkOpener]). */
     var openLink: ((String) -> LinkOpener.Result)? = null
 
-    /** Body: link=<a web link, or text with one in it>. */
+    /** The last request=<id> and what it did: the website sends again after 8 s. */
+    private var lastOpenRequest: String? = null
+    private var lastOpenResult = LinkOpener.Result.OPENED
+
+    /** Body: link=<a web link, or text with one in it>, request=<an id the website makes>. */
+    @Synchronized
     private fun openSharedLink(session: IHTTPSession): Response {
         val opener = openLink ?: return json(Response.Status.NOT_FOUND, JSONObject().put("error", "no-opener"))
         session.parseBody(HashMap())
-        val text = session.parameters["link"]?.firstOrNull() ?: ""
+        val parameters = session.parameters
+        val text = parameters["link"]?.firstOrNull() ?: ""
         val link = SharedLinks.find(text) ?: return json(Response.Status.BAD_REQUEST, JSONObject().put("error", "bad-link"))
-        // When it arrived, not what: the link is the user's watch history.
-        Log.i(TAG, "Link from a phone to open")
-        val result = opener(link)
-        if (result == LinkOpener.Result.NO_APP) {
-            return json(Response.Status.OK, JSONObject().put("result", "no-app"))
+        val request = parameters["request"]?.firstOrNull()
+        val result: LinkOpener.Result
+        if (request != null && request == lastOpenRequest) {
+            // The same request again: the first one got here, only its answer didn't.
+            result = lastOpenResult
+        } else {
+            // When it arrived, not what: the link is the user's watch history.
+            Log.i(TAG, "Link from a phone to open")
+            result = opener(link)
+            lastOpenRequest = request
+            lastOpenResult = result
         }
-        return json(Response.Status.OK, JSONObject().put("result", "opened"))
+        val reply = when (result) {
+            LinkOpener.Result.NO_APP -> "no-app"
+            LinkOpener.Result.SERVICE_OFF -> "service-off"
+            LinkOpener.Result.OPENED -> "opened"
+        }
+        return json(Response.Status.OK, JSONObject().put("result", reply))
     }
 
     // ---------- checks ----------

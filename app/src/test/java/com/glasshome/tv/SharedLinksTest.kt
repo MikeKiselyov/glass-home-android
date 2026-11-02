@@ -42,6 +42,27 @@ class SharedLinksTest {
         assertNull(SharedLinks.find(long))
     }
 
+    /** Found in review: java.net.URI refused links every browser opens. */
+    @Test
+    fun linksBrowsersOpenAreKept() {
+        assertEquals("https://bücher.example/film", SharedLinks.find("https://bücher.example/film"))
+        assertEquals("https://my_host.example.com/", SharedLinks.find("https://my_host.example.com/"))
+        assertEquals("https://example.com/a?x={1}|^", SharedLinks.find("https://example.com/a?x={1}|^"))
+        assertEquals("http://192.168.1.20:8080/", SharedLinks.find("http://192.168.1.20:8080/"))
+    }
+
+    @Test
+    fun aBrokenLinkFirstDoesNotHideAGoodOneLater() {
+        assertEquals("https://example.com/", SharedLinks.find("https:// and then https://example.com/"))
+    }
+
+    @Test
+    fun aLinkWithoutAHostIsRefused() {
+        assertNull(SharedLinks.find("https://user@/path"))
+        assertNull(SharedLinks.find("https://:8080/"))
+        assertNull(SharedLinks.find("https://?q=1"))
+    }
+
     @Test
     fun schemeCaseDoesNotMatter() {
         assertEquals("HTTPS://Example.com/", SharedLinks.find("HTTPS://Example.com/"))

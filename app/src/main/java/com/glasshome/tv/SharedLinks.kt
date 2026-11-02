@@ -1,13 +1,12 @@
 package com.glasshome.tv
 
-import java.net.URI
-import java.net.URISyntaxException
-
 /**
  * The link a phone sends to open on the TV ("Open on the TV" on the website).
  *
  * Only http and https get through: other schemes open things on the TV that
- * no web page should reach (intent:, file:, content:, market:).
+ * no web page should reach (intent:, file:, content:, market:). The check is
+ * loose on purpose: browsers open names with "_", non-Latin domains and "|"
+ * in a query, which java.net.URI refuses.
  */
 object SharedLinks {
 
@@ -18,29 +17,33 @@ object SharedLinks {
         val words = text.trim().split(Regex("\\s+"))
         for (word in words) {
             val lower = word.lowercase()
-            if (lower.startsWith("http://") || lower.startsWith("https://")) {
-                return checked(word)
+            if (!lower.startsWith("http://") && !lower.startsWith("https://")) {
+                continue
+            }
+            if (hasHost(word) && word.length <= MAX_LENGTH) {
+                return word
             }
         }
         return null
     }
 
-    private fun checked(link: String): String? {
-        if (link.length > MAX_LENGTH) {
-            return null
+    /** "https://user@host:port/path" has a non-empty host. */
+    private fun hasHost(link: String): Boolean {
+        for (character in link) {
+            if (character.code < 0x20 || character.code == 0x7F) {
+                return false
+            }
         }
-        val uri = try {
-            URI(link)
-        } catch (notALink: URISyntaxException) {
-            return null
+        var authority = link.substringAfter("://")
+        for (end in listOf('/', '?', '#')) {
+            authority = authority.substringBefore(end)
         }
-        val scheme = uri.scheme?.lowercase()
-        if (scheme != "http" && scheme != "https") {
-            return null
+        var host = authority.substringAfterLast('@')
+        if (host.startsWith("[")) {
+            host = host.substringBefore("]") + "]"
+            return host.length > 2
         }
-        if (uri.host.isNullOrEmpty()) {
-            return null
-        }
-        return link
+        host = host.substringBefore(':')
+        return host.isNotEmpty()
     }
 }

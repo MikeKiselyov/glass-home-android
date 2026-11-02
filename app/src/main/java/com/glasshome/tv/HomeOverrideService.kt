@@ -35,6 +35,7 @@ class HomeOverrideService : AccessibilityService() {
 
     private val settings by lazy { HomeSettings(this) }
     private val homeButton = HomeButton()
+    private val loggedWindows = HashSet<String>()
 
     /**
      * The screensaver is on screen (Android announces it starting and stopping).
@@ -110,7 +111,13 @@ class HomeOverrideService : AccessibilityService() {
             return
         }
         val packageName = event.packageName?.toString() ?: return
-        if (!StockHomeScreens.isHomeScreen(packageName, event.className?.toString())) {
+        val className = event.className?.toString()
+        if (!StockHomeScreens.isHomeScreen(packageName, className)) {
+            // Once per window: if a Google TV build names its home screen
+            // differently, the log shows which name to add.
+            if (className != null && loggedWindows.add(className)) {
+                Log.i(TAG, "Not a home screen: $className")
+            }
             return
         }
         if (HomeScreenState.inFront) {
@@ -135,5 +142,6 @@ class HomeOverrideService : AccessibilityService() {
 
     companion object {
         const val TIMING_TAG = "GlassHomeTiming"
+        private const val TAG = "GlassHome"
     }
 }

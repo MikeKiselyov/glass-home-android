@@ -593,6 +593,7 @@
       timer = setTimeout(function () { controller.abort(); }, timeoutMs);
     }
     return fetch(path, options).catch(function (error) {
+      clearTimeout(timer);
       if (error && error.name === 'AbortError') {
         throw new Error('timeout');
       }
@@ -1205,7 +1206,15 @@
   }
 
   $('weather-enabled').addEventListener('change', function (event) {
-    setWeatherEnabled(event.target.checked).then(function () { toast(t('web.saved')); });
+    var wanted = event.target.checked;
+    setWeatherEnabled(wanted).then(function () {
+      toast(t('web.saved'));
+    }).catch(function (error) {
+      if (error && error.message === 'signin') return;
+      // Not saved: the switch goes back to what the TV has.
+      event.target.checked = !wanted;
+      toast(t('web.offline'));
+    });
   });
 
   $('weather-form').addEventListener('submit', function (event) {
@@ -1275,7 +1284,10 @@
     var status = $('open-status');
     status.className = 'status';
     status.textContent = t('web.open.opening');
-    var body = form({ link: $('open-url').value.trim() });
+    // The same id on the second try: the TV opens the link once even when the
+    // first try got there and only its answer was lost.
+    var request = Date.now().toString(36) + Math.random().toString(36).slice(2);
+    var body = form({ link: $('open-url').value.trim(), request: request });
     // Found with a phone that sat unused for a while: the request hung on
     // "Opening…". After 8 s it goes again on a new connection, then gives up.
     api('/api/open', body, OPEN_TIMEOUT_MS).catch(function (error) {
@@ -1290,6 +1302,9 @@
       } else if (data.result === 'no-app') {
         status.className = 'status error';
         status.textContent = t('web.open.no_app');
+      } else if (data.result === 'service-off') {
+        status.className = 'status error';
+        status.textContent = t('web.open.service_off');
       } else if (data.result === 'opened') {
         status.textContent = t('web.open.opened');
         $('open-url').value = '';

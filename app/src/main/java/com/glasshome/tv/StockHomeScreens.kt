@@ -13,11 +13,12 @@ object StockHomeScreens {
 
     private const val GOOGLE_TV = "com.google.android.apps.tv.launcherx"
 
-    /** Window class names seen on the TV (`uiautomator events`). */
-    private val GOOGLE_TV_HOME_SCREENS = setOf(
-        "$GOOGLE_TV.home.HomeActivity",
-        "$GOOGLE_TV.home.VanillaModeHomeActivity",
-    )
+    /**
+     * Seen on the TV (`uiautomator events`): home.HomeActivity and
+     * home.VanillaModeHomeActivity. Other Google TV builds may add more home
+     * screens there; the settings panel is dashboard.*, profiles profile.*.
+     */
+    private const val GOOGLE_TV_HOME_SCREENS = "$GOOGLE_TV.home."
 
     /** Also listed in res/xml/home_override.xml: the service only hears from these. */
     val LAUNCHERS = setOf(
@@ -33,6 +34,6 @@ object StockHomeScreens {
         if (packageName != GOOGLE_TV) {
             return true
         }
-        return GOOGLE_TV_HOME_SCREENS.contains(className)
+        return className != null && className.startsWith(GOOGLE_TV_HOME_SCREENS)
     }
 }

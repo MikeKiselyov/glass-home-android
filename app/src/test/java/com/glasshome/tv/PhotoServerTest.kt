@@ -292,4 +292,32 @@ class PhotoServerTest {
         assertEquals(NanoHTTPD.Response.Status.UNAUTHORIZED, response.status)
         assertTrue(opened.isEmpty())
     }
+
+    /** Found in review: the website sends again after 8 s, and the first one may have arrived. */
+    @Test
+    fun theSameRequestSentAgainOpensOnce() {
+        val opened = ArrayList<String>()
+        server.openLink = { link ->
+            opened.add(link)
+            LinkOpener.Result.OPENED
+        }
+        val cookie = sessionCookie(signIn(server.code))
+        val first = mapOf("link" to "https://example.com/", "request" to "r1")
+        server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/open", cookie = cookie, form = first))
+        val again = server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/open", cookie = cookie, form = first))
+        assertTrue(again.data.bufferedReader().readText().contains("\"result\":\"opened\""))
+        assertEquals(1, opened.size)
+
+        val next = mapOf("link" to "https://example.com/", "request" to "r2")
+        server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/open", cookie = cookie, form = next))
+        assertEquals(2, opened.size)
+    }
+
+    @Test
+    fun theTvSaysWhenItCannotOpenAppsNow() {
+        server.openLink = { LinkOpener.Result.SERVICE_OFF }
+        val cookie = sessionCookie(signIn(server.code))
+        val response = server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/open", cookie = cookie, form = mapOf("link" to "https://example.com/")))
+        assertTrue(response.data.bufferedReader().readText().contains("\"result\":\"service-off\""))
+    }
 }

@@ -15,6 +15,12 @@ class StockHomeScreensTest {
         assertTrue(StockHomeScreens.isHomeScreen(googleTv, "$googleTv.home.VanillaModeHomeActivity"))
     }
 
+    /** Found in review: another Google TV build may name its home screen differently. */
+    @Test
+    fun anotherHomeScreenOfGoogleTvIsOneToo() {
+        assertTrue(StockHomeScreens.isHomeScreen(googleTv, "$googleTv.home.KidsHomeActivity"))
+    }
+
     /**
      * Found on the TV: the remote's Settings key opens Google TV's settings
      * panel, a window of its launcher, and Glass Home closed it at once.
