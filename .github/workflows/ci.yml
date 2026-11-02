@@ -154,6 +154,8 @@ jobs:
             echo "Already on 0.4.0 or later? Glass Home finds this release by itself and asks before installing it."
             echo
             echo "SHA-256 of glass-home.apk: \`$sum\`"
+            echo
+            echo "Glass Home is free. If it made your TV nicer to use, you can [buy me a coffee](https://buymeacoffee.com/mike_kiselyov)."
           } > out/notes.md
           gh release create "v$VERSION" out/glass-home.apk --target "$GITHUB_SHA" --title "Glass Home $VERSION" --notes-file out/notes.md --generate-notes
       - name: Remove the key

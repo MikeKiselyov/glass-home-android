@@ -89,6 +89,8 @@ notes="$out/notes.md"
     echo "Already on 0.4.0 or later? Glass Home finds this release by itself and asks before installing it."
     echo
     echo "SHA-256 of glass-home.apk: \`$sum\`"
+    echo
+    echo "Glass Home is free. If it made your TV nicer to use, you can [buy me a coffee](https://buymeacoffee.com/mike_kiselyov)."
 } > "$notes"
 gh release create "$tag" "$out/glass-home.apk" --title "Glass Home $version" --notes-file "$notes" --generate-notes
 echo "Done: $(gh release view "$tag" --json url --jq .url)"
