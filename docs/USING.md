@@ -102,7 +102,8 @@ tap on purpose: any site could send you to such an address.
 ## Sleep timer
 
 **More > Sleep timer** on the website (on the TV too): 30, 60, 90 or 120
-minutes, then the TV turns its screen off. It works through Glass Home's
+minutes, or any number from 1 to 720 under **Other**; then the TV turns its
+screen off. It works through Glass Home's
 accessibility service (Settings > Accessibility > Glass Home). A timer that ran
 out while the TV was off is dropped, so turning the TV on doesn't turn it off.
 

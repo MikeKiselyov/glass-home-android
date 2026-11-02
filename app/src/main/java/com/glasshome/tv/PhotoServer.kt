@@ -824,7 +824,7 @@ class PhotoServer(
         return json(Response.Status.OK, body)
     }
 
-    /** Body: minutes=0|30|60|90|120. */
+    /** Body: minutes=0 (off) or 1 to SleepTimer.MAX_MINUTES. */
     private fun changeSleep(session: IHTTPSession): Response {
         val timer = sleepTimer ?: return json(Response.Status.NOT_FOUND, JSONObject().put("error", "no-timer"))
         session.parseBody(HashMap())

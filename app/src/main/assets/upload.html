@@ -419,6 +419,10 @@
       <section id="sleep-section">
         <h2 data-i18n="web.sleep.title"></h2>
         <div class="segments" id="sleep" role="radiogroup" data-i18n-aria-label="web.sleep.title"></div>
+        <form id="sleep-form" class="inline">
+          <input id="sleep-minutes" type="number" min="1" max="720" inputmode="numeric" data-i18n-placeholder="web.sleep.custom" data-i18n-aria-label="web.sleep.custom">
+          <button type="submit" class="button" data-i18n="web.sleep.set"></button>
+        </form>
         <p class="hint" id="sleep-now"></p>
       </section>
 
@@ -1369,16 +1373,8 @@
     var group = $('sleep');
     var remembered = focusedChoice();
     group.textContent = '';
-    // The button that is on: the shortest length that still covers what is left.
-    var current = 0;
-    if (data.minutesLeft > 0) {
-      for (var index = 1; index < SLEEP_LENGTHS.length; index++) {
-        if (SLEEP_LENGTHS[index] >= data.minutesLeft) {
-          current = SLEEP_LENGTHS[index];
-          break;
-        }
-      }
-    }
+    // Off is on without a timer; with one, the line below says when.
+    var current = data.minutesLeft > 0 ? -1 : 0;
     SLEEP_LENGTHS.forEach(function (length) {
       var label = length === 0 ? t('web.sleep.off') : t('web.sleep.minutes', { minutes: length });
       group.appendChild(choice('sleep', String(length), '', label, length === current));
@@ -1395,12 +1391,31 @@
     $('sleep-now').textContent = line;
   }
 
-  $('sleep').addEventListener('change', function (event) {
-    if (event.target.type !== 'radio') return;
-    api('/api/sleep', form({ minutes: event.target.value })).then(json).then(function (data) {
+  function setSleep(minutes) {
+    return api('/api/sleep', form({ minutes: minutes })).then(json).then(function (data) {
+      if (data.error === 'bad-minutes') {
+        toast(t('web.sleep.bad'));
+        return;
+      }
       renderSleep(data);
       toast(t('web.saved'));
     });
+  }
+
+  $('sleep').addEventListener('change', function (event) {
+    if (event.target.type !== 'radio') return;
+    setSleep(event.target.value);
+  });
+
+  // Any number of minutes, from 1 (to try it) to 12 hours.
+  $('sleep-form').addEventListener('submit', function (event) {
+    event.preventDefault();
+    var minutes = parseInt($('sleep-minutes').value, 10);
+    if (!(minutes >= 1 && minutes <= 720)) {
+      toast(t('web.sleep.bad'));
+      return;
+    }
+    setSleep(String(minutes)).then(function () { $('sleep-minutes').value = ''; });
   });
 
   // ---------- links sent before ----------

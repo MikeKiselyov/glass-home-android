@@ -47,13 +47,17 @@ class SleepTimerTest {
         assertEquals(0L, timer.minutesLeft(10L))
     }
 
+    /** Any length the viewer types, from a minute (for a quick try) to 12 hours. */
     @Test
-    fun onlyTheOfferedLengths() {
+    fun anyLengthUpToTwelveHours() {
         val timer = SleepTimer(MemoryStorage())
-        assertFalse(timer.set(7, 0L))
+        assertTrue(timer.set(1, 0L))
+        assertEquals(minute, timer.sleepAt())
+        assertTrue(timer.set(7, 0L))
+        assertTrue(timer.set(SleepTimer.MAX_MINUTES, 0L))
         assertFalse(timer.set(-30, 0L))
-        assertFalse(timer.set(100_000, 0L))
-        assertNull(timer.sleepAt())
+        assertFalse(timer.set(SleepTimer.MAX_MINUTES + 1, 0L))
+        assertEquals(SleepTimer.MAX_MINUTES * minute, timer.sleepAt())
     }
 
     @Test

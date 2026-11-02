@@ -8,7 +8,7 @@ interface SleepTimerStorage {
 }
 
 /**
- * "Turn the TV off in 30 / 60 / 90 / 120 minutes", set on the website. When
+ * "Turn the TV off in 30 / 60 / 90 / 120 minutes" (or any number typed), set on the website. When
  * it runs out, [HomeOverrideService.sleepTv] turns the screen off.
  */
 class SleepTimer(private val storage: SleepTimerStorage) {
@@ -16,14 +16,14 @@ class SleepTimer(private val storage: SleepTimerStorage) {
     @Volatile
     private var sleepAtMillis = storage.loadSleepAt()
 
-    /** [minutes] is one of [LENGTHS] or 0 for off; false for anything else. */
+    /** [minutes] from 1 to [MAX_MINUTES], or 0 for off; false for anything else. */
     fun set(minutes: Int, now: Long): Boolean {
         if (minutes == 0) {
             sleepAtMillis = 0L
             storage.saveSleepAt(0L)
             return true
         }
-        if (!LENGTHS.contains(minutes)) {
+        if (minutes < 1 || minutes > MAX_MINUTES) {
             return false
         }
         sleepAtMillis = now + minutes * MINUTE_MS
@@ -72,7 +72,9 @@ class SleepTimer(private val storage: SleepTimerStorage) {
     }
 
     companion object {
+        /** The website's buttons; any other length can be typed. */
         val LENGTHS = listOf(30, 60, 90, 120)
+        const val MAX_MINUTES = 720
         private const val MINUTE_MS = 60_000L
         private const val LATE_MS = 5 * MINUTE_MS
     }

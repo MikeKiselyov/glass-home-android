@@ -427,7 +427,7 @@ class PhotoServerTest {
         assertNotNull(timer.sleepAt())
         assertEquals(1, changes)
 
-        val odd = server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/sleep", cookie = cookie, form = mapOf("minutes" to "7")))
+        val odd = server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/sleep", cookie = cookie, form = mapOf("minutes" to "1000")))
         assertEquals(NanoHTTPD.Response.Status.BAD_REQUEST, odd.status)
 
         server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/sleep", cookie = cookie, form = mapOf("minutes" to "0")))
