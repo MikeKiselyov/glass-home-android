@@ -21,7 +21,8 @@ import android.view.accessibility.AccessibilityEvent
  * - When Google TV's home screen opens anyway (the "after" mode, or a way to
  *   it other than the Home key), it brings Glass Home to the front right away.
  *   It only receives window events from the stock launchers listed in
- *   res/xml/home_override.xml.
+ *   res/xml/home_override.xml, and only their home screen counts
+ *   ([StockHomeScreens]): Google TV's settings panel is a launcher window too.
  *
  * It never reads what is on screen. Every key from the remote passes through
  * [onKeyEvent], so that stays a few comparisons with no work behind them.
@@ -34,6 +35,7 @@ class HomeOverrideService : AccessibilityService() {
 
     private val settings by lazy { HomeSettings(this) }
     private val homeButton = HomeButton()
+    private val loggedWindows = HashSet<String>()
 
     /**
      * The screensaver is on screen (Android announces it starting and stopping).
@@ -58,6 +60,9 @@ class HomeOverrideService : AccessibilityService() {
     }
 
     override fun onDestroy() {
+        if (running === this) {
+            running = null
+        }
         try {
             unregisterReceiver(dreamReceiver)
         } catch (notRegistered: IllegalArgumentException) {
@@ -73,6 +78,7 @@ class HomeOverrideService : AccessibilityService() {
      */
     public override fun onServiceConnected() {
         super.onServiceConnected()
+        running = this
         if (Updater.takeReopenRequest(this, System.currentTimeMillis())) {
             openGlassHome()
         }
@@ -109,7 +115,13 @@ class HomeOverrideService : AccessibilityService() {
             return
         }
         val packageName = event.packageName?.toString() ?: return
-        if (!STOCK_HOMES.contains(packageName)) {
+        val className = event.className?.toString()
+        if (!StockHomeScreens.isHomeScreen(packageName, className)) {
+            // Once per window: if a Google TV build names its home screen
+            // differently, the log shows which name to add.
+            if (className != null && loggedWindows.add(className)) {
+                Log.i(TAG, "Not a home screen: $className")
+            }
             return
         }
         if (HomeScreenState.inFront) {
@@ -133,12 +145,17 @@ class HomeOverrideService : AccessibilityService() {
     }
 
     companion object {
-        val STOCK_HOMES = setOf(
-            "com.google.android.apps.tv.launcherx",
-            "com.google.android.tvlauncher",
-            "com.google.android.leanbacklauncher",
-        )
+        /** The connected service, for the sleep timer; null while it is off. */
+        @Volatile
+        private var running: HomeOverrideService? = null
+
+        /** Turns the TV's screen off (the sleep timer). False when the service is off. */
+        fun sleepTv(): Boolean {
+            val service = running ?: return false
+            return service.performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN)
+        }
 
         const val TIMING_TAG = "GlassHomeTiming"
+        private const val TAG = "GlassHome"
     }
 }

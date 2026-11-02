@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Turns the screen on (and ends the screensaver) when a link arrives from the phone. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <!-- "Uninstall" in a tile's menu: Android asks the viewer before removing anything. -->
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
     <!-- Answering mDNS for glasshome.local. -->
@@ -29,6 +31,17 @@
         <intent>
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+        <!-- "Open on the TV": is there an app for web links (a browser, YouTube)? -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="http" />
         </intent>
         <intent>
             <action android:name="android.intent.action.VIEW" />
@@ -93,6 +106,18 @@
             <meta-data
                 android:name="android.accessibilityservice"
                 android:resource="@xml/home_override" />
+        </service>
+
+        <!-- The screensaver with Glass Home photos and clock, turned on by scripts/setup.sh (screensaver: glasshome). -->
+        <service
+            android:name=".GlassHomeDream"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_DREAM_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.dreams.DreamService" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </service>
 
         <!-- Android's answer about an update install (see Updater). -->

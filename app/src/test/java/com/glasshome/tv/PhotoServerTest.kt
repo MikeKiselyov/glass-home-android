@@ -47,6 +47,7 @@ class PhotoServerTest {
         host: String? = "192.168.1.20:8090",
         cookie: String? = null,
         private val form: Map<String, String> = emptyMap(),
+        websiteHeader: Boolean = true,
     ) : NanoHTTPD.IHTTPSession {
         private val headers = HashMap<String, String>()
 
@@ -57,7 +58,7 @@ class PhotoServerTest {
             if (cookie != null) {
                 headers["cookie"] = cookie
             }
-            if (method == NanoHTTPD.Method.POST) {
+            if (method == NanoHTTPD.Method.POST && websiteHeader) {
                 headers["x-glass-home"] = "1"
             }
         }
@@ -250,5 +251,188 @@ class PhotoServerTest {
         server.updater = Updater(RuntimeEnvironment.getApplication())
         val response = server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/update", form = mapOf("action" to "install")))
         assertEquals(NanoHTTPD.Response.Status.UNAUTHORIZED, response.status)
+    }
+
+    /** A signed-in phone sends a link; the TV opens it. Only web links get that far. */
+    @Test
+    fun aLinkFromThePhoneOpensOnTheTv() {
+        val opened = ArrayList<String>()
+        server.openLink = { link ->
+            opened.add(link)
+            LinkOpener.Result.OPENED
+        }
+        val cookie = sessionCookie(signIn(server.code))
+
+        val response = server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/open", cookie = cookie, form = mapOf("link" to "Look https://example.com/film")))
+        assertEquals(NanoHTTPD.Response.Status.OK, response.status)
+        assertTrue(response.data.bufferedReader().readText().contains("\"result\":\"opened\""))
+        assertEquals(listOf("https://example.com/film"), opened)
+
+        val bad = server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/open", cookie = cookie, form = mapOf("link" to "file:///data/data/com.glasshome.tv/")))
+        assertEquals(NanoHTTPD.Response.Status.BAD_REQUEST, bad.status)
+        assertTrue(bad.data.bufferedReader().readText().contains("bad-link"))
+        assertEquals(1, opened.size)
+    }
+
+    @Test
+    fun theTvSaysWhenNothingOpensLinks() {
+        server.openLink = { LinkOpener.Result.NO_APP }
+        val cookie = sessionCookie(signIn(server.code))
+        val response = server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/open", cookie = cookie, form = mapOf("link" to "https://example.com/")))
+        assertTrue(response.data.bufferedReader().readText().contains("\"result\":\"no-app\""))
+    }
+
+    @Test
+    fun openingALinkNeedsASession() {
+        val opened = ArrayList<String>()
+        server.openLink = { link ->
+            opened.add(link)
+            LinkOpener.Result.OPENED
+        }
+        val response = server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/open", form = mapOf("link" to "https://example.com/")))
+        assertEquals(NanoHTTPD.Response.Status.UNAUTHORIZED, response.status)
+        assertTrue(opened.isEmpty())
+    }
+
+    /** Found in review: the website sends again after 8 s, and the first one may have arrived. */
+    @Test
+    fun theSameRequestSentAgainOpensOnce() {
+        val opened = ArrayList<String>()
+        server.openLink = { link ->
+            opened.add(link)
+            LinkOpener.Result.OPENED
+        }
+        val cookie = sessionCookie(signIn(server.code))
+        val first = mapOf("link" to "https://example.com/", "request" to "r1")
+        server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/open", cookie = cookie, form = first))
+        val again = server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/open", cookie = cookie, form = first))
+        assertTrue(again.data.bufferedReader().readText().contains("\"result\":\"opened\""))
+        assertEquals(1, opened.size)
+
+        val next = mapOf("link" to "https://example.com/", "request" to "r2")
+        server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/open", cookie = cookie, form = next))
+        assertEquals(2, opened.size)
+    }
+
+    @Test
+    fun theTvSaysWhenItCannotOpenAppsNow() {
+        server.openLink = { LinkOpener.Result.SERVICE_OFF }
+        val cookie = sessionCookie(signIn(server.code))
+        val response = server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/open", cookie = cookie, form = mapOf("link" to "https://example.com/")))
+        assertTrue(response.data.bufferedReader().readText().contains("\"result\":\"service-off\""))
+    }
+
+    private fun body(response: NanoHTTPD.Response): String {
+        return response.data.bufferedReader().readText()
+    }
+
+    private fun openedLinks(): ArrayList<String> {
+        val opened = ArrayList<String>()
+        server.openLink = { link ->
+            opened.add(link)
+            LinkOpener.Result.OPENED
+        }
+        return opened
+    }
+
+    /** The iPhone shortcut: the key in the address, no cookie, no website header. */
+    @Test
+    fun aShortcutWithTheKeyOpensALink() {
+        val opened = openedLinks()
+        val response = server.serve(FakeSession(NanoHTTPD.Method.POST, "/send/" + server.shareKey.key, form = mapOf("link" to "https://example.com/film"), websiteHeader = false))
+        assertEquals(NanoHTTPD.Response.Status.OK, response.status)
+        assertEquals(I18n.t("web.open.opened"), body(response))
+        assertEquals(listOf("https://example.com/film"), opened)
+    }
+
+    @Test
+    fun aWrongKeyOpensNothing() {
+        val opened = openedLinks()
+        val wrong = server.serve(FakeSession(NanoHTTPD.Method.POST, "/send/0123456789abcdef0123456789abcdef", form = mapOf("link" to "https://example.com/"), websiteHeader = false))
+        assertEquals(NanoHTTPD.Response.Status.FORBIDDEN, wrong.status)
+        val none = server.serve(FakeSession(NanoHTTPD.Method.POST, "/send/", form = mapOf("link" to "https://example.com/"), websiteHeader = false))
+        assertEquals(NanoHTTPD.Response.Status.FORBIDDEN, none.status)
+        val get = server.serve(FakeSession(NanoHTTPD.Method.GET, "/send/" + server.shareKey.key))
+        assertTrue(get.status != NanoHTTPD.Response.Status.OK)
+        assertTrue(opened.isEmpty())
+    }
+
+    /** The key also only reaches the TV from the home network, under the TV's own name. */
+    @Test
+    fun theKeyDoesNotLiftTheNetworkChecks() {
+        val opened = openedLinks()
+        val path = "/send/" + server.shareKey.key
+        server.serve(FakeSession(NanoHTTPD.Method.POST, path, remote = "8.8.8.8", form = mapOf("link" to "https://example.com/"), websiteHeader = false))
+        server.serve(FakeSession(NanoHTTPD.Method.POST, path, host = "evil.example", form = mapOf("link" to "https://example.com/"), websiteHeader = false))
+        assertTrue(opened.isEmpty())
+    }
+
+    /** "New code" on the TV: phones are signed out and the old shortcut stops working. */
+    @Test
+    fun aNewCodeRetiresTheKey() {
+        val opened = openedLinks()
+        val old = server.shareKey.key
+        server.newCode()
+        val response = server.serve(FakeSession(NanoHTTPD.Method.POST, "/send/$old", form = mapOf("link" to "https://example.com/"), websiteHeader = false))
+        assertEquals(NanoHTTPD.Response.Status.FORBIDDEN, response.status)
+        assertTrue(opened.isEmpty())
+    }
+
+    @Test
+    fun signedInPhonesSeeAndReplaceTheKey() {
+        val anonymous = server.serve(FakeSession(NanoHTTPD.Method.GET, "/api/share-key"))
+        assertEquals(NanoHTTPD.Response.Status.UNAUTHORIZED, anonymous.status)
+        val cookie = sessionCookie(signIn(server.code))
+        val shown = body(server.serve(FakeSession(NanoHTTPD.Method.GET, "/api/share-key", cookie = cookie)))
+        assertTrue(shown.contains(server.shareKey.key))
+        val old = server.shareKey.key
+        server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/share-key", cookie = cookie, form = mapOf("action" to "reset")))
+        assertTrue(old != server.shareKey.key)
+    }
+
+    @Test
+    fun sentLinksAreListedAndCleared() {
+        openedLinks()
+        val cookie = sessionCookie(signIn(server.code))
+        server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/open", cookie = cookie, form = mapOf("link" to "https://a.example/")))
+        server.serve(FakeSession(NanoHTTPD.Method.POST, "/send/" + server.shareKey.key, form = mapOf("link" to "https://b.example/"), websiteHeader = false))
+        val listed = body(server.serve(FakeSession(NanoHTTPD.Method.GET, "/api/recent", cookie = cookie)))
+        assertTrue(listed.indexOf("b.example") in 0 until listed.indexOf("a.example"))
+
+        assertEquals(NanoHTTPD.Response.Status.UNAUTHORIZED, server.serve(FakeSession(NanoHTTPD.Method.GET, "/api/recent")).status)
+
+        server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/recent", cookie = cookie, form = mapOf("action" to "clear")))
+        val cleared = body(server.serve(FakeSession(NanoHTTPD.Method.GET, "/api/recent", cookie = cookie)))
+        assertTrue(!cleared.contains("example"))
+    }
+
+    private class MemorySleepStorage : SleepTimerStorage {
+        var saved = 0L
+        override fun loadSleepAt(): Long = saved
+        override fun saveSleepAt(millis: Long) {
+            saved = millis
+        }
+    }
+
+    @Test
+    fun aSignedInPhoneSetsTheSleepTimer() {
+        val timer = SleepTimer(MemorySleepStorage())
+        server.sleepTimer = timer
+        var changes = 0
+        server.onSleepChanged = { changes += 1 }
+        val cookie = sessionCookie(signIn(server.code))
+
+        val set = server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/sleep", cookie = cookie, form = mapOf("minutes" to "60")))
+        assertTrue(body(set).contains("\"minutesLeft\":60"))
+        assertNotNull(timer.sleepAt())
+        assertEquals(1, changes)
+
+        val odd = server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/sleep", cookie = cookie, form = mapOf("minutes" to "1000")))
+        assertEquals(NanoHTTPD.Response.Status.BAD_REQUEST, odd.status)
+
+        server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/sleep", cookie = cookie, form = mapOf("minutes" to "0")))
+        assertEquals(null, timer.sleepAt())
+
+        assertEquals(NanoHTTPD.Response.Status.UNAUTHORIZED, server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/sleep", form = mapOf("minutes" to "30"))).status)
     }
 }

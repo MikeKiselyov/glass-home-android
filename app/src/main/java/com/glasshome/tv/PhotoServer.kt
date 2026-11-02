@@ -8,8 +8,6 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.io.FileInputStream
-import java.net.Inet4Address
-import java.net.NetworkInterface
 import java.security.SecureRandom
 
 /**
@@ -48,6 +46,17 @@ class PhotoServer(
     val code: String
         get() = signInGuard.code
 
+    /** For the iPhone shortcut: POST /send/<key> opens a link without signing in. */
+    val shareKey = ShareKey(PrefsShareKeyStorage(prefs), SecureRandom())
+
+    private val recentLinks = RecentLinks(loadRecentLinks())
+
+    /** "New code" on the TV: every phone signs in again, and the shortcut needs the new key. */
+    fun newCode() {
+        signInGuard.resetCode()
+        shareKey.reset()
+    }
+
     /** "http://glasshome.local:8090": answered by LocalName over mDNS. */
     fun friendlyAddress(): String {
         return "http://" + LocalName.HOST_NAME + ":" + PORT
@@ -61,18 +70,8 @@ class PhotoServer(
 
     /** "http://192.168.1.20:8090", or null without a home-network address. */
     fun address(): String? {
-        val interfaces = NetworkInterface.getNetworkInterfaces() ?: return null
-        for (networkInterface in interfaces) {
-            if (!networkInterface.isUp || networkInterface.isLoopback) {
-                continue
-            }
-            for (inetAddress in networkInterface.inetAddresses) {
-                if (inetAddress is Inet4Address && inetAddress.isSiteLocalAddress) {
-                    return "http://" + inetAddress.hostAddress + ":" + PORT
-                }
-            }
-        }
-        return null
+        val home = HomeNetwork.find() ?: return null
+        return "http://" + home.address.hostAddress + ":" + PORT
     }
 
     override fun serve(session: IHTTPSession): Response {
@@ -95,6 +94,11 @@ class PhotoServer(
             }
             if (method == Method.GET && path.startsWith("/fonts/")) {
                 return font(path.removePrefix("/fonts/"))
+            }
+            // Before the website's own checks: the shortcut has the key instead of a
+            // session, and can't be a page in a browser (the key is in no page).
+            if (method == Method.POST && path.startsWith("/send/")) {
+                return sendWithKey(session, path.removePrefix("/send/"))
             }
             if (method == Method.POST && !hasCsrfHeader(session)) {
                 return text(Response.Status.FORBIDDEN, I18n.t("server.missing_header"))
@@ -165,9 +169,30 @@ class PhotoServer(
             if (method == Method.POST && path == "/api/icon-delete") {
                 return deleteIcon(session)
             }
+            if (method == Method.POST && path == "/api/open") {
+                return openSharedLink(session)
+            }
+            if (method == Method.GET && path == "/api/sleep") {
+                return sleepStatus()
+            }
+            if (method == Method.POST && path == "/api/sleep") {
+                return changeSleep(session)
+            }
+            if (method == Method.GET && path == "/api/recent") {
+                return recent()
+            }
+            if (method == Method.POST && path == "/api/recent") {
+                return changeRecent(session)
+            }
+            if (method == Method.GET && path == "/api/share-key") {
+                return shareKeyInfo()
+            }
+            if (method == Method.POST && path == "/api/share-key") {
+                return changeShareKey(session)
+            }
             return text(Response.Status.NOT_FOUND, I18n.t("server.not_found"))
         } catch (error: Exception) {
-            Log.w(TAG, "Request failed: $path", error)
+            Log.w(TAG, "Request failed: " + RequestLog.path(path), error)
             return text(Response.Status.INTERNAL_ERROR, I18n.t("server.error"))
         }
     }
@@ -177,7 +202,7 @@ class PhotoServer(
     private fun page(): Response {
         val html = context.assets.open("upload.html").use { input -> input.bufferedReader().readText() }
         val response = newFixedLengthResponse(Response.Status.OK, "text/html; charset=utf-8", html)
-        response.addHeader("Content-Security-Policy", "default-src 'self'; img-src 'self' blob: data:; font-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'")
+        response.addHeader("Content-Security-Policy", "default-src 'self'; frame-ancestors 'none'; img-src 'self' blob: data:; font-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'")
         // Check for a newer page every time: after an app update the phone must not keep the old one.
         response.addHeader("Cache-Control", "no-cache")
         return response
@@ -669,6 +694,148 @@ class PhotoServer(
         return updateStatus()
     }
 
+    // ---------- links ----------
+
+    /** Set by GlassHomeApp: opens a link on the TV ([LinkOpener]). */
+    var openLink: ((String) -> LinkOpener.Result)? = null
+
+    /** The last request=<id> and what it did: the website sends again after 8 s. */
+    private var lastOpenRequest: String? = null
+    private var lastOpenResult = LinkOpener.Result.OPENED
+
+    /** Body: link=<a web link, or text with one in it>, request=<an id the website makes>. */
+    @Synchronized
+    private fun openSharedLink(session: IHTTPSession): Response {
+        val opener = openLink ?: return json(Response.Status.NOT_FOUND, JSONObject().put("error", "no-opener"))
+        session.parseBody(HashMap())
+        val parameters = session.parameters
+        val text = parameters["link"]?.firstOrNull() ?: ""
+        val link = SharedLinks.find(text) ?: return json(Response.Status.BAD_REQUEST, JSONObject().put("error", "bad-link"))
+        val request = parameters["request"]?.firstOrNull()
+        val result: LinkOpener.Result
+        if (request != null && request == lastOpenRequest) {
+            // The same request again: the first one got here, only its answer didn't.
+            result = lastOpenResult
+        } else {
+            result = openAndRemember(opener, link)
+            lastOpenRequest = request
+            lastOpenResult = result
+        }
+        val reply = when (result) {
+            LinkOpener.Result.NO_APP -> "no-app"
+            LinkOpener.Result.SERVICE_OFF -> "service-off"
+            LinkOpener.Result.OPENED -> "opened"
+        }
+        return json(Response.Status.OK, JSONObject().put("result", reply))
+    }
+
+    @Synchronized
+    private fun openAndRemember(opener: (String) -> LinkOpener.Result, link: String): LinkOpener.Result {
+        // When it arrived, not what: the link is the user's watch history.
+        Log.i(TAG, "Link from a phone to open")
+        val result = opener(link)
+        if (result == LinkOpener.Result.OPENED) {
+            recentLinks.add(link)
+            prefs.edit().putString("recent_links", JSONArray(recentLinks.links).toString()).apply()
+        }
+        return result
+    }
+
+    /** POST /send/<key>, body link=<link>: the answer is a sentence the shortcut can show. */
+    private fun sendWithKey(session: IHTTPSession, given: String): Response {
+        if (!shareKey.matches(given)) {
+            return text(Response.Status.FORBIDDEN, I18n.t("web.send.wrong_key"))
+        }
+        val opener = openLink ?: return text(Response.Status.NOT_FOUND, I18n.t("server.not_found"))
+        session.parseBody(HashMap())
+        val text = session.parameters["link"]?.firstOrNull() ?: ""
+        val link = SharedLinks.find(text) ?: return text(Response.Status.BAD_REQUEST, I18n.t("web.open.bad_link"))
+        val result = openAndRemember(opener, link)
+        val sentence = when (result) {
+            LinkOpener.Result.NO_APP -> I18n.t("web.open.no_app")
+            LinkOpener.Result.SERVICE_OFF -> I18n.t("web.open.service_off")
+            LinkOpener.Result.OPENED -> I18n.t("web.open.opened")
+        }
+        return text(Response.Status.OK, sentence)
+    }
+
+    @Synchronized
+    private fun recent(): Response {
+        return json(Response.Status.OK, JSONObject().put("links", JSONArray(recentLinks.links)))
+    }
+
+    /** Body: action=clear. */
+    @Synchronized
+    private fun changeRecent(session: IHTTPSession): Response {
+        session.parseBody(HashMap())
+        if (session.parameters["action"]?.firstOrNull() != "clear") {
+            return json(Response.Status.BAD_REQUEST, JSONObject().put("error", "bad-action"))
+        }
+        recentLinks.clear()
+        prefs.edit().remove("recent_links").apply()
+        return recent()
+    }
+
+    private fun loadRecentLinks(): List<String> {
+        val saved = prefs.getString("recent_links", null) ?: return emptyList()
+        val links = ArrayList<String>()
+        try {
+            val array = JSONArray(saved)
+            for (index in 0 until array.length()) {
+                links.add(array.getString(index))
+            }
+        } catch (broken: Exception) {
+            // A damaged list: start a new one.
+        }
+        return links
+    }
+
+    private fun shareKeyInfo(): Response {
+        val body = JSONObject()
+            .put("key", shareKey.key)
+            .put("address", friendlyAddress() + "/send/" + shareKey.key)
+        return json(Response.Status.OK, body)
+    }
+
+    /** Body: action=reset. The shortcut on every phone needs the new address. */
+    private fun changeShareKey(session: IHTTPSession): Response {
+        session.parseBody(HashMap())
+        if (session.parameters["action"]?.firstOrNull() != "reset") {
+            return json(Response.Status.BAD_REQUEST, JSONObject().put("error", "bad-action"))
+        }
+        shareKey.reset()
+        return shareKeyInfo()
+    }
+
+    // ---------- sleep timer ----------
+
+    /** Set by GlassHomeApp, which turns the TV off when it runs out. */
+    var sleepTimer: SleepTimer? = null
+    var onSleepChanged: (() -> Unit)? = null
+
+    private fun sleepStatus(): Response {
+        val timer = sleepTimer ?: return json(Response.Status.NOT_FOUND, JSONObject().put("error", "no-timer"))
+        val now = System.currentTimeMillis()
+        val body = JSONObject()
+            .put("minutesLeft", timer.minutesLeft(now))
+            .put("sleepAt", timer.sleepAt() ?: 0L)
+            // Only the accessibility service can turn the screen off.
+            .put("serviceOn", LinkOpener.serviceOn(context))
+        return json(Response.Status.OK, body)
+    }
+
+    /** Body: minutes=0 (off) or 1 to SleepTimer.MAX_MINUTES. */
+    private fun changeSleep(session: IHTTPSession): Response {
+        val timer = sleepTimer ?: return json(Response.Status.NOT_FOUND, JSONObject().put("error", "no-timer"))
+        session.parseBody(HashMap())
+        val minutes = session.parameters["minutes"]?.firstOrNull()?.toIntOrNull()
+        if (minutes == null || !timer.set(minutes, System.currentTimeMillis())) {
+            return json(Response.Status.BAD_REQUEST, JSONObject().put("error", "bad-minutes"))
+        }
+        onSleepChanged?.invoke()
+        return sleepStatus()
+    }
+
     // ---------- checks ----------
 
     private fun hasCsrfHeader(session: IHTTPSession): Boolean {
@@ -696,6 +863,17 @@ class PhotoServer(
         private const val MAX_PHOTOS = 300
         private const val MAX_ICONS = 100
         private val ALLOWED_INTERVALS = setOf(15, 30, 45, 60, 120, 300, 600)
+    }
+}
+
+/** The share key in the server's SharedPreferences. */
+private class PrefsShareKeyStorage(private val prefs: SharedPreferences) : ShareKeyStorage {
+    override fun loadKey(): String? {
+        return prefs.getString("share_key", null)
+    }
+
+    override fun saveKey(key: String) {
+        prefs.edit().putString("share_key", key).apply()
     }
 }
 

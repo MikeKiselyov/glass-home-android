@@ -24,10 +24,15 @@ class HomeOverrideServiceTest {
         return Robolectric.setupService(HomeOverrideService::class.java)
     }
 
-    private fun windowOpened(packageName: String): AccessibilityEvent {
+    private fun windowOpened(packageName: String, className: String? = null): AccessibilityEvent {
         val event = AccessibilityEvent.obtain(AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED)
         event.packageName = packageName
+        event.className = className
         return event
+    }
+
+    private fun googleTvHomeOpened(): AccessibilityEvent {
+        return windowOpened(GOOGLE_TV, "$GOOGLE_TV.home.HomeActivity")
     }
 
     private fun key(action: Int, keyCode: Int, repeat: Int = 0): KeyEvent {
@@ -80,15 +85,31 @@ class HomeOverrideServiceTest {
         assertFalse(service.onKeyEvent(key(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_HOME)))
         assertNull(shadowOf(service).nextStartedActivity)
 
-        service.onAccessibilityEvent(windowOpened("com.google.android.apps.tv.launcherx"))
+        service.onAccessibilityEvent(googleTvHomeOpened())
         assertOpenedGlassHome(shadowOf(service).nextStartedActivity)
     }
 
     @Test
     fun theStockHomeOpeningAnotherWayStillLeadsToGlassHome() {
         val service = startService()
-        service.onAccessibilityEvent(windowOpened("com.google.android.apps.tv.launcherx"))
+        service.onAccessibilityEvent(googleTvHomeOpened())
         assertOpenedGlassHome(shadowOf(service).nextStartedActivity)
+    }
+
+    /** Found on the TV: Google TV's home coming back is announced as a FrameLayout. */
+    @Test
+    fun googleTvHomeAsAPlainWindowLeadsToGlassHome() {
+        val service = startService()
+        service.onAccessibilityEvent(windowOpened(GOOGLE_TV, "android.widget.FrameLayout"))
+        assertOpenedGlassHome(shadowOf(service).nextStartedActivity)
+    }
+
+    /** Found on the TV: Glass Home closed the panel the remote's Settings key opens. */
+    @Test
+    fun googleTvSettingsPanelStaysOnScreen() {
+        val service = startService()
+        service.onAccessibilityEvent(windowOpened(GOOGLE_TV, "$GOOGLE_TV.dashboard.DashboardActivity"))
+        assertNull(shadowOf(service).nextStartedActivity)
     }
 
     @Test
@@ -127,12 +148,34 @@ class HomeOverrideServiceTest {
         val service = startService()
         HomeScreenState.inFront = true
         try {
-            service.onAccessibilityEvent(windowOpened("com.google.android.apps.tv.launcherx"))
+            service.onAccessibilityEvent(googleTvHomeOpened())
             assertNull(shadowOf(service).nextStartedActivity)
         } finally {
             HomeScreenState.inFront = false
         }
-        service.onAccessibilityEvent(windowOpened("com.google.android.apps.tv.launcherx"))
+        service.onAccessibilityEvent(googleTvHomeOpened())
         assertOpenedGlassHome(shadowOf(service).nextStartedActivity)
+    }
+
+    /** The sleep timer turns the screen off through the service's global action. */
+    @Test
+    fun sleepTurnsTheScreenOff() {
+        val service = startService()
+        service.onServiceConnected()
+        assertTrue(HomeOverrideService.sleepTv())
+        val actions = shadowOf(service).globalActionsPerformed
+        assertEquals(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_LOCK_SCREEN, actions.last())
+    }
+
+    @Test
+    fun withoutTheServiceSleepSaysSo() {
+        val service = startService()
+        service.onServiceConnected()
+        service.onDestroy()
+        assertFalse(HomeOverrideService.sleepTv())
+    }
+
+    companion object {
+        const val GOOGLE_TV = "com.google.android.apps.tv.launcherx"
     }
 }

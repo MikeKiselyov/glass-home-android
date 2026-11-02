@@ -76,6 +76,9 @@ Open a terminal in this repository and try:
   YouTube Music.
 - **Set up from your phone**: scan a QR code on the TV; or with the remote on
   the TV itself.
+- **Open on the TV**: send a link from the phone (one tap from the iPhone's
+  Share menu); it opens in YouTube or in a browser on the TV, waking it first.
+- **Sleep timer** and a **screensaver** with your photos and the clock.
 - **Updates from GitHub, only when you say so**: Install, Later or Skip this version.
 - **English, Ukrainian, Belarusian**.
 
