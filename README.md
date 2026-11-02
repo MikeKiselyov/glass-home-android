@@ -356,9 +356,10 @@ Reports and pull requests are welcome, especially additions to
 
 APKs on the [Releases](https://github.com/MikeKiselyov/glass-home-android/releases)
 page are signed with one permanent key, so each release installs over the
-previous one. From the next release, 0.4.0, Glass Home finds new releases by itself and asks
-before installing them ([how](docs/INSTALL.md#updates)). How releases are
-made: [docs/RELEASING.md](docs/RELEASING.md).
+previous one. From 0.4.0 Glass Home finds new releases by itself and asks
+before installing them ([how](docs/INSTALL.md#updates)). A merge to `main`
+that changes the app is tested and released by CI; how:
+[docs/RELEASING.md](docs/RELEASING.md).
 
 ## Credits and licences
 

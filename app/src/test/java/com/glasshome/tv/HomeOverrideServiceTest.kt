@@ -117,4 +117,22 @@ class HomeOverrideServiceTest {
         service.onServiceConnected()
         assertNull(shadowOf(service).nextStartedActivity)
     }
+    /**
+     * Found on the TV: a notification Google TV's launcher drew over Glass Home
+     * made the service open Glass Home again, which closed the update question
+     * (and counted it as Later for a day).
+     */
+    @Test
+    fun aLauncherWindowOverGlassHomeLeavesItAlone() {
+        val service = startService()
+        HomeScreenState.inFront = true
+        try {
+            service.onAccessibilityEvent(windowOpened("com.google.android.apps.tv.launcherx"))
+            assertNull(shadowOf(service).nextStartedActivity)
+        } finally {
+            HomeScreenState.inFront = false
+        }
+        service.onAccessibilityEvent(windowOpened("com.google.android.apps.tv.launcherx"))
+        assertOpenedGlassHome(shadowOf(service).nextStartedActivity)
+    }
 }

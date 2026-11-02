@@ -228,6 +228,7 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         hideSystemBars()
+        HomeScreenState.inFront = true
         app.updater.onNews = { askAboutUpdate() }
         handler.postDelayed(updateQuestion, UPDATE_QUESTION_DELAY_MS)
         // For scripts/measure/home-key.sh: the first frame after Glass Home came in front.
@@ -237,6 +238,7 @@ class MainActivity : Activity() {
     }
 
     override fun onPause() {
+        HomeScreenState.inFront = false
         app.updater.onNews = null
         handler.removeCallbacks(updateQuestion)
         super.onPause()

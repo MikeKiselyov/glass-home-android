@@ -657,9 +657,10 @@ class PhotoServer(
         if (action == "check") {
             current.check()
         } else if (action == "install") {
-            // From the settings on the TV (127.0.0.1): the viewer is at the TV, so Glass Home comes back after.
+            // Glass Home comes back after the update when it was on the TV's screen,
+            // or the request came from the settings on the TV (127.0.0.1).
             val fromTv = session.remoteIpAddress == "127.0.0.1"
-            current.install(reopenHome = fromTv)
+            current.install(reopenHome = fromTv || HomeScreenState.inFront)
         } else if (action == "skip") {
             current.skip()
         } else if (action != null) {
