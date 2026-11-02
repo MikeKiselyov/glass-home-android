@@ -15,6 +15,8 @@ on:
   pull_request:
   push:
     branches: [main]
+  # Run again by hand (Actions > CI > Run workflow), e.g. after a failed release.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -40,7 +42,7 @@ jobs:
 
   release:
     needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -114,14 +116,29 @@ jobs:
         if: steps.changed.outputs.app == 'true'
         run: |
           apk=app/build/outputs/apk/release/app-release.apk
-          build_tools=$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)
-          certificate=$("$ANDROID_HOME/build-tools/$build_tools/apksigner" verify --print-certs "$apk" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p')
+          ls -l app/build/outputs/apk/release/
+          # The newest build-tools that has apksigner.
+          apksigner=""
+          for folder in $(ls -d "$ANDROID_HOME"/build-tools/* | sort -V); do
+            if [ -x "$folder/apksigner" ]; then
+              apksigner="$folder/apksigner"
+            fi
+          done
+          if [ -z "$apksigner" ]; then
+            echo "No apksigner in $ANDROID_HOME/build-tools" >&2
+            exit 1
+          fi
+          echo "Using $apksigner"
+          mkdir -p out
+          # Certificates are public: the whole output goes to the log.
+          "$apksigner" verify --print-certs "$apk" > out/certs.txt
+          cat out/certs.txt
+          certificate=$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' out/certs.txt)
           # The release key's certificate (docs/RELEASING.md). Anything else would never install over a release.
           if [ "$certificate" != "952f6d18b0ce7c4b6c77ae4e00a9b5aac9576c3666ec604a4f9e060440e7afc6" ]; then
             echo "Signed with another key: $certificate" >&2
             exit 1
           fi
-          mkdir -p out
           cp "$apk" out/glass-home.apk
       - name: Publish
         if: steps.changed.outputs.app == 'true'
