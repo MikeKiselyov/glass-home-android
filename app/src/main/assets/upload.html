@@ -528,7 +528,8 @@
 
   function applyStaticText() {
     // language.tag is the BCP 47 code (uk for ua.json): screen readers and hyphenation need that, not the file name.
-    document.documentElement.lang = t('language.tag') || 'en';
+    var tag = t('language.tag');
+    document.documentElement.lang = tag === 'language.tag' ? 'en' : tag;
     document.querySelectorAll('[data-i18n]').forEach(function (element) { element.textContent = t(element.dataset.i18n); });
     document.querySelectorAll('[data-i18n-placeholder]').forEach(function (element) { element.placeholder = t(element.dataset.i18nPlaceholder); });
     document.querySelectorAll('[data-i18n-aria-label]').forEach(function (element) { element.setAttribute('aria-label', t(element.dataset.i18nAriaLabel)); });
@@ -935,7 +936,8 @@
     language.textContent = '';
     (settings.languages || []).forEach(function (code) {
       var names = settings.languageNames || {};
-      language.appendChild(choice('language', code, '', names[code] || code, settings.language === code));
+      // choice() takes HTML: the name is escaped, whatever a language file says.
+      language.appendChild(choice('language', code, '', escapeHtml(names[code] || code), settings.language === code));
     });
 
     var homeButton = $('home-button');
@@ -1187,7 +1189,8 @@
       return;
     }
     $('update-checks').checked = !!data.checks;
-    var ready = data.state === 'ready' || (data.state === 'failed' && !!data.latest && data.latest !== data.installed);
+    // Only a download that passed its checks can be installed.
+    var ready = data.state === 'ready';
     var now = t('web.update.installed', { version: data.installed });
     if (data.development) {
       now = now + ' ' + t('web.update.development');

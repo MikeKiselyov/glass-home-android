@@ -128,7 +128,7 @@ class Overlays(
             close()
             onInstall()
         }
-        addAction(panel, I18n.t("update.later")) {
+        val laterButton = addAction(panel, I18n.t("update.later")) {
             close()
         }
         addAction(panel, I18n.t("update.skip")) {
@@ -137,6 +137,9 @@ class Overlays(
             onSkip()
         }
         show(panel, Gravity.START or Gravity.BOTTOM)
+        // The question comes up by itself, maybe while someone is pressing OK on
+        // the dock: the focus starts on Later, so a stray OK installs nothing.
+        laterButton.requestFocus()
         // Set after newPanel(), which closes whatever was open before.
         updateLater = onLater
     }
@@ -477,7 +480,7 @@ class Overlays(
         return panel
     }
 
-    private fun addAction(parent: LinearLayout, label: String, action: () -> Unit) {
+    private fun addAction(parent: LinearLayout, label: String, action: () -> Unit): TextView {
         val button = newText(label, 15f, 0)
         button.setTextColor(activity.resources.getColorStateList(R.color.menu_text, activity.theme))
         button.setBackgroundResource(R.drawable.menu_item)
@@ -486,6 +489,7 @@ class Overlays(
         button.isClickable = true
         button.setOnClickListener { action() }
         parent.addView(button)
+        return button
     }
 
     private fun checked(label: String, isChecked: Boolean): String {

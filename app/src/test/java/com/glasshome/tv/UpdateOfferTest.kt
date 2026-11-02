@@ -72,11 +72,13 @@ class UpdateOfferTest {
     }
 
     @Test
-    fun opensWithTheVersionAndFocusOnInstall() {
+    fun opensWithTheVersionAndFocusOnLater() {
         open()
         assertTrue(overlays.isOpen)
         button("Glass Home 0.4.0 is ready")
-        assertTrue(button("Install").isFocused)
+        // It comes up by itself: an OK meant for the dock must not install.
+        assertTrue(button("Later").isFocused)
+        assertFalse(button("Install").isFocused)
         assertTrue(picked.isEmpty())
     }
 

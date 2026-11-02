@@ -95,6 +95,17 @@ object UpdateCheck {
     }
 
     /**
+     * GitHub didn't answer (the TV asleep, no network). An update already
+     * downloaded and checked stays ready to offer; anything else is a failed check.
+     */
+    fun stateAfterUnansweredCheck(current: String): String {
+        if (current == Updater.STATE_READY) {
+            return Updater.STATE_READY
+        }
+        return Updater.STATE_FAILED
+    }
+
+    /**
      * True when the downloaded APK is signed by the same certificates as the
      * installed app (SHA-256 of each). Nothing known on either side is never a match.
      */

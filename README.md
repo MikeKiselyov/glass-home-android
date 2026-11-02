@@ -161,7 +161,7 @@ Glass Home and the clean-up don't need each other. Pick one or both:
 | Both (recommended) | `scripts/setup.sh` | Glass Home as the home screen, and ads, tracking and junk switched off |
 | Only Glass Home | `scripts/setup.sh --only glasshome` | Glass Home, Home button and now playing. Nothing on the TV is switched off |
 | Only the clean-up | `scripts/setup.sh --only clean` | Ads, tracking, animations, DNS, screensaver. Glass Home is not installed; the TV keeps its own home screen |
-| Just the APK | `scripts/install/install-apk.sh glass-home.apk` | Installs Glass Home and nothing else: no backup, Home button or clean-up. Open it from the apps list; `scripts/install/set-home.sh` later puts it on Home |
+| Just the APK | `scripts/install/install-apk.sh glass-home.apk` | Installs Glass Home and lets it install its own updates; no backup, Home button or clean-up. Open it from the apps list; `scripts/install/set-home.sh` later puts it on Home |
 
 `glass-home.apk` comes from the
 [Releases](https://github.com/MikeKiselyov/glass-home-android/releases) page;
@@ -317,7 +317,9 @@ photo screensaver off the network while the TV is idle.
 
 The app talks to: Open-Meteo for weather (once you pick a city), your shared
 album's host (once you add a link), GitHub once a day to look for a new release
-(off with More > Updates on the website), and nothing else. The update check
+(a few hours later again if it didn't answer; the APK itself comes from
+GitHub's download servers; off with More > Updates on the website), and
+nothing else. The update check
 sends nothing about you or the TV beyond what any web request carries.
 
 The accessibility service that makes Home open Glass Home sees the keys

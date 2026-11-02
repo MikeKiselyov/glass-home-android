@@ -155,9 +155,11 @@ Once a day Glass Home asks GitHub for the latest release. When there is a newer
 one, it downloads it, checks it against the SHA-256 GitHub lists for it, and
 asks on the home screen:
 
-- **Install**: Glass Home closes for a few seconds and opens in the new
+- **Install** (the focus starts on Later, so a stray OK installs nothing):
+  Glass Home closes for a few seconds and opens in the new
   version. Settings and photos stay.
-- **Later**: asked again the next day.
+- **Later**: asked again the next day. Back, or leaving the home screen while
+  the question is open, counts as Later.
 - **Skip this version**: not asked again until a newer version comes out.
 
 Nothing is installed without **Install**. The phone website has the same under

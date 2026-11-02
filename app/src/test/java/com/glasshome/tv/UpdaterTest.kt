@@ -60,4 +60,30 @@ class UpdaterTest {
         assertFalse(UpdateCheck.isRecentReopen(now - 6 * 60_000L, now))
         assertFalse(UpdateCheck.isRecentReopen(now + 60_000L, now))
     }
+    /** Review: a check during the TV's sleep turned a downloaded update into a failure, and the question stopped. */
+    @Test
+    fun aDownloadedUpdateStaysReadyWhenGitHubDoesNotAnswer() {
+        assertEquals(Updater.STATE_READY, UpdateCheck.stateAfterUnansweredCheck(Updater.STATE_READY))
+        assertEquals(Updater.STATE_FAILED, UpdateCheck.stateAfterUnansweredCheck(Updater.STATE_IDLE))
+        assertEquals(Updater.STATE_FAILED, UpdateCheck.stateAfterUnansweredCheck(Updater.STATE_OTHER_KEY))
+    }
+
+    /** Review: Install from a failed state skipped the signing key check. Only READY installs. */
+    @Test
+    fun installDoesNothingUnlessAnUpdateIsReady() {
+        val updater = Updater(context, fetchForTests = { null })
+        updater.checkNow()
+        assertEquals(Updater.STATE_FAILED, updater.state)
+        updater.install(reopenHome = true)
+        assertEquals(Updater.STATE_FAILED, updater.state)
+        val prefs = context.getSharedPreferences("updates", Context.MODE_PRIVATE)
+        assertFalse(prefs.contains("reopen_home_at"))
+    }
+
+    @Test
+    fun nothingIsOfferedWhileChecksAreOff() {
+        val updater = Updater(context)
+        updater.checksEnabled = false
+        assertEquals(null, updater.versionToOffer(System.currentTimeMillis()))
+    }
 }

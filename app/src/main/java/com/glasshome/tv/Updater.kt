@@ -121,7 +121,7 @@ class Updater(
         }
         val skipped = prefs.getString("skipped_version", "") ?: ""
         val askAgainAt = prefs.getLong("ask_again_at", 0L)
-        if (!UpdateCheck.shouldOffer(release.version, skipped, askAgainAt, nowMillis)) {
+        if (!checksEnabled || !UpdateCheck.shouldOffer(release.version, skipped, askAgainAt, nowMillis)) {
             return null
         }
         return release.version
@@ -132,12 +132,26 @@ class Updater(
      * on the TV's screen when asked, so it comes back there after the update
      * instead of the TV's own home screen, which Android opens while it is gone.
      */
+    @Synchronized
     fun install(reopenHome: Boolean) {
-        if (state == STATE_READY || (state == STATE_FAILED && latest != null)) {
-            if (reopenHome) {
-                prefs.edit().putLong(REOPEN_KEY, System.currentTimeMillis()).apply()
-            }
-            executor.execute { installNow() }
+        // Only a download that passed the SHA-256 and signing key checks is READY;
+        // INSTALLING is set here, not on the worker, so a second press does nothing.
+        if (state != STATE_READY) {
+            return
+        }
+        state = STATE_INSTALLING
+        if (reopenHome) {
+            prefs.edit().putLong(REOPEN_KEY, System.currentTimeMillis()).apply()
+        }
+        handler.postDelayed(installTimeout, INSTALL_TIMEOUT_MS)
+        executor.execute { installNow() }
+    }
+
+    /** Android never answered about the install: offer it again rather than stay stuck. */
+    private val installTimeout = Runnable {
+        if (state == STATE_INSTALLING) {
+            Log.w(TAG, "No answer about the install; ready again")
+            state = STATE_READY
         }
     }
 
@@ -150,6 +164,8 @@ class Updater(
     fun skip() {
         val release = latest ?: return
         prefs.edit().putString("skipped_version", release.version).apply()
+        // Android's own question for this version must not come up after all.
+        confirmation = null
     }
 
     /**
@@ -163,24 +179,6 @@ class Updater(
         return true
     }
 
-    /**
-     * True when Android installs an update from Glass Home without asking:
-     * Android 12 or later, Glass Home installed by itself, and installing apps allowed.
-     */
-    fun canUpdateSilently(): Boolean {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-            return false
-        }
-        val packageManager = context.packageManager
-        val installer = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            packageManager.getInstallSourceInfo(context.packageName).installingPackageName
-        } else {
-            @Suppress("DEPRECATION")
-            packageManager.getInstallerPackageName(context.packageName)
-        }
-        return installer == context.packageName && packageManager.canRequestPackageInstalls()
-    }
-
     /** Called by [UpdateReceiver] with what Android said about the install. */
     fun onInstallResult(status: Int, message: String?, confirm: Intent?) {
         if (status == PackageInstaller.STATUS_PENDING_USER_ACTION && confirm != null) {
@@ -190,6 +188,7 @@ class Updater(
             handler.post { onNews?.invoke() }
             return
         }
+        handler.removeCallbacks(installTimeout)
         if (status == PackageInstaller.STATUS_SUCCESS) {
             // Android restarts Glass Home with the new version right after this.
             state = STATE_IDLE
@@ -226,7 +225,8 @@ class Updater(
         if (body == null) {
             // Not counted as a check: the next look, a few hours later, asks again.
             // A TV asleep has no network, and waiting a whole day for that is too long.
-            fail("GitHub did not answer")
+            lastError = "GitHub did not answer"
+            state = UpdateCheck.stateAfterUnansweredCheck(state)
             return
         }
         prefs.edit().putLong("last_check", System.currentTimeMillis()).apply()
@@ -276,7 +276,11 @@ class Updater(
             fail("The downloaded update is missing or damaged")
             return
         }
-        state = STATE_INSTALLING
+        if (!isSignedLikeThisApp(apk)) {
+            state = STATE_OTHER_KEY
+            return
+        }
+        var sessionId = -1
         try {
             val installer = context.packageManager.packageInstaller
             val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL)
@@ -284,7 +288,7 @@ class Updater(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 params.setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
             }
-            val sessionId = installer.createSession(params)
+            sessionId = installer.createSession(params)
             installer.openSession(sessionId).use { session ->
                 session.openWrite(UpdateCheck.APK_NAME, 0, apk.length()).use { output ->
                     apk.inputStream().use { input -> input.copyTo(output) }
@@ -302,6 +306,14 @@ class Updater(
             Log.i(TAG, "Installing Glass Home ${release.version}")
         } catch (error: Exception) {
             Log.w(TAG, "Could not start the install", error)
+            if (sessionId >= 0) {
+                // Not left behind in PackageInstaller's list of open sessions.
+                try {
+                    context.packageManager.packageInstaller.abandonSession(sessionId)
+                } catch (gone: Exception) {
+                    // Already closed.
+                }
+            }
             fail(error.message ?: "Could not start the install")
         }
     }
@@ -341,6 +353,8 @@ class Updater(
                         }
                         total += count
                         if (total > MAX_APK_BYTES) {
+                            output.close()
+                            partial.delete()
                             fail("The update is larger than expected")
                             return false
                         }
@@ -500,6 +514,8 @@ class Updater(
         private const val TIMEOUT_MS = 20_000
 
         /** The 0.3.0 APK is 7 MB; anything far larger is not ours. */
+        private const val INSTALL_TIMEOUT_MS = 2 * 60_000L
+
         private const val MAX_APK_BYTES = 64L * 1024 * 1024
 
         fun sha256(file: File): String {

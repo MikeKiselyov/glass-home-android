@@ -57,7 +57,7 @@ while [ "$#" -gt 0 ]; do
         --animations) shift; animations="${1:-}" ;;
         --dns) shift; dns="${1:-}" ;;
         --screensaver) shift; screensaver="${1:-}" ;;
-        -h|--help) sed -n '2,36p' "$0"; exit 0 ;;
+        -h|--help) sed -n '/^set -eu$/q;2,$p' "$0"; exit 0 ;;
         *) echo "unknown option: $1 (see scripts/setup.sh --help)" >&2; exit 2 ;;
     esac
     shift
