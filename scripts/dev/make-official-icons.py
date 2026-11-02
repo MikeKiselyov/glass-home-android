@@ -4,21 +4,21 @@ Builds official device icon tiles for personal use on your own TV.
 
 The brand logos are trademarks of their owners, so they never go into the
 repository or the APK: sources and tiles live in .tv/official-icons/ (ignored
-by git) and scripts/push-icons.sh copies the tiles straight onto the TV.
+by git) and scripts/dev/push-icons.sh copies the tiles straight onto the TV.
 
 Each tile is the logo in white on the brand's colour, 312x312 PNG, rendered
 with macOS Quick Look (qlmanage).
 
 The logos are downloaded from Wikimedia Commons on first run.
 
-Usage: python3 scripts/make-official-icons.py
+Usage: python3 scripts/dev/make-official-icons.py
 """
 import re
 import subprocess
 import urllib.request
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 SOURCES = ROOT / ".tv" / "official-icons" / "src"
 TILES = ROOT / ".tv" / "official-icons" / "tiles"
 SIZE = 312

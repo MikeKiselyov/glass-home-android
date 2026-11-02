@@ -3,11 +3,13 @@
 # track and cover art on the home screen. Android only allows this for apps
 # with notification access; Glass Home reads media sessions, not notifications.
 #
-# Usage: scripts/enable-now-playing.sh
+# Usage: scripts/install/enable-now-playing.sh
 set -eu
 
-TV=${TV:-$("$(dirname "$0")/tv-connect.sh")}
-. "$(dirname "$0")/changelog.sh"
+root="$(cd "$(dirname "$0")/../.." && pwd)"
+
+TV=${TV:-$("$root/scripts/tv/connect.sh")}
+. "$root/scripts/lib/changelog.sh"
 
 LISTENER=com.glasshome.tv/com.glasshome.tv.MediaListener
 tv_shell cmd notification allow_listener "$LISTENER"

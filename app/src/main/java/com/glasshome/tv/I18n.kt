@@ -65,6 +65,16 @@ object I18n {
         return result.toString()
     }
 
+    /** The name a language file gives itself (language.name, in that language), for the language list; the file name if it has none. */
+    fun nameOf(context: Context, code: String): String {
+        val file = read(context, code) ?: return code
+        val name = file.optString("language.name", "")
+        if (name.isEmpty()) {
+            return code
+        }
+        return name
+    }
+
     private fun has(key: String): Boolean {
         return chosen.has(key) || english.has(key)
     }

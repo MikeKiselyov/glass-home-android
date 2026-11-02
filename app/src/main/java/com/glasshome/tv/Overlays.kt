@@ -36,6 +36,9 @@ class Overlays(
     private var generation = 0
     private var showingPhoneInfo = false
 
+    /** While the update question is open and nothing was picked: closing it counts as "Later". */
+    private var updateLater: (() -> Unit)? = null
+
     val isOpen: Boolean
         get() = container.visibility == View.VISIBLE
 
@@ -45,6 +48,9 @@ class Overlays(
         }
         generation += 1
         showingPhoneInfo = false
+        val later = updateLater
+        updateLater = null
+        later?.invoke()
         container.removeAllViews()
         container.visibility = View.GONE
         for (thumb in thumbs) {
@@ -103,6 +109,39 @@ class Overlays(
             }
         }
         show(panel, Gravity.START or Gravity.BOTTOM)
+    }
+
+    // ---------- update question ----------
+
+    /**
+     * Asks before installing an update: nothing is installed without "Install".
+     * Back, or anything else that closes the panel, is "Later".
+     */
+    fun openUpdateOffer(version: String, onInstall: () -> Unit, onLater: () -> Unit, onSkip: () -> Unit) {
+        val panel = newPanel(I18n.t("update.title", "version" to version))
+        val lead = newText(I18n.t("update.lead"), 15f, 0xCCFFFFFF.toInt())
+        lead.setPadding(dp(8), 0, dp(8), dp(10))
+        lead.maxWidth = dp(420)
+        panel.addView(lead)
+        addAction(panel, I18n.t("update.install")) {
+            updateLater = null
+            close()
+            onInstall()
+        }
+        val laterButton = addAction(panel, I18n.t("update.later")) {
+            close()
+        }
+        addAction(panel, I18n.t("update.skip")) {
+            updateLater = null
+            close()
+            onSkip()
+        }
+        show(panel, Gravity.START or Gravity.BOTTOM)
+        // The question comes up by itself, maybe while someone is pressing OK on
+        // the dock: the focus starts on Later, so a stray OK installs nothing.
+        laterButton.requestFocus()
+        // Set after newPanel(), which closes whatever was open before.
+        updateLater = onLater
     }
 
     // ---------- wallpaper picker ----------
@@ -441,7 +480,7 @@ class Overlays(
         return panel
     }
 
-    private fun addAction(parent: LinearLayout, label: String, action: () -> Unit) {
+    private fun addAction(parent: LinearLayout, label: String, action: () -> Unit): TextView {
         val button = newText(label, 15f, 0)
         button.setTextColor(activity.resources.getColorStateList(R.color.menu_text, activity.theme))
         button.setBackgroundResource(R.drawable.menu_item)
@@ -450,6 +489,7 @@ class Overlays(
         button.isClickable = true
         button.setOnClickListener { action() }
         parent.addView(button)
+        return button
     }
 
     private fun checked(label: String, isChecked: Boolean): String {

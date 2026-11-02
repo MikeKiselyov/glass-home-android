@@ -23,6 +23,8 @@ class GlassHomeApp : Application() {
         private set
     lateinit var settings: HomeSettings
         private set
+    lateinit var updater: Updater
+        private set
 
     /**
      * The dock as the home screen last showed it. The home screen can be closed
@@ -43,6 +45,12 @@ class GlassHomeApp : Application() {
     private val albumExecutor = Background.executor("glasshome-album")
     private val handler = Handler(Looper.getMainLooper())
     private val albumTick = Runnable { syncAlbum() }
+    private val updateTick = object : Runnable {
+        override fun run() {
+            updater.checkIfDue()
+            handler.postDelayed(this, UPDATE_TICK_MS)
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -56,11 +64,14 @@ class GlassHomeApp : Application() {
         catalog = AppCatalog(this, icons)
         weather = Weather(this)
         settings = HomeSettings(this)
+        updater = Updater(this)
+        updater.restore()
         I18n.load(this, settings.language)
         server = PhotoServer(this, wallpapers, icons, weather, settings, catalog)
         server.onAlbumChanged = { syncAlbum() }
         server.albumCount = { albumCount }
         server.currentPhoto = { currentPhotoKey }
+        server.updater = updater
         // Off the UI thread: NanoHTTPD's start waits for its socket, and nothing
         // on the first frame needs the website or the album.
         albumExecutor.execute {
@@ -72,6 +83,7 @@ class GlassHomeApp : Application() {
             LocalName(this).start()
         }
         handler.postDelayed(albumTick, ALBUM_FIRST_MS)
+        handler.postDelayed(updateTick, UPDATE_FIRST_MS)
     }
 
     /** Opens the settings on the TV, signed in with a session made here, where the website runs. */
@@ -117,5 +129,9 @@ class GlassHomeApp : Application() {
 
         /** The first album check after the TV starts, once the home screen is up. */
         private const val ALBUM_FIRST_MS = 30_000L
+
+        /** The first update check after the TV starts, then a look every 6 hours (GitHub is asked once a day). */
+        private const val UPDATE_FIRST_MS = 120_000L
+        private const val UPDATE_TICK_MS = 6 * 3600_000L
     }
 }

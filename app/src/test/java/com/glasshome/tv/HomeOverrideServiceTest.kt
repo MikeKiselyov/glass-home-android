@@ -97,4 +97,24 @@ class HomeOverrideServiceTest {
         service.onAccessibilityEvent(windowOpened("com.google.android.youtube.tv"))
         assertNull(shadowOf(service).nextStartedActivity)
     }
+    /**
+     * Found on the TV: after "Install", Android showed Google TV's home while
+     * Glass Home was being replaced, before this service was connected again.
+     */
+    @Test
+    fun afterAnUpdateAskedFromTheHomeScreenGlassHomeComesBack() {
+        val context = org.robolectric.RuntimeEnvironment.getApplication()
+        context.getSharedPreferences("updates", android.content.Context.MODE_PRIVATE)
+            .edit().putLong("reopen_home_at", System.currentTimeMillis()).commit()
+        val service = startService()
+        service.onServiceConnected()
+        assertOpenedGlassHome(shadowOf(service).nextStartedActivity)
+    }
+
+    @Test
+    fun connectingWithoutAnUpdateLeavesTheScreenAlone() {
+        val service = startService()
+        service.onServiceConnected()
+        assertNull(shadowOf(service).nextStartedActivity)
+    }
 }

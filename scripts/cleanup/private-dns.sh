@@ -3,12 +3,14 @@
 # Default: AdGuard DNS. Note: YouTube ads come from the same servers as the
 # videos, so DNS can't remove those.
 #
-# Usage: scripts/private-dns.sh [hostname]   e.g. dns.adguard-dns.com (default)
-#        scripts/private-dns.sh off
+# Usage: scripts/cleanup/private-dns.sh [hostname]   e.g. dns.adguard-dns.com (default)
+#        scripts/cleanup/private-dns.sh off
 set -eu
 
-TV=${TV:-$("$(dirname "$0")/tv-connect.sh")}
-. "$(dirname "$0")/changelog.sh"
+root="$(cd "$(dirname "$0")/../.." && pwd)"
+
+TV=${TV:-$("$root/scripts/tv/connect.sh")}
+. "$root/scripts/lib/changelog.sh"
 require_backup
 
 hostname=${1:-dns.adguard-dns.com}

@@ -228,10 +228,41 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         hideSystemBars()
-        // For scripts/measure-home.sh: the first frame after Glass Home came in front.
+        app.updater.onNews = { askAboutUpdate() }
+        handler.postDelayed(updateQuestion, UPDATE_QUESTION_DELAY_MS)
+        // For scripts/measure/home-key.sh: the first frame after Glass Home came in front.
         Choreographer.getInstance().postFrameCallback {
             Log.i(HomeOverrideService.TIMING_TAG, "home shown " + SystemClock.uptimeMillis())
         }
+    }
+
+    override fun onPause() {
+        app.updater.onNews = null
+        handler.removeCallbacks(updateQuestion)
+        super.onPause()
+    }
+
+    private val updateQuestion = Runnable { askAboutUpdate() }
+
+    /**
+     * A downloaded update: ask on the home screen (never while a menu is open),
+     * or show Android's own question for an install already said yes to.
+     */
+    private fun askAboutUpdate() {
+        if (isFinishing || overlays.isOpen) {
+            return
+        }
+        if (app.updater.showWaitingConfirmation(this)) {
+            return
+        }
+        val version = app.updater.versionToOffer(System.currentTimeMillis()) ?: return
+        val updater = app.updater
+        overlays.openUpdateOffer(
+            version,
+            onInstall = { updater.install(reopenHome = true) },
+            onLater = { updater.later(System.currentTimeMillis()) },
+            onSkip = { updater.skip() },
+        )
     }
 
     /** Another app is in front: drop the photos so the launcher holds almost no memory. */
@@ -787,6 +818,9 @@ class MainActivity : Activity() {
     }
 
     companion object {
+        /** The update question waits for the home screen to settle after it comes in front. */
+        private const val UPDATE_QUESTION_DELAY_MS = 1500L
+
         /** The layout of each theme in HomeSettings.THEMES. */
         val THEME_LAYOUTS = mapOf(
             "clock" to R.layout.home_clock,

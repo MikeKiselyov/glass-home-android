@@ -3,12 +3,12 @@
 #
 # Wireless debugging picks a new port after every reboot; the TV announces the
 # current one over mDNS, so this finds it without looking at the TV. A paired
-# computer stays paired across reboots (pair once with scripts/tv-pair.sh).
+# computer stays paired across reboots (pair once with scripts/tv/pair.sh).
 #
 # With one TV on the network nothing needs configuring. With several, set
 # TV_HOST to the one you mean, e.g. TV_HOST=192.168.1.20.
 #
-# Usage: TV=$(scripts/tv-connect.sh)
+# Usage: TV=$(scripts/tv/connect.sh)
 set -eu
 
 TV_HOST=${TV_HOST:-}
@@ -28,7 +28,7 @@ endpoint_count=$(printf "%s" "$endpoints" | grep -c . || true)
 if [ "$endpoint_count" -eq 0 ]; then
     echo "No TV with wireless debugging found on the network." >&2
     echo "On the TV: Settings > System > Developer options > Wireless debugging (turn it on)." >&2
-    echo "First time on this computer? Pair it: scripts/tv-pair.sh" >&2
+    echo "First time on this computer? Pair it: scripts/tv/pair.sh" >&2
     exit 1
 fi
 if [ "$endpoint_count" -gt 1 ]; then

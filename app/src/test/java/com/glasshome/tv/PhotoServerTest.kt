@@ -224,4 +224,31 @@ class PhotoServerTest {
         val body = server.serve(FakeSession(NanoHTTPD.Method.GET, "/api/settings", cookie = cookie)).data.bufferedReader().readText()
         assertTrue(body.contains("\"photoMotion\":false"))
     }
+    /** The website can switch update checks off; no request installs anything without action=install. */
+    @Test
+    fun updatesAreSwitchedAndNeverInstalledUnasked() {
+        val context = RuntimeEnvironment.getApplication()
+        val updater = Updater(context)
+        server.updater = updater
+        val cookie = sessionCookie(signIn(server.code))
+
+        val status = server.serve(FakeSession(NanoHTTPD.Method.GET, "/api/update", cookie = cookie))
+        assertEquals(NanoHTTPD.Response.Status.OK, status.status)
+        assertTrue(status.data.bufferedReader().readText().contains("\"checks\":true"))
+
+        server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/update", cookie = cookie, form = mapOf("checks" to "0")))
+        assertEquals(false, updater.checksEnabled)
+        assertEquals(Updater.STATE_IDLE, updater.state)
+
+        val unknown = server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/update", cookie = cookie, form = mapOf("action" to "install-silently")))
+        assertEquals(NanoHTTPD.Response.Status.BAD_REQUEST, unknown.status)
+        assertEquals(Updater.STATE_IDLE, updater.state)
+    }
+
+    @Test
+    fun updatesNeedASession() {
+        server.updater = Updater(RuntimeEnvironment.getApplication())
+        val response = server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/update", form = mapOf("action" to "install")))
+        assertEquals(NanoHTTPD.Response.Status.UNAUTHORIZED, response.status)
+    }
 }

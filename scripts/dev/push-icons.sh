@@ -4,12 +4,12 @@
 # Works with the debug build (run-as). Doesn't touch what's on screen: the dock
 # picks the icons up the next time it is shown.
 #
-# Usage: scripts/push-icons.sh        (TV=<serial> to pick a device)
+# Usage: scripts/dev/push-icons.sh        (TV=<serial> to pick a device)
 set -eu
 
-TV=${TV:-$("$(dirname "$0")/tv-connect.sh")}
+root="$(cd "$(dirname "$0")/../.." && pwd)"
+TV=${TV:-$("$root/scripts/tv/connect.sh")}
 PACKAGE=com.glasshome.tv
-root="$(cd "$(dirname "$0")/.." && pwd)"
 tiles="$root/.tv/official-icons/tiles"
 
 adb -s "$TV" shell run-as "$PACKAGE" mkdir -p files/icons

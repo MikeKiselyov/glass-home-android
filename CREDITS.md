@@ -51,7 +51,7 @@ version is a native rewrite.
 
 The device icons in `app/src/main/assets/icons` (Glow, Toy and Line sets) are
 drawn for this project: silhouettes and colours only, no brand logos.
-`scripts/make-official-icons.py` can fetch official logos from Wikimedia Commons
+`scripts/dev/make-official-icons.py` can fetch official logos from Wikimedia Commons
 for use on your own TV; they are never committed or bundled.
 
 ## Trademarks

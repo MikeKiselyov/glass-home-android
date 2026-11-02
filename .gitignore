@@ -12,3 +12,5 @@ design/icons/
 keystore.properties
 *.jks
 *.keystore
+# Design mockups, local only.
+design/*.html

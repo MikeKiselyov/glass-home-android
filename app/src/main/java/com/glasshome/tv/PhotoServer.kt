@@ -105,6 +105,12 @@ class PhotoServer(
             if (!isSignedIn(session)) {
                 return json(Response.Status.UNAUTHORIZED, JSONObject().put("error", "sign-in"))
             }
+            if (method == Method.GET && path == "/api/update") {
+                return updateStatus()
+            }
+            if (method == Method.POST && path == "/api/update") {
+                return changeUpdate(session)
+            }
             if (method == Method.GET && path == "/api/screen") {
                 return screen()
             }
@@ -397,6 +403,7 @@ class PhotoServer(
             .put("dateFormat", settings.dateFormat)
             .put("language", I18n.language)
             .put("languages", JSONArray(availableLanguages()))
+            .put("languageNames", languageNames())
             .put("shufflePhotos", settings.shufflePhotos)
             .put("photoMotion", settings.photoMotion)
             .put("photoMode", store.mode)
@@ -512,6 +519,14 @@ class PhotoServer(
     }
 
     /** Language codes with a file in assets/i18n, e.g. ["en"]. */
+    private fun languageNames(): JSONObject {
+        val names = JSONObject()
+        for (code in availableLanguages()) {
+            names.put(code, I18n.nameOf(context, code))
+        }
+        return names
+    }
+
     private fun availableLanguages(): List<String> {
         val files = context.assets.list("i18n") ?: emptyArray()
         val codes = ArrayList<String>()
@@ -606,6 +621,51 @@ class PhotoServer(
         }
         onWeatherChanged?.invoke()
         return weatherSettings()
+    }
+
+    // ---------- updates ----------
+
+    /** Set by GlassHomeApp: the updater that checks GitHub and installs after "Install". */
+    var updater: Updater? = null
+
+    private fun updateStatus(): Response {
+        val current = updater ?: return json(Response.Status.NOT_FOUND, JSONObject().put("error", "no-updater"))
+        val reply = JSONObject()
+            .put("installed", current.installedVersion)
+            .put("state", current.state)
+            .put("checks", current.checksEnabled)
+            .put("development", current.isDevelopmentBuild)
+            .put("lastCheck", current.lastCheckMillis)
+            .put("error", current.lastError)
+        val latest = current.latest
+        if (latest != null) {
+            reply.put("latest", latest.version)
+        }
+        return json(Response.Status.OK, reply)
+    }
+
+    /** Body: action=check|install|skip, or checks=0|1. Nothing installs without action=install. */
+    private fun changeUpdate(session: IHTTPSession): Response {
+        val current = updater ?: return json(Response.Status.NOT_FOUND, JSONObject().put("error", "no-updater"))
+        session.parseBody(HashMap())
+        val parameters = session.parameters
+        val checks = parameters["checks"]?.firstOrNull()
+        if (checks != null) {
+            current.checksEnabled = checks == "1"
+        }
+        val action = parameters["action"]?.firstOrNull()
+        if (action == "check") {
+            current.check()
+        } else if (action == "install") {
+            // From the settings on the TV (127.0.0.1): the viewer is at the TV, so Glass Home comes back after.
+            val fromTv = session.remoteIpAddress == "127.0.0.1"
+            current.install(reopenHome = fromTv)
+        } else if (action == "skip") {
+            current.skip()
+        } else if (action != null) {
+            return json(Response.Status.BAD_REQUEST, JSONObject().put("error", "bad-action"))
+        }
+        return updateStatus()
     }
 
     // ---------- checks ----------

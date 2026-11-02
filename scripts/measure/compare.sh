@@ -3,22 +3,22 @@
 # (scripts/setup.sh), run "after", and get one table. Measures whatever home
 # screen the TV shows: its own launcher before, Glass Home after.
 #
-# Usage: scripts/compare.sh before [runs]   (default 3)
-#        scripts/compare.sh after [runs]
-#        scripts/compare.sh table            prints the table again
+# Usage: scripts/measure/compare.sh before [runs]   (default 3)
+#        scripts/measure/compare.sh after [runs]
+#        scripts/measure/compare.sh table            prints the table again
 #
 # Per run: the home screen in front, 20 s quiet, then free memory, the home
 # screen's memory (every process of its package), process counts, and over 30 s
 # the CPU of the home screen and of the whole TV; then TV Settings in front for
 # 15 s and the home screen's memory behind it; then Home again (am start -W).
 # Once per state: frame times while moving with the arrow keys, and for Glass
-# Home the time from the Home key to its first frame (scripts/measure-home.sh).
+# Home the time from the Home key to its first frame (scripts/measure/home-key.sh).
 #
 # For a fair comparison, reboot before each state, or don't reboot at all.
 # The numbers go to .tv/compare/<state>/; nothing on the TV is changed.
 set -eu
 
-root="$(cd "$(dirname "$0")/.." && pwd)"
+root="$(cd "$(dirname "$0")/../.." && pwd)"
 state=${1:-}
 runs=${2:-3}
 case "$state" in
@@ -83,9 +83,9 @@ if [ "$state" = table ]; then
     exit 0
 fi
 
-TV=${TV:-$("$root/scripts/tv-connect.sh")}
+TV=${TV:-$("$root/scripts/tv/connect.sh")}
 export TV
-. "$root/scripts/accessibility.sh"
+. "$root/scripts/install/accessibility.sh"
 remember_accessibility
 
 shell() {
@@ -188,7 +188,7 @@ cat "$out/$state/frames.txt"
 
 if [ "$home_package" = "$GLASS_HOME" ]; then
     echo "Home key to Glass Home"
-    "$root/scripts/measure-home.sh" 5 | tee "$out/$state/home-key-runs.txt" | tail -1
+    "$root/scripts/measure/home-key.sh" 5 | tee "$out/$state/home-key-runs.txt" | tail -1
     sed -n 's/^Median: \(.*\)/\1, Google TV not started/p' "$out/$state/home-key-runs.txt" > "$out/$state/home-key.txt"
 else
     echo "not measured (needs Glass Home's timing log)" > "$out/$state/home-key.txt"

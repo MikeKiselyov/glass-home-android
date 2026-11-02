@@ -13,11 +13,13 @@
 #
 # On TVs without a stock launcher of that kind it simply sets the default Home app.
 #
-# Usage: scripts/set-home.sh
+# Usage: scripts/install/set-home.sh
 set -eu
 
-TV=${TV:-$("$(dirname "$0")/tv-connect.sh")}
-. "$(dirname "$0")/changelog.sh"
+root="$(cd "$(dirname "$0")/../.." && pwd)"
+
+TV=${TV:-$("$root/scripts/tv/connect.sh")}
+. "$root/scripts/lib/changelog.sh"
 require_backup
 
 GLASS_HOME=com.glasshome.tv/.MainActivity

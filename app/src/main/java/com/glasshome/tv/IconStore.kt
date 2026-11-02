@@ -18,7 +18,7 @@ class IconChoice(val id: String, val group: String)
  * Choice ids:
  *   "asset:<file>"  a drawn icon bundled with the app (assets/icons: glow-, toy-, line-)
  *   "file:<file>"   an icon on the TV in files/icons: official-*.png (copied by
- *                   scripts/push-icons.sh, never bundled) or user-*.png (uploaded from a phone)
+ *                   scripts/dev/push-icons.sh, never bundled) or user-*.png (uploaded from a phone)
  * No saved choice means automatic: the app's own icon, or for an HDMI device the
  * official tile when present, else the drawn Glow one.
  */

@@ -1,5 +1,8 @@
 {
-  "_comment": "All interface text for the TV and the phone website. To add a language, copy this file to <code>.json (e.g. ru.json) and translate the values; missing keys fall back to English. {name} marks a value filled in by the app. A key ending in _one is used when {count} is 1.",
+  "_comment": "All interface text for the TV and the phone website. To add a language, copy this file to <name>.json (e.g. ua.json), set language.name (shown in the language list) and language.tag (the BCP 47 code, e.g. uk) and translate the values; missing keys fall back to English. {name} marks a value filled in by the app. A key ending in _one is used when {count} is 1; for languages with more plural forms, word the plain key so the number needs no agreement (\"Photos: {count}\").",
+
+  "language.name": "English",
+  "language.tag": "en",
 
   "date.words": "{weekday}, the {ordinal} of {month}",
   "date.weekdays": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
@@ -63,6 +66,12 @@
   "menu.phone": "Set up from your phone",
   "menu.show_hidden": "Show hidden apps ({count})",
   "menu.done": "Done",
+
+  "update.title": "Glass Home {version} is ready",
+  "update.lead": "Install it now? Glass Home closes for a few seconds and opens again. Your settings and photos stay.",
+  "update.install": "Install",
+  "update.later": "Later",
+  "update.skip": "Skip this version",
 
   "buttons.title": "Open {app} with",
   "buttons.remove": "Remove from the {color} button",
@@ -129,7 +138,7 @@
   "web.home.label": "Home opens",
   "web.home.catch": "Glass Home at once",
   "web.home.after": "After Google TV",
-  "web.home.lead": "At once: Google TV doesn't start and its screen doesn't flash; holding Home no longer opens the Google TV panel. After Google TV: Google TV opens first and Glass Home comes in front of it. Only on TVs set up with scripts/set-home.sh.",
+  "web.home.lead": "At once: Google TV doesn't start and its screen doesn't flash; holding Home no longer opens the Google TV panel. After Google TV: Google TV opens first and Glass Home comes in front of it. Only on TVs set up with scripts/install/set-home.sh.",
   "web.footer": "Glass Home answers only on your home network. This phone stays signed in for 30 days.",
 
 
@@ -235,5 +244,25 @@
   "web.icons.uploading": "Uploading…",
   "web.icons.added": "{count} icons added.",
   "web.icons.added_one": "1 icon added.",
-  "web.icons.delete": "Delete"
+  "web.icons.delete": "Delete",
+
+  "web.language.title": "Language",
+  "web.language.lead": "For the TV and this website.",
+
+  "web.update.title": "Updates",
+  "web.update.installed": "Glass Home {version}.",
+  "web.update.current": "This is the latest version.",
+  "web.update.ready": "Version {version} is downloaded. It installs only when you say so.",
+  "web.update.development": "Built from source: updates from GitHub are off.",
+  "web.update.checks": "Check GitHub for new versions once a day",
+  "web.update.check": "Check now",
+  "web.update.install": "Install {version}",
+  "web.update.skip": "Skip this version",
+  "web.update.skipped": "Skipped. The TV asks again when a newer version comes out.",
+  "web.update.checking": "Checking…",
+  "web.update.downloading": "Downloading…",
+  "web.update.installing": "Installing. Glass Home opens again in a few seconds.",
+  "web.update.confirm": "Confirm the update on the TV.",
+  "web.update.failed": "The update didn’t install: {error}",
+  "web.update.other_key": "Version {version} is out, but this Glass Home was built with another key, so Android can’t install it over this one. Install glass-home.apk from the Releases page instead (settings and photos are lost)."
 }
