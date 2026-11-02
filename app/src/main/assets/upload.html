@@ -7,6 +7,7 @@
 <meta name="theme-color" content="#f5f2ec" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#171b20" media="(prefers-color-scheme: dark)">
 <title>Glass Home</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20viewBox%3D%220%200%20108%20108%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%20%3Cdefs%3E%3ClinearGradient%20id%3D%22logo-ground%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%232A5260%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%2316303A%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%20%3Crect%20width%3D%22108%22%20height%3D%22108%22%20rx%3D%2224%22%20fill%3D%22url%28%23logo-ground%29%22%2F%3E%20%3Cpath%20fill%3D%22%23C4F4EF%22%20fill-opacity%3D%22.16%22%20stroke%3D%22%23C4F4EF%22%20stroke-width%3D%224.5%22%20d%3D%22M27%2C24h54a11%2C11%200%2C0%201%2C11%2011v32a11%2C11%200%2C0%201%2C-11%2011h-54a11%2C11%200%2C0%201%2C-11%20-11v-32a11%2C11%200%2C0%201%2C11%20-11z%22%2F%3E%20%3Cpath%20fill%3D%22%23C4F4EF%22%20d%3D%22M35.77%2C39.4%20a6.11%2C6.11%200%201%2C0%2012.22%2C0%20a6.11%2C6.11%200%201%2C0%20-12.22%2C0%20z%20M60.21%2C39.4%20a6.11%2C6.11%200%201%2C0%2012.22%2C0%20a6.11%2C6.11%200%201%2C0%20-12.22%2C0%20z%22%2F%3E%20%3Cpath%20fill%3D%22%23C4F4EF%22%20fill-rule%3D%22evenodd%22%20d%3D%22M38.12%2C48.8%20a15.98%2C13.865%200%201%2C0%2031.96%2C0%20a15.98%2C13.865%200%201%2C0%20-31.96%2C0%20z%20M47.286%2C46.92%20a2.232%2C2.232%200%201%2C0%204.464%2C0%20a2.232%2C2.232%200%201%2C0%20-4.464%2C0%20z%20M58.8%2C46.92%20a2.232%2C2.232%200%201%2C0%204.464%2C0%20a2.232%2C2.232%200%201%2C0%20-4.464%2C0%20z%20M51.515%2C51.62%20a2.585%2C1.763%200%201%2C0%205.17%2C0%20a2.585%2C1.763%200%201%2C0%20-5.17%2C0%20z%22%2F%3E%20%3Cpath%20fill%3D%22%23C4F4EF%22%20fill-opacity%3D%22.85%22%20d%3D%22M42.5%2C84h23a2.5%2C2.5%200%2C0%201%2C0%205h-23a2.5%2C2.5%200%2C0%201%2C0%20-5z%22%2F%3E%20%3C%2Fsvg%3E">
 <style>
   /* The website's own type: Bricolage Grotesque for headings and numbers,
      Atkinson Hyperlegible for everything you read. The clock fonts are the TV's. */
@@ -231,12 +232,22 @@
   .toast.on { opacity: 1; transform: translate(-50%, 0); }
 
   #signin { padding-top: var(--space-xl); }
+  #signin h2 { margin-top: var(--space-md); }
+  .signin-logo { display: block; width: 72px; height: 72px; }
+  #signin .button { white-space: nowrap; }
+  .notice { display: flex; align-items: center; justify-content: space-between; gap: var(--space-md); flex-wrap: wrap;
+    margin: 0 0 var(--space-md); padding: var(--space-md); border-radius: 12px; font-weight: 600;
+    border: 1.5px solid var(--danger); background: color-mix(in oklch, var(--danger) 12%, var(--ground)); color: var(--ink); }
+  .notice .button { white-space: nowrap; }
+  #weather-styles.off { opacity: .45; }
+  .steps { margin: 0 0 var(--space-lg); padding-left: 1.4em; max-width: 60ch; }
+  .steps li { margin-bottom: var(--space-xs); }
   #signin input { font: 700 32px var(--display); letter-spacing: .2em; text-align: center; }
 
   /* ---------- on the TV: two columns, the remote's focus ring is the loudest thing ---------- */
   .tv-only { display: none; }
   body.tv .tv-only { display: block; }
-  body.tv .file-button, body.tv .photo-grid li .handle { display: none; }
+  body.tv .file-button, body.tv .photo-grid li .handle, body.tv #open-link { display: none; }
   body.tv .shell { max-width: none; display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 0 var(--space-2xl); padding: 0 var(--space-2xl); }
   body.tv .side { display: block; position: sticky; top: 0; height: 100vh; padding-top: var(--space-lg); }
   body.tv .tabs { position: static; grid-template-columns: 1fr; gap: 6px; padding-top: var(--space-md); }
@@ -283,8 +294,21 @@
 
   <div class="content">
     <main id="signin" hidden>
+      <svg class="signin-logo" viewBox="0 0 108 108" role="img" aria-label="Glass Home">
+        <defs><linearGradient id="logo-ground" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2A5260"/><stop offset="1" stop-color="#16303A"/></linearGradient></defs>
+        <rect width="108" height="108" rx="24" fill="url(#logo-ground)"/>
+        <path fill="#C4F4EF" fill-opacity=".16" stroke="#C4F4EF" stroke-width="4.5" d="M27,24h54a11,11 0,0 1,11 11v32a11,11 0,0 1,-11 11h-54a11,11 0,0 1,-11 -11v-32a11,11 0,0 1,11 -11z"/>
+        <path fill="#C4F4EF" d="M35.77,39.4 a6.11,6.11 0 1,0 12.22,0 a6.11,6.11 0 1,0 -12.22,0 z M60.21,39.4 a6.11,6.11 0 1,0 12.22,0 a6.11,6.11 0 1,0 -12.22,0 z"/>
+        <path fill="#C4F4EF" fill-rule="evenodd" d="M38.12,48.8 a15.98,13.865 0 1,0 31.96,0 a15.98,13.865 0 1,0 -31.96,0 z M47.286,46.92 a2.232,2.232 0 1,0 4.464,0 a2.232,2.232 0 1,0 -4.464,0 z M58.8,46.92 a2.232,2.232 0 1,0 4.464,0 a2.232,2.232 0 1,0 -4.464,0 z M51.515,51.62 a2.585,1.763 0 1,0 5.17,0 a2.585,1.763 0 1,0 -5.17,0 z"/>
+        <path fill="#C4F4EF" fill-opacity=".85" d="M42.5,84h23a2.5,2.5 0,0 1,0 5h-23a2.5,2.5 0,0 1,0 -5z"/>
+      </svg>
       <h2 data-i18n="web.signin_title"></h2>
-      <p class="hint" data-i18n="web.signin_help"></p>
+      <p class="hint" data-i18n="web.signin_lead"></p>
+      <ol class="steps">
+        <li data-i18n="web.signin_step1"></li>
+        <li data-i18n="web.signin_step2"></li>
+        <li data-i18n="web.signin_step3"></li>
+      </ol>
       <form id="signin-form" class="inline">
         <input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" data-i18n-aria-label="web.code_label">
         <button type="submit" class="button" data-i18n="web.signin"></button>
@@ -309,6 +333,10 @@
         <div class="chips" id="dates" role="radiogroup" data-i18n-aria-label="web.look.date"></div>
 
         <h2 data-i18n="web.look.weather"></h2>
+        <div class="notice" id="weather-notice" hidden>
+          <span id="weather-notice-text"></span>
+          <button type="button" class="button" id="weather-notice-action"></button>
+        </div>
         <div class="tiles" id="weather-styles" role="radiogroup" data-i18n-aria-label="web.look.weather"></div>
 
         <h2 data-i18n="web.look.night"></h2>
@@ -354,6 +382,15 @@
 
       <!-- ===== More: weather, shared album, icons ===== -->
       <div class="tab-panel" id="panel-more" data-tab="more" role="tabpanel" aria-labelledby="tab-more">
+      <section id="open-link">
+        <h2 data-i18n="web.open.title"></h2>
+        <p class="hint" data-i18n="web.open.lead"></p>
+        <form id="open-form" class="inline">
+          <input id="open-url" type="url" inputmode="url" autocomplete="off" placeholder="https://…" data-i18n-aria-label="web.open.label">
+          <button type="submit" class="button" data-i18n="web.open.send"></button>
+        </form>
+        <p id="open-status" class="status" role="status"></p>
+      </section>
       <section id="language-section">
         <h2 data-i18n="web.language.title"></h2>
         <div class="segments" id="language" role="radiogroup" data-i18n-aria-label="web.language.title"></div>
@@ -376,7 +413,9 @@
           <button type="submit" class="button" data-i18n="web.weather.find"></button>
         </form>
         <div id="weather-results" class="results"></div>
-        <p><button id="weather-toggle" type="button" class="quiet"></button></p>
+        <div class="rows">
+          <div class="row"><label for="weather-enabled" data-i18n="web.weather.switch"></label><span class="switch"><input type="checkbox" id="weather-enabled"><span></span></span></div>
+        </div>
         <p class="status" data-i18n="web.weather.credit"></p>
       </section>
 
@@ -539,13 +578,27 @@
 
   function $(id) { return document.getElementById(id); }
 
-  function api(path, body) {
+  // timeoutMs (optional): give up after that long with Error('timeout'). Not for
+  // uploads, which can take minutes.
+  function api(path, body, timeoutMs) {
     var options = { credentials: 'same-origin', headers: { 'X-Glass-Home': '1' } };
     if (body !== undefined) {
       options.method = 'POST';
       options.body = body;
     }
-    return fetch(path, options).then(function (response) {
+    var timer = null;
+    if (timeoutMs) {
+      var controller = new AbortController();
+      options.signal = controller.signal;
+      timer = setTimeout(function () { controller.abort(); }, timeoutMs);
+    }
+    return fetch(path, options).catch(function (error) {
+      if (error && error.name === 'AbortError') {
+        throw new Error('timeout');
+      }
+      throw error;
+    }).then(function (response) {
+      clearTimeout(timer);
       if (response.status === 401) {
         showSignIn();
         throw new Error('signin');
@@ -1121,12 +1174,39 @@
     if (data.enabled && data.place) line = t('web.weather.showing', { place: data.place });
     if (data.enabled && !data.place) line = t('web.weather.pick');
     $('weather-now').textContent = line;
-    var toggle = $('weather-toggle');
-    toggle.textContent = data.enabled ? t('web.weather.turn_off') : t('web.weather.turn_on');
-    toggle.onclick = function () {
-      api('/api/weather', form({ enabled: data.enabled ? '0' : '1' })).then(json).then(renderWeather);
-    };
+    $('weather-enabled').checked = !!data.enabled;
+    renderWeatherNotice(data);
   }
+
+  // On the Look tab, above the weather styles: the TV shows no weather, and why.
+  function renderWeatherNotice(data) {
+    var notice = $('weather-notice');
+    var action = $('weather-notice-action');
+    var off = !data.enabled || !data.place;
+    notice.hidden = !off;
+    $('weather-styles').classList.toggle('off', off);
+    if (!data.enabled) {
+      $('weather-notice-text').textContent = t('web.weather.off');
+      action.textContent = t('web.weather.turn_on');
+      action.onclick = function () { setWeatherEnabled(true); };
+    } else if (!data.place) {
+      $('weather-notice-text').textContent = t('web.weather.pick');
+      action.textContent = t('web.weather.pick_city');
+      action.onclick = function () {
+        showTab('more');
+        $('weather').scrollIntoView({ block: 'start' });
+        $('weather-query').focus({ preventScroll: true });
+      };
+    }
+  }
+
+  function setWeatherEnabled(enabled) {
+    return api('/api/weather', form({ enabled: enabled ? '1' : '0' })).then(json).then(renderWeather);
+  }
+
+  $('weather-enabled').addEventListener('change', function (event) {
+    setWeatherEnabled(event.target.checked).then(function () { toast(t('web.saved')); });
+  });
 
   $('weather-form').addEventListener('submit', function (event) {
     event.preventDefault();
@@ -1169,6 +1249,58 @@
     $('album-status').textContent = t('web.album.saving');
     saveSetting('albumLink', $('album-link').value.trim()).then(function () {
       setTimeout(loadSettings, 8000);
+    });
+  });
+
+  // ---------- open a link on the TV ----------
+
+  // A link the phone shared to this page as ?open=<link> (an iPhone shortcut,
+  // a bookmarklet). It waits in the field for a tap on Open: another site can
+  // send people to that address too, and the TV opens nothing on its own.
+  var linkFromAddress = new URLSearchParams(location.search).get('open');
+  var OPEN_TIMEOUT_MS = 8000;
+
+  function showLinkFromAddress() {
+    if (!linkFromAddress) {
+      return;
+    }
+    $('open-url').value = linkFromAddress;
+    linkFromAddress = null;
+    showTab('more');
+    $('open-link').scrollIntoView({ block: 'start' });
+  }
+
+  $('open-form').addEventListener('submit', function (event) {
+    event.preventDefault();
+    var status = $('open-status');
+    status.className = 'status';
+    status.textContent = t('web.open.opening');
+    var body = form({ link: $('open-url').value.trim() });
+    // Found with a phone that sat unused for a while: the request hung on
+    // "Opening…". After 8 s it goes again on a new connection, then gives up.
+    api('/api/open', body, OPEN_TIMEOUT_MS).catch(function (error) {
+      if (error && error.message === 'timeout') {
+        return api('/api/open', body, OPEN_TIMEOUT_MS);
+      }
+      throw error;
+    }).then(json).then(function (data) {
+      if (data.error === 'bad-link') {
+        status.className = 'status error';
+        status.textContent = t('web.open.bad_link');
+      } else if (data.result === 'no-app') {
+        status.className = 'status error';
+        status.textContent = t('web.open.no_app');
+      } else if (data.result === 'opened') {
+        status.textContent = t('web.open.opened');
+        $('open-url').value = '';
+      } else {
+        status.className = 'status error';
+        status.textContent = t('web.offline');
+      }
+    }).catch(function (error) {
+      if (error && error.message === 'signin') return;
+      status.className = 'status error';
+      status.textContent = t('web.open.no_answer');
     });
   });
 
@@ -1384,7 +1516,7 @@
     if (name === 'apps' || name === 'dock') {
       return 'apps';
     }
-    if (name === 'more' || name === 'weather' || name === 'album' || name === 'icons' || name === 'updates') {
+    if (name === 'more' || name === 'weather' || name === 'album' || name === 'icons' || name === 'updates' || name === 'open-link') {
       return 'more';
     }
     return 'look';
@@ -1393,7 +1525,7 @@
   // The section an old link named, to scroll to inside its tab.
   function sectionFromAddress() {
     var name = location.hash.slice(1);
-    if (name === 'album' || name === 'icons' || name === 'updates') {
+    if (name === 'album' || name === 'icons' || name === 'updates' || name === 'open-link') {
       return $(name);
     }
     return null;
@@ -1536,6 +1668,8 @@
       renderPreview();
       if (IS_TV) {
         showTvStart();
+      } else {
+        showLinkFromAddress();
       }
     }).catch(function (error) {
       if (error && error.message === 'signin') return;
@@ -1906,6 +2040,10 @@
     // The QR code on the TV carries the code: sign in, then drop it from the address bar.
     var params = new URLSearchParams(location.search);
     var codeFromLink = params.get('code');
+    if (params.get('open')) {
+      // Read already (linkFromAddress); a reload must not bring it back.
+      history.replaceState(null, '', location.pathname + location.hash);
+    }
     if (codeFromLink) {
       history.replaceState(null, '', location.pathname + location.hash);
       signIn(codeFromLink).then(loadAll);

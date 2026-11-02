@@ -7,8 +7,8 @@ import java.io.ByteArrayOutputStream
 import java.net.DatagramPacket
 import java.net.Inet4Address
 import java.net.InetAddress
+import java.net.InetSocketAddress
 import java.net.MulticastSocket
-import java.net.NetworkInterface
 
 /**
  * Answers mDNS questions for "glasshome.local", so phones can open
@@ -39,9 +39,21 @@ class LocalName(private val context: Context) {
             multicastLock.acquire()
             lock = multicastLock
 
+            // Right after boot the Wi-Fi may not be up yet.
+            var home = HomeNetwork.find()
+            while (home == null && running) {
+                Thread.sleep(NETWORK_WAIT_MS)
+                home = HomeNetwork.find()
+            }
+            if (home == null) {
+                return
+            }
             val group = InetAddress.getByName(MDNS_GROUP)
             val multicast = MulticastSocket(MDNS_PORT)
-            multicast.joinGroup(group)
+            // On the home network by name: with a VPN on, the default route (and
+            // with it the group membership and the replies) goes into the tunnel.
+            multicast.networkInterface = home.networkInterface
+            multicast.joinGroup(InetSocketAddress(group, MDNS_PORT), home.networkInterface)
             socket = multicast
 
             announce(multicast, group)
@@ -159,18 +171,7 @@ class LocalName(private val context: Context) {
     }
 
     private fun localAddress(): Inet4Address? {
-        val interfaces = NetworkInterface.getNetworkInterfaces() ?: return null
-        for (networkInterface in interfaces) {
-            if (!networkInterface.isUp || networkInterface.isLoopback) {
-                continue
-            }
-            for (inetAddress in networkInterface.inetAddresses) {
-                if (inetAddress is Inet4Address && inetAddress.isSiteLocalAddress) {
-                    return inetAddress
-                }
-            }
-        }
-        return null
+        return HomeNetwork.find()?.address
     }
 
     companion object {
@@ -178,6 +179,7 @@ class LocalName(private val context: Context) {
         private const val TAG = "GlassHome"
         private const val MDNS_GROUP = "224.0.0.251"
         private const val MDNS_PORT = 5353
+        private const val NETWORK_WAIT_MS = 10_000L
         private const val TYPE_A = 1
         private const val TYPE_AAAA = 28
         private const val TYPE_NSEC = 47

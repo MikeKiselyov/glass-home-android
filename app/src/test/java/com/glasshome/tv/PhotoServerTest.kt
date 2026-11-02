@@ -251,4 +251,45 @@ class PhotoServerTest {
         val response = server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/update", form = mapOf("action" to "install")))
         assertEquals(NanoHTTPD.Response.Status.UNAUTHORIZED, response.status)
     }
+
+    /** A signed-in phone sends a link; the TV opens it. Only web links get that far. */
+    @Test
+    fun aLinkFromThePhoneOpensOnTheTv() {
+        val opened = ArrayList<String>()
+        server.openLink = { link ->
+            opened.add(link)
+            LinkOpener.Result.OPENED
+        }
+        val cookie = sessionCookie(signIn(server.code))
+
+        val response = server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/open", cookie = cookie, form = mapOf("link" to "Look https://example.com/film")))
+        assertEquals(NanoHTTPD.Response.Status.OK, response.status)
+        assertTrue(response.data.bufferedReader().readText().contains("\"result\":\"opened\""))
+        assertEquals(listOf("https://example.com/film"), opened)
+
+        val bad = server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/open", cookie = cookie, form = mapOf("link" to "file:///data/data/com.glasshome.tv/")))
+        assertEquals(NanoHTTPD.Response.Status.BAD_REQUEST, bad.status)
+        assertTrue(bad.data.bufferedReader().readText().contains("bad-link"))
+        assertEquals(1, opened.size)
+    }
+
+    @Test
+    fun theTvSaysWhenNothingOpensLinks() {
+        server.openLink = { LinkOpener.Result.NO_APP }
+        val cookie = sessionCookie(signIn(server.code))
+        val response = server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/open", cookie = cookie, form = mapOf("link" to "https://example.com/")))
+        assertTrue(response.data.bufferedReader().readText().contains("\"result\":\"no-app\""))
+    }
+
+    @Test
+    fun openingALinkNeedsASession() {
+        val opened = ArrayList<String>()
+        server.openLink = { link ->
+            opened.add(link)
+            LinkOpener.Result.OPENED
+        }
+        val response = server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/open", form = mapOf("link" to "https://example.com/")))
+        assertEquals(NanoHTTPD.Response.Status.UNAUTHORIZED, response.status)
+        assertTrue(opened.isEmpty())
+    }
 }

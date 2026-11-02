@@ -21,7 +21,8 @@ import android.view.accessibility.AccessibilityEvent
  * - When Google TV's home screen opens anyway (the "after" mode, or a way to
  *   it other than the Home key), it brings Glass Home to the front right away.
  *   It only receives window events from the stock launchers listed in
- *   res/xml/home_override.xml.
+ *   res/xml/home_override.xml, and only their home screen counts
+ *   ([StockHomeScreens]): Google TV's settings panel is a launcher window too.
  *
  * It never reads what is on screen. Every key from the remote passes through
  * [onKeyEvent], so that stays a few comparisons with no work behind them.
@@ -109,7 +110,7 @@ class HomeOverrideService : AccessibilityService() {
             return
         }
         val packageName = event.packageName?.toString() ?: return
-        if (!STOCK_HOMES.contains(packageName)) {
+        if (!StockHomeScreens.isHomeScreen(packageName, event.className?.toString())) {
             return
         }
         if (HomeScreenState.inFront) {
@@ -133,12 +134,6 @@ class HomeOverrideService : AccessibilityService() {
     }
 
     companion object {
-        val STOCK_HOMES = setOf(
-            "com.google.android.apps.tv.launcherx",
-            "com.google.android.tvlauncher",
-            "com.google.android.leanbacklauncher",
-        )
-
         const val TIMING_TAG = "GlassHomeTiming"
     }
 }

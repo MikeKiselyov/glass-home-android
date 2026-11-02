@@ -8,8 +8,6 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.io.FileInputStream
-import java.net.Inet4Address
-import java.net.NetworkInterface
 import java.security.SecureRandom
 
 /**
@@ -61,18 +59,8 @@ class PhotoServer(
 
     /** "http://192.168.1.20:8090", or null without a home-network address. */
     fun address(): String? {
-        val interfaces = NetworkInterface.getNetworkInterfaces() ?: return null
-        for (networkInterface in interfaces) {
-            if (!networkInterface.isUp || networkInterface.isLoopback) {
-                continue
-            }
-            for (inetAddress in networkInterface.inetAddresses) {
-                if (inetAddress is Inet4Address && inetAddress.isSiteLocalAddress) {
-                    return "http://" + inetAddress.hostAddress + ":" + PORT
-                }
-            }
-        }
-        return null
+        val home = HomeNetwork.find() ?: return null
+        return "http://" + home.address.hostAddress + ":" + PORT
     }
 
     override fun serve(session: IHTTPSession): Response {
@@ -164,6 +152,9 @@ class PhotoServer(
             }
             if (method == Method.POST && path == "/api/icon-delete") {
                 return deleteIcon(session)
+            }
+            if (method == Method.POST && path == "/api/open") {
+                return openSharedLink(session)
             }
             return text(Response.Status.NOT_FOUND, I18n.t("server.not_found"))
         } catch (error: Exception) {
@@ -667,6 +658,26 @@ class PhotoServer(
             return json(Response.Status.BAD_REQUEST, JSONObject().put("error", "bad-action"))
         }
         return updateStatus()
+    }
+
+    // ---------- links ----------
+
+    /** Set by GlassHomeApp: opens a link on the TV ([LinkOpener]). */
+    var openLink: ((String) -> LinkOpener.Result)? = null
+
+    /** Body: link=<a web link, or text with one in it>. */
+    private fun openSharedLink(session: IHTTPSession): Response {
+        val opener = openLink ?: return json(Response.Status.NOT_FOUND, JSONObject().put("error", "no-opener"))
+        session.parseBody(HashMap())
+        val text = session.parameters["link"]?.firstOrNull() ?: ""
+        val link = SharedLinks.find(text) ?: return json(Response.Status.BAD_REQUEST, JSONObject().put("error", "bad-link"))
+        // When it arrived, not what: the link is the user's watch history.
+        Log.i(TAG, "Link from a phone to open")
+        val result = opener(link)
+        if (result == LinkOpener.Result.NO_APP) {
+            return json(Response.Status.OK, JSONObject().put("result", "no-app"))
+        }
+        return json(Response.Status.OK, JSONObject().put("result", "opened"))
     }
 
     // ---------- checks ----------

@@ -1,0 +1,49 @@
+package com.glasshome.tv
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Test
+
+/** The link a phone sends to open on the TV. */
+class SharedLinksTest {
+
+    @Test
+    fun aPlainLinkIsKept() {
+        assertEquals("https://www.youtube.com/watch?v=abc", SharedLinks.find("https://www.youtube.com/watch?v=abc"))
+        assertEquals("http://example.com/film", SharedLinks.find("  http://example.com/film \n"))
+    }
+
+    /** Apps share "Title https://..." as text: the link inside is the one. */
+    @Test
+    fun theLinkInsideSharedTextIsFound() {
+        assertEquals("https://example.com/a?b=1", SharedLinks.find("Watch this https://example.com/a?b=1 tonight"))
+    }
+
+    @Test
+    fun onlyWebLinksOpen() {
+        assertNull(SharedLinks.find("javascript:alert(1)"))
+        assertNull(SharedLinks.find("intent://scan/#Intent;scheme=zxing;end"))
+        assertNull(SharedLinks.find("file:///data/data/com.glasshome.tv/shared_prefs/server.xml"))
+        assertNull(SharedLinks.find("content://settings/secure"))
+        assertNull(SharedLinks.find("market://details?id=com.example"))
+    }
+
+    @Test
+    fun notALinkIsRefused() {
+        assertNull(SharedLinks.find(""))
+        assertNull(SharedLinks.find("just some words"))
+        assertNull(SharedLinks.find("https://"))
+        assertNull(SharedLinks.find("https:///path-without-host"))
+    }
+
+    @Test
+    fun aVeryLongLinkIsRefused() {
+        val long = "https://example.com/" + "a".repeat(SharedLinks.MAX_LENGTH)
+        assertNull(SharedLinks.find(long))
+    }
+
+    @Test
+    fun schemeCaseDoesNotMatter() {
+        assertEquals("HTTPS://Example.com/", SharedLinks.find("HTTPS://Example.com/"))
+    }
+}

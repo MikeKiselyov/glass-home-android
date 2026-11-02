@@ -76,6 +76,8 @@ Open a terminal in this repository and try:
   YouTube Music.
 - **Set up from your phone**: scan a QR code on the TV; or with the remote on
   the TV itself.
+- **Open on the TV**: send a link from the phone; it opens in YouTube or in a
+  browser on the TV.
 - **Updates from GitHub, only when you say so**: Install, Later or Skip this version.
 - **English, Ukrainian, Belarusian**.
 
