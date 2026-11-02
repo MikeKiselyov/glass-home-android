@@ -54,4 +54,21 @@ class DreamTest {
         assertEquals(15_000L, DreamPlan.photoMillis(5))
         assertEquals(60_000L, DreamPlan.photoMillis(60))
     }
+
+    /** Every change is a crossfade: the incoming photo is on top, whichever view it is. */
+    @Test
+    fun theIncomingPhotoIsAlwaysOnTop() {
+        val context = RuntimeEnvironment.getApplication()
+        val photos = android.widget.FrameLayout(context)
+        val first = android.widget.ImageView(context)
+        val second = android.widget.ImageView(context)
+        photos.addView(first)
+        photos.addView(second)
+        // First change: the view drawn last comes in.
+        GlassHomeDream.putOnTop(second)
+        assertTrue(photos.getChildAt(1) === second && second.alpha == 0f)
+        // Second change: the other view, which lies underneath, comes in.
+        GlassHomeDream.putOnTop(first)
+        assertTrue(photos.getChildAt(1) === first && first.alpha == 0f)
+    }
 }

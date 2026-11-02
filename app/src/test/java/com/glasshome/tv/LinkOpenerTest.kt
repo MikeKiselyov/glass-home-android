@@ -36,9 +36,13 @@ class LinkOpenerTest {
     }
 
     private var wakes = 0
+    private var startedBeforeWaking = false
 
     private fun opener(canStart: Boolean = true): LinkOpener {
-        return LinkOpener(context, { canStart }, { wakes += 1 })
+        return LinkOpener(context, { canStart }, {
+            wakes += 1
+            startedBeforeWaking = shadowOf(context).peekNextStartedActivity() != null
+        })
     }
 
     /** The screensaver goes first, or the app would open behind it. */
@@ -47,6 +51,8 @@ class LinkOpenerTest {
         installBrowser()
         opener().open("https://example.com/film")
         assertEquals(1, wakes)
+        assertFalse(startedBeforeWaking)
+        assertEquals("https://example.com/film", shadowOf(context).nextStartedActivity.dataString)
     }
 
     @Test

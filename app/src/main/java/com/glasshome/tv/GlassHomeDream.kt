@@ -117,6 +117,7 @@ class GlassHomeDream : DreamService() {
         if (bitmap != null) {
             val old = shownBitmap
             hidden.setImageBitmap(bitmap)
+            putOnTop(hidden)
             hidden.animate().alpha(1f).setDuration(FADE_MS).withEndAction {
                 shown.setImageDrawable(null)
                 shown.alpha = 0f
@@ -132,6 +133,16 @@ class GlassHomeDream : DreamService() {
 
     companion object {
         private const val FADE_MS = 1_500L
+
+        /**
+         * The incoming photo, see-through, above the other one before it fades
+         * in. Found in review: after the views swapped, the new photo was under
+         * the old one and every second change was a cut.
+         */
+        fun putOnTop(incoming: ImageView) {
+            incoming.alpha = 0f
+            incoming.bringToFront()
+        }
         private const val CLOCK_DRIFT_DP = 24f
     }
 }

@@ -192,7 +192,7 @@ class PhotoServer(
             }
             return text(Response.Status.NOT_FOUND, I18n.t("server.not_found"))
         } catch (error: Exception) {
-            Log.w(TAG, "Request failed: $path", error)
+            Log.w(TAG, "Request failed: " + RequestLog.path(path), error)
             return text(Response.Status.INTERNAL_ERROR, I18n.t("server.error"))
         }
     }
@@ -759,6 +759,7 @@ class PhotoServer(
         return text(Response.Status.OK, sentence)
     }
 
+    @Synchronized
     private fun recent(): Response {
         return json(Response.Status.OK, JSONObject().put("links", JSONArray(recentLinks.links)))
     }

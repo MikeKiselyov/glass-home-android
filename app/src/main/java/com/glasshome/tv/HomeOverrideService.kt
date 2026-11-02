@@ -48,7 +48,6 @@ class HomeOverrideService : AccessibilityService() {
     private val dreamReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             dreaming = intent.action == Intent.ACTION_DREAMING_STARTED
-            HomeScreenState.dreaming = dreaming
         }
     }
 

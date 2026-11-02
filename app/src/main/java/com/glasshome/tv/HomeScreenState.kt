@@ -8,8 +8,4 @@ package com.glasshome.tv
 object HomeScreenState {
     @Volatile
     var inFront: Boolean = false
-
-    /** The screensaver is on screen; set by HomeOverrideService from Android's broadcasts. */
-    @Volatile
-    var dreaming: Boolean = false
 }

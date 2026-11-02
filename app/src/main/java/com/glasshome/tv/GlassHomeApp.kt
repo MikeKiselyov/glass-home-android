@@ -100,9 +100,8 @@ class GlassHomeApp : Application() {
     /** The next look at the sleep timer: when it runs out, or never. */
     private fun scheduleSleep() {
         handler.removeCallbacks(sleepTick)
-        val sleepAt = sleepTimer.sleepAt() ?: return
-        val wait = sleepAt - System.currentTimeMillis()
-        handler.postDelayed(sleepTick, wait.coerceAtLeast(0L))
+        val wait = sleepTimer.nextCheckIn(System.currentTimeMillis()) ?: return
+        handler.postDelayed(sleepTick, wait)
     }
 
     private fun sleepIfDue() {

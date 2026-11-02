@@ -5,20 +5,27 @@
     android:layout_height="match_parent"
     android:background="#000000">
 
-    <ImageView
-        android:id="@+id/dream_photo_a"
+    <!-- Only the two photos inside: the new one is brought to the front here,
+         under the scrim and the clock. -->
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:importantForAccessibility="no"
-        android:scaleType="centerCrop" />
+        android:layout_height="match_parent">
 
-    <ImageView
-        android:id="@+id/dream_photo_b"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:alpha="0"
-        android:importantForAccessibility="no"
-        android:scaleType="centerCrop" />
+        <ImageView
+            android:id="@+id/dream_photo_a"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:importantForAccessibility="no"
+            android:scaleType="centerCrop" />
+
+        <ImageView
+            android:id="@+id/dream_photo_b"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:alpha="0"
+            android:importantForAccessibility="no"
+            android:scaleType="centerCrop" />
+    </FrameLayout>
 
     <View
         android:layout_width="match_parent"

@@ -55,6 +55,14 @@ class SleepTimer(private val storage: SleepTimerStorage) {
         return late <= LATE_MS
     }
 
+    /** Milliseconds until the app should look at the timer again; null without one. */
+    fun nextCheckIn(now: Long): Long? {
+        if (sleepAtMillis == 0L) {
+            return null
+        }
+        return maxOf(0L, sleepAtMillis - now)
+    }
+
     /** Rounded up: "1 minute" until the very end. */
     fun minutesLeft(now: Long): Long {
         if (sleepAtMillis == 0L || now >= sleepAtMillis) {

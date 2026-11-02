@@ -79,4 +79,14 @@ class SleepTimerTest {
         assertNull(timer.sleepAt())
         assertEquals(0L, storage.saved)
     }
+
+    /** When the app looks at the timer next: at the end, at once if late, never without one. */
+    @Test
+    fun theNextLookIsAtTheEnd() {
+        val timer = SleepTimer(MemoryStorage())
+        assertNull(timer.nextCheckIn(0L))
+        timer.set(30, 0L)
+        assertEquals(30 * minute, timer.nextCheckIn(0L))
+        assertEquals(0L, timer.nextCheckIn(31 * minute))
+    }
 }
