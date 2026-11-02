@@ -144,6 +144,12 @@ Reports and pull requests are welcome, especially additions to
 [debloat/packages.tsv](debloat/packages.tsv) for your TV brand. Releases are
 tested and published by CI on every merge: [docs/RELEASING.md](docs/RELEASING.md).
 
+## Support
+
+Glass Home is free and open source. If it made your TV nicer to use, you can buy me a coffee:
+
+<a href="https://buymeacoffee.com/mike_kiselyov"><img src="https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black" alt="Buy me a coffee"></a>
+
 ## Credits and licences
 
 - Code: MIT, see [LICENSE](LICENSE). Based on Glass Home for Samsung TVs by
