@@ -10,8 +10,8 @@
 # Usage: scripts/restore.sh [--uninstall] [--dry-run]   (TV=<serial> to pick a device)
 set -eu
 
-TV=${TV:-$("$(dirname "$0")/tv-connect.sh")}
 root="$(cd "$(dirname "$0")/.." && pwd)"
+TV=${TV:-$("$root/scripts/tv/connect.sh")}
 log="$root/.tv/changes.log"
 uninstall=false
 dry_run=false
@@ -42,7 +42,7 @@ adb -s "$TV" get-state >/dev/null
 
 if [ "$dry_run" = false ]; then
     # The state before undoing, too: if the undo itself goes wrong, this is what it was.
-    TV="$TV" "$root/scripts/backup.sh"
+    TV="$TV" "$root/scripts/backup/backup.sh"
 fi
 
 # Newest change first. (awk rather than "tail -r", which Linux doesn't have.)

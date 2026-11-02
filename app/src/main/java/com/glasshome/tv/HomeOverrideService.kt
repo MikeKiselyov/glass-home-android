@@ -26,7 +26,7 @@ import android.view.accessibility.AccessibilityEvent
  * It never reads what is on screen. Every key from the remote passes through
  * [onKeyEvent], so that stays a few comparisons with no work behind them.
  *
- * Enabled with scripts/set-home.sh (or Settings > Accessibility > Glass Home).
+ * Enabled with scripts/install/set-home.sh (or Settings > Accessibility > Glass Home).
  * Force-stopping Glass Home switches it off (Android does that for every
  * accessibility service); set-home.sh turns it on again.
  */
@@ -66,6 +66,18 @@ class HomeOverrideService : AccessibilityService() {
         super.onDestroy()
     }
 
+    /**
+     * Android connects the service again after Glass Home is updated. While the
+     * update went in, Android showed the TV's own home screen, before this
+     * service was back to catch it: put Glass Home back if it asked for that.
+     */
+    public override fun onServiceConnected() {
+        super.onServiceConnected()
+        if (Updater.takeReopenRequest(this, System.currentTimeMillis())) {
+            openGlassHome()
+        }
+    }
+
     private fun screenAsleep(): Boolean {
         if (dreaming) {
             return true
@@ -76,7 +88,7 @@ class HomeOverrideService : AccessibilityService() {
 
     public override fun onKeyEvent(event: KeyEvent): Boolean {
         if (event.keyCode == KeyEvent.KEYCODE_HOME && event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
-            // For scripts/measure-home.sh: from the key press to Glass Home's first frame.
+            // For scripts/measure/home-key.sh: from the key press to Glass Home's first frame.
             Log.i(TIMING_TAG, "home key " + event.eventTime)
         }
         if (event.keyCode != KeyEvent.KEYCODE_HOME) {

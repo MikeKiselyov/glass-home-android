@@ -8,10 +8,10 @@
 # the app on screen) is put back at the end.
 #
 # Needs a debug build on the TV (it reads the sign-in code with run-as).
-# Usage: scripts/measure.sh [runs]   (start time runs per theme, default 5)
+# Usage: scripts/measure/themes.sh [runs]   (start time runs per theme, default 5)
 set -eu
 
-root="$(cd "$(dirname "$0")/.." && pwd)"
+root="$(cd "$(dirname "$0")/../.." && pwd)"
 PACKAGE=com.glasshome.tv
 ACTIVITY="$PACKAGE/.MainActivity"
 STOCK_LAUNCHER=com.google.android.apps.tv.launcherx
@@ -19,8 +19,8 @@ OTHER_APP=com.android.tv.settings
 PORT=8090
 runs=${1:-5}
 
-TV=${TV:-$("$root/scripts/tv-connect.sh")}
-. "$root/scripts/accessibility.sh"
+TV=${TV:-$("$root/scripts/tv/connect.sh")}
+. "$root/scripts/install/accessibility.sh"
 remember_accessibility
 base="http://${TV%%:*}:$PORT"
 work="$root/.tv/measure"

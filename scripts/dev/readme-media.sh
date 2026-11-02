@@ -13,11 +13,11 @@
 #
 # Needs a debug build on the TV (it reads the sign-in code with run-as).
 #
-# Usage: scripts/readme-media.sh            pictures, then put the TV back
-#        scripts/readme-media.sh --keep     pictures, leave the scene set up and
+# Usage: scripts/dev/readme-media.sh            pictures, then put the TV back
+#        scripts/dev/readme-media.sh --keep     pictures, leave the scene set up and
 #                                           print a sign-in link for the phone
 #                                           website pictures (docs/images/web-*)
-#        scripts/readme-media.sh --restore  put the TV back after --keep
+#        scripts/dev/readme-media.sh --restore  put the TV back after --keep
 set -eu
 
 mode=all
@@ -28,7 +28,7 @@ case "${1:-}" in
     *) echo "unknown option: $1" >&2; exit 2 ;;
 esac
 
-root="$(cd "$(dirname "$0")/.." && pwd)"
+root="$(cd "$(dirname "$0")/../.." && pwd)"
 PACKAGE=com.glasshome.tv
 PORT=8090
 HIDE="com.surfshark.vpnclient.android"
@@ -38,8 +38,8 @@ PLACE_LATITUDE=45.1885
 PLACE_LONGITUDE=5.7245
 WIDTH=1600
 
-TV=${TV:-$("$root/scripts/tv-connect.sh")}
-. "$root/scripts/accessibility.sh"
+TV=${TV:-$("$root/scripts/tv/connect.sh")}
+. "$root/scripts/install/accessibility.sh"
 remember_accessibility
 ip=$(adb -s "$TV" shell ip -4 addr show wlan0 2>/dev/null | sed -n 's/.*inet \([0-9.]*\).*/\1/p' | head -1)
 if [ -z "$ip" ]; then
@@ -206,7 +206,7 @@ restore() {
     set +e
     echo "Putting the TV back"
     if ! sign_in; then
-        echo "The TV still shows the scene for the pictures. Run: scripts/readme-media.sh --restore" >&2
+        echo "The TV still shows the scene for the pictures. Run: scripts/dev/readme-media.sh --restore" >&2
         return 1
     fi
     before_theme=$(json_field "$work/settings.json" theme)
@@ -368,5 +368,5 @@ if [ "$mode" = keep ]; then
     echo
     echo "The scene stays set up. Website sign-in link (phone pictures):"
     echo "  $base/?code=$code"
-    echo "Then: scripts/readme-media.sh --restore"
+    echo "Then: scripts/dev/readme-media.sh --restore"
 fi

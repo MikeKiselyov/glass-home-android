@@ -36,6 +36,9 @@ class Overlays(
     private var generation = 0
     private var showingPhoneInfo = false
 
+    /** While the update question is open and nothing was picked: closing it counts as "Later". */
+    private var updateLater: (() -> Unit)? = null
+
     val isOpen: Boolean
         get() = container.visibility == View.VISIBLE
 
@@ -45,6 +48,9 @@ class Overlays(
         }
         generation += 1
         showingPhoneInfo = false
+        val later = updateLater
+        updateLater = null
+        later?.invoke()
         container.removeAllViews()
         container.visibility = View.GONE
         for (thumb in thumbs) {
@@ -103,6 +109,36 @@ class Overlays(
             }
         }
         show(panel, Gravity.START or Gravity.BOTTOM)
+    }
+
+    // ---------- update question ----------
+
+    /**
+     * Asks before installing an update: nothing is installed without "Install".
+     * Back, or anything else that closes the panel, is "Later".
+     */
+    fun openUpdateOffer(version: String, onInstall: () -> Unit, onLater: () -> Unit, onSkip: () -> Unit) {
+        val panel = newPanel(I18n.t("update.title", "version" to version))
+        val lead = newText(I18n.t("update.lead"), 15f, 0xCCFFFFFF.toInt())
+        lead.setPadding(dp(8), 0, dp(8), dp(10))
+        lead.maxWidth = dp(420)
+        panel.addView(lead)
+        addAction(panel, I18n.t("update.install")) {
+            updateLater = null
+            close()
+            onInstall()
+        }
+        addAction(panel, I18n.t("update.later")) {
+            close()
+        }
+        addAction(panel, I18n.t("update.skip")) {
+            updateLater = null
+            close()
+            onSkip()
+        }
+        show(panel, Gravity.START or Gravity.BOTTOM)
+        // Set after newPanel(), which closes whatever was open before.
+        updateLater = onLater
     }
 
     // ---------- wallpaper picker ----------

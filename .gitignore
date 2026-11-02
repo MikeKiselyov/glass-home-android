@@ -12,3 +12,6 @@ design/icons/
 keystore.properties
 *.jks
 *.keystore
+# Old design mockups (in Russian, local only). The app icon page stays.
+design/*.html
+!design/app-icon.html

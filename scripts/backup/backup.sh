@@ -6,11 +6,11 @@
 # Saved to .tv/backup/<time>/ and remembered in .tv/latest-backup. Old backups
 # are never deleted: each one is a point to compare against or go back to.
 #
-# Usage: scripts/backup.sh
+# Usage: scripts/backup/backup.sh
 set -eu
 
-root="$(cd "$(dirname "$0")/.." && pwd)"
-TV=${TV:-$("$root/scripts/tv-connect.sh")}
+root="$(cd "$(dirname "$0")/../.." && pwd)"
+TV=${TV:-$("$root/scripts/tv/connect.sh")}
 backup="$root/.tv/backup/$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$backup"
 

@@ -3,18 +3,18 @@
 # the release key, checks the signature, commits and tags on main, pushes, and
 # publishes a GitHub release with glass-home.apk attached.
 #
-# Usage: scripts/release.sh <version>      e.g. scripts/release.sh 0.2.0
+# Usage: scripts/dev/release.sh <version>      e.g. scripts/dev/release.sh 0.2.0
 #
 # Needs keystore.properties and the key it points to (both kept out of git; see
 # docs/RELEASING.md), the Android SDK (local.properties) and gh, signed in.
 set -eu
 
-root="$(cd "$(dirname "$0")/.." && pwd)"
+root="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$root"
 version=${1:-}
 case "$version" in
     [0-9]*.[0-9]*.[0-9]*) ;;
-    *) echo "Usage: scripts/release.sh <version>, e.g. 0.2.0" >&2; exit 2 ;;
+    *) echo "Usage: scripts/dev/release.sh <version>, e.g. 0.2.0" >&2; exit 2 ;;
 esac
 tag="v$version"
 
@@ -76,7 +76,9 @@ git push -q origin main "$tag"
 echo "Publishing"
 notes="$out/notes.md"
 {
-    echo "Install: \`scripts/setup.sh --apk glass-home.apk\` (backs up the TV first, undo with \`scripts/restore.sh\`), or \`adb install glass-home.apk\`. Step by step: docs/INSTALL.md."
+    echo "Install: \`scripts/setup.sh --apk glass-home.apk\` (backs up the TV first, undo with \`scripts/restore.sh\`; \`--only glasshome\` for Glass Home alone), or \`scripts/install/install-apk.sh glass-home.apk\` for the app and nothing else. Step by step: docs/INSTALL.md."
+    echo
+    echo "Already on 0.4.0 or later? Glass Home finds this release by itself and asks before installing it."
     echo
     echo "SHA-256 of glass-home.apk: \`$sum\`"
 } > "$notes"

@@ -1,14 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- TV banner: the icon's bear on a TV screen, centred. Drawn from design/app-icon.html, variant "In the screen". -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="320dp"
     android:height="180dp"
     android:viewportWidth="320"
     android:viewportHeight="180">
-    <path android:fillColor="#FF1E3A44" android:pathData="M0,0h320v180h-320z" />
-    <path
-        android:fillColor="#1AFFFFFF"
-        android:pathData="M110,45h100a18,18 0,0 1,18 18v44a18,18 0,0 1,-18 18h-100a18,18 0,0 1,-18 -18v-44a18,18 0,0 1,18 -18z"
-        android:strokeWidth="8"
-        android:strokeColor="#FFC4F4EF" />
-    <path android:fillColor="#E6C4F4EF" android:pathData="M135,100h50a8,8 0,0 1,0 16h-50a8,8 0,0 1,0 -16z" />
+    <path android:pathData="M0,0h320v180h-320z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:endX="0"
+                android:endY="180"
+                android:startX="0"
+                android:startY="0"
+                android:type="linear">
+                <item android:color="#FF2A5260" android:offset="0" />
+                <item android:color="#FF16303A" android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <group
+        android:scaleX="1.5"
+        android:scaleY="1.5"
+        android:translateX="79"
+        android:translateY="5.25">
+        <!-- The screen: a glass panel with a light frame, like the old icon. -->
+        <path
+            android:fillColor="#29C4F4EF"
+            android:pathData="M27,24h54a11,11 0,0 1,11 11v32a11,11 0,0 1,-11 11h-54a11,11 0,0 1,-11 -11v-32a11,11 0,0 1,11 -11z"
+            android:strokeWidth="4.5"
+            android:strokeColor="#FFC4F4EF" />
+        <!-- The bear from Bearcorder's logo: ears, then the head with eyes and nose cut out. -->
+        <path
+            android:fillColor="#FFC4F4EF"
+            android:pathData="M35.77,39.4 a6.11,6.11 0 1,0 12.22,0 a6.11,6.11 0 1,0 -12.22,0 z M60.21,39.4 a6.11,6.11 0 1,0 12.22,0 a6.11,6.11 0 1,0 -12.22,0 z" />
+        <path
+            android:fillColor="#FFC4F4EF"
+            android:fillType="evenOdd"
+            android:pathData="M38.12,48.8 a15.98,13.865 0 1,0 31.96,0 a15.98,13.865 0 1,0 -31.96,0 z M47.286,46.92 a2.232,2.232 0 1,0 4.464,0 a2.232,2.232 0 1,0 -4.464,0 z M58.8,46.92 a2.232,2.232 0 1,0 4.464,0 a2.232,2.232 0 1,0 -4.464,0 z M51.515,51.62 a2.585,1.763 0 1,0 5.17,0 a2.585,1.763 0 1,0 -5.17,0 z" />
+        <!-- The stand. -->
+        <path
+            android:fillColor="#D9C4F4EF"
+            android:pathData="M42.5,84h23a2.5,2.5 0,0 1,0 5h-23a2.5,2.5 0,0 1,0 -5z" />
+    </group>
 </vector>

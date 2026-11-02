@@ -34,7 +34,7 @@ Commands are for macOS and Linux. On Windows, run them in WSL or Git Bash.
 2. On the computer:
 
    ```sh
-   scripts/tv-pair.sh 192.168.1.20:37123 123456
+   scripts/tv/pair.sh 192.168.1.20:37123 123456
    ```
 
 3. The TV may ask to allow debugging from this computer: choose
@@ -49,10 +49,34 @@ address or port changes. Older TVs without pairing: `adb connect <tv-address>:55
 scripts/setup.sh
 ```
 
-It goes through these steps and asks before each one; Enter takes the
+First it asks what to set up:
+
+| Choice | Option | What you get |
+|---|---|---|
+| Everything (recommended) | `--only all` | Glass Home and the clean-up: steps 1 to 8 below |
+| Only Glass Home | `--only glasshome` | Backup, Glass Home, Home button, now playing (steps 1 to 4). Nothing on the TV is switched off |
+| Only the clean-up | `--only clean` | Backup, then ads, tracking, animations, DNS and screensaver (steps 1 and 5 to 8). Glass Home is not installed; the TV keeps its own home screen |
+
+```sh
+scripts/setup.sh --only glasshome --apk glass-home.apk   # only Glass Home, downloaded APK
+scripts/setup.sh --only clean --yes                       # only the clean-up, recommended answers
+```
+
+Then it goes through the steps and asks before each one; Enter takes the
 recommended answer in [brackets]. `scripts/setup.sh --yes` takes all the
 recommended answers without asking, and every answer can be given as an
-option instead (`scripts/setup.sh --help` lists them, the README has a table).
+option instead (`scripts/setup.sh --help` lists them too):
+
+| Step | Option | Recommended | What it does |
+|---|---|---|---|
+| Install | `--apk <file>` | build from source | Installs a downloaded APK instead of building (building needs JDK 17+ and the Android SDK) |
+| Home button | `--home on\|off` | on | Home opens Glass Home (see [Good to know](#good-to-know)) |
+| Now playing | `--now-playing on\|off` | on | Track and cover art while Spotify or YouTube Music plays |
+| Clean-up | `--clean ask\|junk\|none` | junk | Switches off ads, tracking and demo apps from [debloat/packages.tsv](debloat/packages.tsv); `ask` goes one by one, features you might use (voice search, Chromecast) are only switched off when you say so |
+| Animations | `--animations 0.5\|1\|keep` | 0.5 | System animations twice as fast |
+| Ad-blocking DNS | `--dns adguard\|keep` | keep | AdGuard's Private DNS for every app (not YouTube ads) |
+| Screensaver | `--screensaver keep\|colors\|off` | keep | Google's photo screensaver uses the network and memory while the TV is idle |
+
 
 1. **Backup.** The TV's state goes to `.tv/backup/<date-time>/`: every app and
    whether it is on, all system settings, the Home app, a screenshot and a
@@ -60,7 +84,9 @@ option instead (`scripts/setup.sh --help` lists them, the README has a table).
    every time; old ones are kept.
 2. **Install.** Builds the release APK and installs it, then compiles it
    ahead of time on the TV so it starts quickly from the first day. With a
-   downloaded APK: `scripts/setup.sh --apk glass-home.apk`.
+   downloaded APK: `scripts/setup.sh --apk glass-home.apk`. It installs Glass
+   Home as its own installer and lets it install apps, so it can put an update
+   on later after you say so (see [Updates](#updates)).
 3. **Home button** (recommended: on). Google TV and most Android TVs keep
    their own launcher on Home whichever app you choose. Glass Home turns on a
    small accessibility service that catches the Home key and opens Glass Home,
@@ -88,14 +114,17 @@ Open Glass Home once to check it looks right: press Home.
 Each step is its own script, if you'd rather run them one at a time:
 
 ```sh
-scripts/backup.sh              # 1
-scripts/deploy.sh --release    # 2 (without --release: a debug build, for development)
-scripts/set-home.sh            # 3
-scripts/enable-now-playing.sh  # 4
-scripts/debloat.sh             # 5
-scripts/speed.sh               # 6
-scripts/private-dns.sh         # 7
+scripts/backup/backup.sh              # 1
+scripts/install/deploy.sh --release    # 2 (without --release: a debug build, for development)
+                               #   or scripts/install/install-apk.sh glass-home.apk for a downloaded APK
+scripts/install/set-home.sh            # 3
+scripts/install/enable-now-playing.sh  # 4
+scripts/cleanup/debloat.sh             # 5
+scripts/cleanup/speed.sh               # 6
+scripts/cleanup/private-dns.sh         # 7
 ```
+
+The screensaver (8) has no script of its own: `scripts/setup.sh --only clean --screensaver colors`.
 
 Some settings can't be changed safely over adb. Do these by hand if you like:
 
@@ -112,19 +141,49 @@ Scan the QR code with your phone's camera (or open `glasshome.local:8090` and
 enter the code), and you can:
 
 - upload photos and icons, and drag photos into your own order,
-- choose the theme, clock font and date format,
+- choose the language (English, Ukrainian, Belarusian), theme, clock font and
+  date format,
 - link an iCloud or Google Photos shared album,
 - pick the city for the weather,
 - reorder or hide dock tiles,
-- set the photo interval, clock format and night mode.
+- set the photo interval, clock format and night mode,
+- install an update, or switch update checks off.
+
+## Updates
+
+Once a day Glass Home asks GitHub for the latest release. When there is a newer
+one, it downloads it, checks it against the SHA-256 GitHub lists for it, and
+asks on the home screen:
+
+- **Install**: Glass Home closes for a few seconds and opens in the new
+  version. Settings and photos stay.
+- **Later**: asked again the next day.
+- **Skip this version**: not asked again until a newer version comes out.
+
+Nothing is installed without **Install**. The phone website has the same under
+More > Updates, with **Check now** and a switch that stops the checks
+altogether.
+
+After Install, Android puts the update on straight away when Glass Home is its
+own installer and may install apps: `setup.sh`, `deploy.sh` and
+`scripts/install/install-apk.sh` set that up. Installed some other way (a plain
+`adb install`, a file manager), Android first asks **Allow from this source?**
+once and **Update this app?** each time. To set it up afterwards, install the
+APK again with `scripts/install/install-apk.sh glass-home.apk`.
+
+GitHub's APKs are signed with the release key. A build from source is signed
+with your own key (`setup.sh` without `--apk`, `deploy.sh`), so Android can't
+install a release over it: Glass Home sees that and doesn't offer the update.
+To get updates, install `glass-home.apk` from the Releases page instead
+(uninstall the own build first; its settings and photos go with it).
 
 ## Compare before and after (optional)
 
 To see what changed on your own TV, measure it before the set-up and after:
 
 ```sh
-scripts/compare.sh before    # before step 4
-scripts/compare.sh after     # after it; prints one table
+scripts/measure/compare.sh before    # before scripts/setup.sh
+scripts/measure/compare.sh after     # after it; prints one table
 ```
 
 Each takes about 7 minutes (3 runs) and changes nothing on the TV. For a
@@ -158,7 +217,7 @@ again, then turn Wireless debugging back on. If you disabled anything by hand
 outside these scripts, run `scripts/restore.sh` once you're connected.
 
 **Home shows the stock screen.** Check Settings > Accessibility > Glass Home is
-on, or run `scripts/set-home.sh` again. A system update can switch it off, and so
+on, or run `scripts/install/set-home.sh` again. A system update can switch it off, and so
 does **Force stop** on Glass Home in Settings > Apps (Android does that to every
 app with an accessibility service).
 
@@ -172,4 +231,4 @@ system apps: anything disabled can be enabled again there. Settings >
 Accessibility > Glass Home: off brings back the stock Home.
 
 **An app is missing from the dock.** Hold OK on any tile > Show hidden apps,
-or check the phone website's Dock section.
+or the Apps tab on the phone website.

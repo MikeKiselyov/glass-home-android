@@ -4,15 +4,15 @@
 # Glass Home's own GlassHomeTiming log lines), and whether Google TV's home
 # screen was started on the way. Then the median.
 #
-# The key comes from a virtual input device (scripts/home-key.json, played by
+# The key comes from a virtual input device (scripts/measure/home-key.json, played by
 # the TV's uinput tool): "adb shell input keyevent" would skip the accessibility
 # key filter that catches Home, so it would measure something else.
 #
-# Usage: scripts/measure-home.sh [runs]   (default 10)
+# Usage: scripts/measure/home-key.sh [runs]   (default 10)
 set -eu
 
-root="$(cd "$(dirname "$0")/.." && pwd)"
-TV=${TV:-$("$root/scripts/tv-connect.sh")}
+root="$(cd "$(dirname "$0")/../.." && pwd)"
+TV=${TV:-$("$root/scripts/tv/connect.sh")}
 runs=${1:-10}
 OTHER_APP=com.android.tv.settings/.MainSettings
 
@@ -20,7 +20,7 @@ shell() {
     adb -s "$TV" shell "$@" | tr -d '\r'
 }
 
-adb -s "$TV" push "$root/scripts/home-key.json" /data/local/tmp/home-key.json > /dev/null
+adb -s "$TV" push "$root/scripts/measure/home-key.json" /data/local/tmp/home-key.json > /dev/null
 results=""
 printf "run\thome_press_ms\tgoogle_tv_started\n"
 for run in $(seq 1 "$runs"); do

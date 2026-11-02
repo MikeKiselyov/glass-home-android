@@ -3,13 +3,15 @@
 # about each one that is installed and enabled on this TV. Nothing is
 # uninstalled; scripts/restore.sh turns everything back on.
 #
-# Usage: scripts/debloat.sh                  asks about each one
-#        scripts/debloat.sh --yes-junk       no questions: disables all "junk", keeps every "feature"
-#        scripts/debloat.sh --disable a,b    also disables these packages (e.g. features you said you don't use)
+# Usage: scripts/cleanup/debloat.sh                  asks about each one
+#        scripts/cleanup/debloat.sh --yes-junk       no questions: disables all "junk", keeps every "feature"
+#        scripts/cleanup/debloat.sh --disable a,b    also disables these packages (e.g. features you said you don't use)
 set -eu
 
-TV=${TV:-$("$(dirname "$0")/tv-connect.sh")}
-. "$(dirname "$0")/changelog.sh"
+root="$(cd "$(dirname "$0")/../.." && pwd)"
+
+TV=${TV:-$("$root/scripts/tv/connect.sh")}
+. "$root/scripts/lib/changelog.sh"
 
 yes_junk=false
 extra=""

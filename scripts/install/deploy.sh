@@ -3,13 +3,13 @@
 # Installing restarts Glass Home; if it was on screen it is opened again, so
 # the TV ends up showing what it showed before. Nothing else on the TV changes.
 #
-# Usage: scripts/deploy.sh [--release] [--no-build]
+# Usage: scripts/install/deploy.sh [--release] [--no-build]
 #   --release   the build people install: R8, no debugging, compiled ahead of time (speed)
 #               on the TV right after installing (otherwise Android does that
 #               overnight). Debug builds allow run-as, which some scripts use.
 set -eu
 
-root="$(cd "$(dirname "$0")/.." && pwd)"
+root="$(cd "$(dirname "$0")/../.." && pwd)"
 PACKAGE=com.glasshome.tv
 build=true
 build_type=debug
@@ -33,20 +33,13 @@ if [ "$build" = true ]; then
     fi
 fi
 
-TV=$("$root/scripts/tv-connect.sh")
+TV=$("$root/scripts/tv/connect.sh")
 front=$(adb -s "$TV" shell dumpsys activity activities 2>/dev/null | grep -m1 topResumedActivity || true)
 was_in_front=false
 case "$front" in *"$PACKAGE/"*) was_in_front=true ;; esac
 
-installed=$(adb -s "$TV" install -r "$root/app/build/outputs/apk/$build_type/app-$build_type.apk" 2>&1 || true)
-case "$installed" in
-    *Success*) echo "Installed the $build_type build." ;;
-    *)
-        echo "$installed" >&2
-        echo "Could not install. INSTALL_FAILED_UPDATE_INCOMPATIBLE means a build signed with another key is on the TV: uninstall it first (its settings and photos go with it)." >&2
-        exit 1
-        ;;
-esac
+TV="$TV" "$root/scripts/install/install-apk.sh" "$root/app/build/outputs/apk/$build_type/app-$build_type.apk"
+echo "Installed the $build_type build."
 if [ "$build_type" = release ]; then
     adb -s "$TV" shell cmd package compile -m speed -f "$PACKAGE" | tail -1
 fi
@@ -57,7 +50,7 @@ fi
 if [ "$was_in_front" = true ]; then
     adb -s "$TV" shell am start -n "$PACKAGE/.MainActivity" >/dev/null 2>&1
     sleep 5
-    TV="$TV" "$root/scripts/tv-shot.sh" "deploy-$(date +%H%M%S)"
+    TV="$TV" "$root/scripts/tv/shot.sh" "deploy-$(date +%H%M%S)"
 else
     echo "Glass Home was not on screen ($front); left the TV as it was."
 fi

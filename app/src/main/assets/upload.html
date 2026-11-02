@@ -170,6 +170,7 @@
   .hours { display: flex; gap: 6px; align-items: center; }
   .hours select { max-width: none; }
 
+  #language-section .segments { margin-bottom: var(--space-sm); }
   .segments { display: inline-flex; background: var(--raised); border-radius: 11px; padding: 3px; gap: 2px; }
   .segments label { position: relative; font: 700 13px/1 var(--display); padding: 9px 12px; border-radius: 9px; color: var(--muted); cursor: pointer; white-space: nowrap; }
   .segments input { position: absolute; opacity: 0; pointer-events: none; }
@@ -353,6 +354,12 @@
 
       <!-- ===== More: weather, shared album, icons ===== -->
       <div class="tab-panel" id="panel-more" data-tab="more" role="tabpanel" aria-labelledby="tab-more">
+      <section id="language-section">
+        <h2 data-i18n="web.language.title"></h2>
+        <div class="segments" id="language" role="radiogroup" data-i18n-aria-label="web.language.title"></div>
+        <p class="hint" data-i18n="web.language.lead"></p>
+      </section>
+
       <section id="home-button-section">
         <h2 data-i18n="web.home.title"></h2>
         <div class="rows">
@@ -381,6 +388,20 @@
           <button type="submit" class="button" data-i18n="web.album.save"></button>
         </form>
         <p id="album-status" class="status" role="status"></p>
+      </section>
+
+      <section id="updates">
+        <h2 data-i18n="web.update.title"></h2>
+        <p class="hint" id="update-now"></p>
+        <div class="rows">
+          <div class="row"><label for="update-checks" data-i18n="web.update.checks"></label><span class="switch"><input type="checkbox" id="update-checks"><span></span></span></div>
+        </div>
+        <p class="inline">
+          <button id="update-install" type="button" class="button" hidden></button>
+          <button id="update-skip" type="button" class="quiet" hidden data-i18n="web.update.skip"></button>
+          <button id="update-check" type="button" class="quiet" data-i18n="web.update.check"></button>
+        </p>
+        <p id="update-status" class="status" role="status"></p>
       </section>
 
       <section id="icons">
@@ -506,7 +527,8 @@
   }
 
   function applyStaticText() {
-    document.documentElement.lang = settings.language || 'en';
+    // language.tag is the BCP 47 code (uk for ua.json): screen readers and hyphenation need that, not the file name.
+    document.documentElement.lang = t('language.tag') || 'en';
     document.querySelectorAll('[data-i18n]').forEach(function (element) { element.textContent = t(element.dataset.i18n); });
     document.querySelectorAll('[data-i18n-placeholder]').forEach(function (element) { element.placeholder = t(element.dataset.i18nPlaceholder); });
     document.querySelectorAll('[data-i18n-aria-label]').forEach(function (element) { element.setAttribute('aria-label', t(element.dataset.i18nAriaLabel)); });
@@ -909,6 +931,13 @@
       clockFormat.appendChild(choice('clockFormat', format.id, '', t(format.key), settings.clockFormat === format.id));
     });
 
+    var language = $('language');
+    language.textContent = '';
+    (settings.languages || []).forEach(function (code) {
+      var names = settings.languageNames || {};
+      language.appendChild(choice('language', code, '', names[code] || code, settings.language === code));
+    });
+
     var homeButton = $('home-button');
     homeButton.textContent = '';
     HOME_BUTTON_MODES.forEach(function (mode) {
@@ -938,6 +967,16 @@
       styles.appendChild(choice('weatherStyle', style, 'tile', inner, settings.weatherStyle === style));
     });
   }
+
+  // Every text on the page comes from the language file: load the page again in the new language.
+  $('language').addEventListener('change', function (event) {
+    if (event.target.type !== 'radio') return;
+    saveSetting('language', event.target.value).then(function () {
+      // After the reload the remote's focus comes back to the language just picked.
+      try { sessionStorage.setItem('glasshome.focusLanguage', '1'); } catch (unavailable) {}
+      location.reload();
+    });
+  });
 
   ['themes', 'clock-format', 'home-button', 'fonts', 'dates', 'weather-styles'].forEach(function (id) {
     $(id).addEventListener('change', function (event) {
@@ -1131,6 +1170,65 @@
     });
   });
 
+  // ---------- updates ----------
+
+  // Nothing installs unless "Install" is pressed here or on the TV.
+  function loadUpdate() {
+    return api('/api/update').then(json).then(renderUpdate);
+  }
+
+  function changeUpdate(values) {
+    return api('/api/update', form(values)).then(json).then(renderUpdate);
+  }
+
+  function renderUpdate(data) {
+    if (data.error === 'no-updater') {
+      $('updates').hidden = true;
+      return;
+    }
+    $('update-checks').checked = !!data.checks;
+    var ready = data.state === 'ready' || (data.state === 'failed' && !!data.latest && data.latest !== data.installed);
+    var now = t('web.update.installed', { version: data.installed });
+    if (data.development) {
+      now = now + ' ' + t('web.update.development');
+    } else if (ready) {
+      now = now + ' ' + t('web.update.ready', { version: data.latest });
+    } else if (data.state === 'idle' && data.lastCheck > 0) {
+      now = now + ' ' + t('web.update.current');
+    }
+    $('update-now').textContent = now;
+    $('update-install').hidden = !ready || data.development;
+    $('update-install').textContent = t('web.update.install', { version: data.latest || '' });
+    $('update-skip').hidden = !ready || data.development;
+    var status = $('update-status');
+    status.className = 'status';
+    status.textContent = '';
+    if (data.state === 'checking' || data.state === 'downloading') {
+      status.textContent = t('web.update.' + data.state);
+      setTimeout(loadUpdate, 3000);
+    } else if (data.state === 'installing' || data.state === 'confirm') {
+      status.textContent = t('web.update.' + data.state);
+    } else if (data.state === 'other-key') {
+      status.textContent = t('web.update.other_key', { version: data.latest || '' });
+    } else if (data.state === 'failed' && data.error) {
+      status.textContent = t('web.update.failed', { error: data.error });
+      status.className = 'status error';
+    }
+  }
+
+  $('update-checks').addEventListener('change', function () {
+    changeUpdate({ checks: $('update-checks').checked ? '1' : '0' }).then(function () { toast(t('web.saved')); });
+  });
+  $('update-check').addEventListener('click', function () {
+    changeUpdate({ action: 'check' }).then(function () { setTimeout(loadUpdate, 2000); });
+  });
+  $('update-install').addEventListener('click', function () {
+    changeUpdate({ action: 'install' });
+  });
+  $('update-skip').addEventListener('click', function () {
+    changeUpdate({ action: 'skip' }).then(function () { toast(t('web.update.skipped')); });
+  });
+
   // ---------- icons ----------
 
   function loadIcons() {
@@ -1283,7 +1381,7 @@
     if (name === 'apps' || name === 'dock') {
       return 'apps';
     }
-    if (name === 'more' || name === 'weather' || name === 'album' || name === 'icons') {
+    if (name === 'more' || name === 'weather' || name === 'album' || name === 'icons' || name === 'updates') {
       return 'more';
     }
     return 'look';
@@ -1292,7 +1390,7 @@
   // The section an old link named, to scroll to inside its tab.
   function sectionFromAddress() {
     var name = location.hash.slice(1);
-    if (name === 'album' || name === 'icons') {
+    if (name === 'album' || name === 'icons' || name === 'updates') {
       return $(name);
     }
     return null;
@@ -1429,7 +1527,7 @@
       showApp();
       showTabFromAddress();
       loadScreenPhoto();
-      return Promise.all([loadSettings(), loadDock(), loadWeather(), loadIcons()]);
+      return Promise.all([loadSettings(), loadDock(), loadWeather(), loadIcons(), loadUpdate()]);
     }).then(function () {
       applyStaticText();
       renderPreview();
@@ -1778,6 +1876,16 @@
   // The page is built after it loads: once it is, the focus goes to the first
   // control of the open tab, ready for the remote.
   function showTvStart() {
+    var cameFromLanguage = false;
+    try {
+      cameFromLanguage = sessionStorage.getItem('glasshome.focusLanguage') === '1';
+      sessionStorage.removeItem('glasshome.focusLanguage');
+    } catch (unavailable) {}
+    var picked = document.querySelector('#language input:checked');
+    if (cameFromLanguage && picked) {
+      picked.focus({ preventScroll: true });
+      return;
+    }
     var first = firstControlOfOpenTab();
     if (first) {
       first.focus({ preventScroll: true });

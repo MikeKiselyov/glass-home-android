@@ -1,5 +1,5 @@
 #!/bin/sh
-# Measures the TV's own launcher the same way scripts/measure.sh measures
+# Measures the TV's own launcher the same way scripts/measure/themes.sh measures
 # Glass Home, so the two can be compared on the same TV: cold start, Home
 # (another app, then the launcher again), idle CPU, memory on screen and
 # behind another app, the memory the whole TV has free with each launcher on
@@ -11,18 +11,18 @@
 # screen, so it is switched off while measuring and put back afterwards.
 #
 # The numbers describe the TV as it is now (after any clean-up with
-# scripts/debloat.sh), not as it came from the shop.
+# scripts/cleanup/debloat.sh), not as it came from the shop.
 #
-# Usage: scripts/measure-stock.sh [runs]   (default 5)
+# Usage: scripts/measure/stock.sh [runs]   (default 5)
 set -eu
 
-root="$(cd "$(dirname "$0")/.." && pwd)"
+root="$(cd "$(dirname "$0")/../.." && pwd)"
 GLASS_HOME=com.glasshome.tv
 GLASS_HOME_ACTIVITY="$GLASS_HOME/.MainActivity"
 OTHER_APP=com.android.tv.settings
 runs=${1:-5}
 
-TV=${TV:-$("$root/scripts/tv-connect.sh")}
+TV=${TV:-$("$root/scripts/tv/connect.sh")}
 work="$root/.tv/measure"
 mkdir -p "$work"
 

@@ -2,11 +2,12 @@
 # Shared helpers: every change to the TV is appended to .tv/changes.log so that
 # scripts/restore.sh can undo it. Sourced by the other scripts.
 
-root="$(cd "$(dirname "$0")/.." && pwd)"
-if [ ! -f "$root/scripts/changelog.sh" ]; then
+# The script that sources this sets root (the repository folder) first: $0 is
+# that script, at any depth under scripts/, so it can't be worked out here.
+if [ -z "${root:-}" ] || [ ! -f "$root/scripts/lib/changelog.sh" ]; then
     # Sourced from somewhere other than a script in scripts/: refuse rather
     # than write the change log to the wrong place.
-    echo "changelog.sh must be used by the scripts in scripts/" >&2
+    echo "scripts/lib/changelog.sh must be sourced by a script in scripts/ that sets root" >&2
     exit 1
 fi
 CHANGES="$root/.tv/changes.log"
@@ -15,7 +16,7 @@ mkdir -p "$root/.tv"
 require_backup() {
     if [ ! -s "$root/.tv/latest-backup" ]; then
         echo "No backup yet; making one first."
-        TV="$TV" "$root/scripts/backup.sh"
+        TV="$TV" "$root/scripts/backup/backup.sh"
     fi
 }
 
