@@ -18,7 +18,11 @@ import android.util.Log
  * another one is on screen only while its accessibility service is on
  * ([canStartApps]: that, or the home screen is in front).
  */
-class LinkOpener(private val context: Context, private val canStartApps: () -> Boolean) {
+class LinkOpener(
+    private val context: Context,
+    private val canStartApps: () -> Boolean,
+    private val wakeScreen: () -> Unit,
+) {
 
     enum class Result { OPENED, NO_APP, SERVICE_OFF }
 
@@ -36,6 +40,7 @@ class LinkOpener(private val context: Context, private val canStartApps: () -> B
         if (!canStartApps()) {
             return Result.SERVICE_OFF
         }
+        wakeScreen()
         try {
             context.startActivity(intent)
         } catch (gone: ActivityNotFoundException) {

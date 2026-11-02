@@ -372,7 +372,7 @@ class Overlays(
             friendlyAddress = server.friendlyAddress(),
             ipAddress = server.address(),
             code = server.code,
-            onNewCode = { server.signInGuard.resetCode() },
+            onNewCode = { server.newCode() },
         ))
     }
 

@@ -240,6 +240,11 @@
     border: 1.5px solid var(--danger); background: color-mix(in oklch, var(--danger) 12%, var(--ground)); color: var(--ink); }
   .notice .button { white-space: nowrap; }
   #weather-styles.off { opacity: .45; }
+  h3 { font-size: 16px; margin: var(--space-xl) 0 var(--space-xs); }
+  .recent-links { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-xs); }
+  .recent-links button { display: block; width: 100%; max-width: 100%; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .copy-row { display: flex; gap: var(--space-xs); margin-top: var(--space-xs); }
+  .copy-row input { flex: 1; min-width: 0; font-size: 13px; }
   .steps { margin: 0 0 var(--space-lg); padding-left: 1.4em; max-width: 60ch; }
   .steps li { margin-bottom: var(--space-xs); }
   #signin input { font: 700 32px var(--display); letter-spacing: .2em; text-align: center; }
@@ -390,7 +395,33 @@
           <button type="submit" class="button" data-i18n="web.open.send"></button>
         </form>
         <p id="open-status" class="status" role="status"></p>
+
+        <div id="recent" hidden>
+          <h3 data-i18n="web.recent.title"></h3>
+          <p class="hint" data-i18n="web.recent.lead"></p>
+          <ul class="recent-links" id="recent-links"></ul>
+          <p><button id="recent-clear" type="button" class="quiet" data-i18n="web.recent.clear"></button></p>
+        </div>
+
+        <h3 data-i18n="web.send.title"></h3>
+        <p class="hint" data-i18n="web.send.lead"></p>
+        <ol class="steps">
+          <li data-i18n="web.send.step1"></li>
+          <li><span data-i18n="web.send.step2"></span>
+            <span class="inline copy-row"><input id="send-address" type="text" readonly data-i18n-aria-label="web.send.address"><button id="send-copy" type="button" class="button" data-i18n="web.send.copy"></button></span></li>
+          <li data-i18n="web.send.step3"></li>
+          <li data-i18n="web.send.step4"></li>
+          <li data-i18n="web.send.step5"></li>
+        </ol>
+        <p><button id="send-new-key" type="button" class="quiet" data-i18n="web.send.new_key"></button></p>
+        <p id="send-status" class="status" role="status"></p>
       </section>
+      <section id="sleep-section">
+        <h2 data-i18n="web.sleep.title"></h2>
+        <div class="segments" id="sleep" role="radiogroup" data-i18n-aria-label="web.sleep.title"></div>
+        <p class="hint" id="sleep-now"></p>
+      </section>
+
       <section id="language-section">
         <h2 data-i18n="web.language.title"></h2>
         <div class="segments" id="language" role="radiogroup" data-i18n-aria-label="web.language.title"></div>
@@ -1308,6 +1339,7 @@
       } else if (data.result === 'opened') {
         status.textContent = t('web.open.opened');
         $('open-url').value = '';
+        loadRecent();
       } else {
         status.className = 'status error';
         status.textContent = t('web.offline');
@@ -1316,6 +1348,121 @@
       if (error && error.message === 'signin') return;
       status.className = 'status error';
       status.textContent = t('web.open.no_answer');
+    });
+  });
+
+  // ---------- sleep timer ----------
+
+  var SLEEP_LENGTHS = [0, 30, 60, 90, 120];
+  var sleepData = {};
+
+  function loadSleep() {
+    return api('/api/sleep').then(json).then(renderSleep);
+  }
+
+  function renderSleep(data) {
+    if (data.error === 'no-timer') {
+      $('sleep-section').hidden = true;
+      return;
+    }
+    sleepData = data;
+    var group = $('sleep');
+    var remembered = focusedChoice();
+    group.textContent = '';
+    // The button that is on: the shortest length that still covers what is left.
+    var current = 0;
+    if (data.minutesLeft > 0) {
+      for (var index = 1; index < SLEEP_LENGTHS.length; index++) {
+        if (SLEEP_LENGTHS[index] >= data.minutesLeft) {
+          current = SLEEP_LENGTHS[index];
+          break;
+        }
+      }
+    }
+    SLEEP_LENGTHS.forEach(function (length) {
+      var label = length === 0 ? t('web.sleep.off') : t('web.sleep.minutes', { minutes: length });
+      group.appendChild(choice('sleep', String(length), '', label, length === current));
+    });
+    refocusChoice(remembered);
+    var line = t('web.sleep.none');
+    if (data.minutesLeft > 0) {
+      var at = new Date(data.sleepAt);
+      line = t('web.sleep.at', { time: clockText(at), minutes: data.minutesLeft });
+    }
+    if (!data.serviceOn) {
+      line = line + ' ' + t('web.sleep.service_off');
+    }
+    $('sleep-now').textContent = line;
+  }
+
+  $('sleep').addEventListener('change', function (event) {
+    if (event.target.type !== 'radio') return;
+    api('/api/sleep', form({ minutes: event.target.value })).then(json).then(function (data) {
+      renderSleep(data);
+      toast(t('web.saved'));
+    });
+  });
+
+  // ---------- links sent before ----------
+
+  // "www.youtube.com/watch?v=..." from "https://www.youtube.com/watch?v=...".
+  function shortLink(link) {
+    return link.replace(/^https?:\/\//i, '');
+  }
+
+  function loadRecent() {
+    return api('/api/recent').then(json).then(renderRecent);
+  }
+
+  function renderRecent(data) {
+    var links = data.links || [];
+    $('recent').hidden = links.length === 0;
+    var list = $('recent-links');
+    list.textContent = '';
+    links.forEach(function (link) {
+      var item = document.createElement('li');
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'quiet';
+      button.textContent = shortLink(link);
+      button.title = link;
+      button.addEventListener('click', function () {
+        $('open-url').value = link;
+        $('open-form').requestSubmit();
+      });
+      item.appendChild(button);
+      list.appendChild(item);
+    });
+  }
+
+  $('recent-clear').addEventListener('click', function () {
+    api('/api/recent', form({ action: 'clear' })).then(json).then(renderRecent);
+  });
+
+  // ---------- the iPhone shortcut's address ----------
+
+  function loadShareKey() {
+    return api('/api/share-key').then(json).then(function (data) {
+      $('send-address').value = data.address;
+    });
+  }
+
+  // navigator.clipboard needs HTTPS; the TV's website is plain HTTP.
+  $('send-copy').addEventListener('click', function () {
+    var field = $('send-address');
+    field.focus();
+    field.setSelectionRange(0, field.value.length);
+    var copied = false;
+    try {
+      copied = document.execCommand('copy');
+    } catch (unsupported) {}
+    toast(copied ? t('web.send.copied') : t('web.send.select'));
+  });
+
+  $('send-new-key').addEventListener('click', function () {
+    api('/api/share-key', form({ action: 'reset' })).then(json).then(function (data) {
+      $('send-address').value = data.address;
+      $('send-status').textContent = t('web.send.new_key_done');
     });
   });
 
@@ -1677,7 +1824,11 @@
       showApp();
       showTabFromAddress();
       loadScreenPhoto();
-      return Promise.all([loadSettings(), loadDock(), loadWeather(), loadIcons(), loadUpdate()]);
+      var loads = [loadSettings(), loadDock(), loadWeather(), loadIcons(), loadUpdate(), loadSleep()];
+      if (!IS_TV) {
+        loads.push(loadRecent(), loadShareKey());
+      }
+      return Promise.all(loads);
     }).then(function () {
       applyStaticText();
       renderPreview();

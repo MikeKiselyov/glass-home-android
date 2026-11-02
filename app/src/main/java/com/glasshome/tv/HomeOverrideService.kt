@@ -48,6 +48,7 @@ class HomeOverrideService : AccessibilityService() {
     private val dreamReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             dreaming = intent.action == Intent.ACTION_DREAMING_STARTED
+            HomeScreenState.dreaming = dreaming
         }
     }
 
@@ -60,6 +61,9 @@ class HomeOverrideService : AccessibilityService() {
     }
 
     override fun onDestroy() {
+        if (running === this) {
+            running = null
+        }
         try {
             unregisterReceiver(dreamReceiver)
         } catch (notRegistered: IllegalArgumentException) {
@@ -75,6 +79,7 @@ class HomeOverrideService : AccessibilityService() {
      */
     public override fun onServiceConnected() {
         super.onServiceConnected()
+        running = this
         if (Updater.takeReopenRequest(this, System.currentTimeMillis())) {
             openGlassHome()
         }
@@ -141,6 +146,16 @@ class HomeOverrideService : AccessibilityService() {
     }
 
     companion object {
+        /** The connected service, for the sleep timer; null while it is off. */
+        @Volatile
+        private var running: HomeOverrideService? = null
+
+        /** Turns the TV's screen off (the sleep timer). False when the service is off. */
+        fun sleepTv(): Boolean {
+            val service = running ?: return false
+            return service.performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN)
+        }
+
         const val TIMING_TAG = "GlassHomeTiming"
         private const val TAG = "GlassHome"
     }

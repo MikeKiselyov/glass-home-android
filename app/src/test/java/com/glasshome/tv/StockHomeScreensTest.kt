@@ -30,12 +30,22 @@ class StockHomeScreensTest {
         assertFalse(StockHomeScreens.isHomeScreen(googleTv, "$googleTv.dashboard.DashboardActivity"))
     }
 
-    /** Notifications, account checks and profiles come from the launcher too. */
+    /** Account checks and profiles are screens of the launcher too. */
     @Test
-    fun otherGoogleTvWindowsAreNot() {
-        assertFalse(StockHomeScreens.isHomeScreen(googleTv, "android.widget.FrameLayout"))
+    fun otherGoogleTvScreensAreNot() {
         assertFalse(StockHomeScreens.isHomeScreen(googleTv, "$googleTv.profile.core.AccountVerificationActivity"))
-        assertFalse(StockHomeScreens.isHomeScreen(googleTv, null))
+        assertFalse(StockHomeScreens.isHomeScreen(googleTv, "$googleTv.entity.EntityActivity"))
+    }
+
+    /**
+     * Found on the TV: when Google TV brings its home screen back (the Home
+     * key), the window is announced as a plain FrameLayout, not HomeActivity,
+     * and Glass Home stayed behind it.
+     */
+    @Test
+    fun googleTvHomeComingBackAsAPlainWindowIsOne() {
+        assertTrue(StockHomeScreens.isHomeScreen(googleTv, "android.widget.FrameLayout"))
+        assertTrue(StockHomeScreens.isHomeScreen(googleTv, null))
     }
 
     /** Not checked on a TV with these launchers: any of their windows still counts. */

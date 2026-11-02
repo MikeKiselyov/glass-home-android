@@ -35,8 +35,26 @@ class LinkOpenerTest {
         packageManager.addIntentFilterForActivity(browser, filter)
     }
 
+    private var wakes = 0
+
     private fun opener(canStart: Boolean = true): LinkOpener {
-        return LinkOpener(context) { canStart }
+        return LinkOpener(context, { canStart }, { wakes += 1 })
+    }
+
+    /** The screensaver goes first, or the app would open behind it. */
+    @Test
+    fun theScreenWakesBeforeTheAppOpens() {
+        installBrowser()
+        opener().open("https://example.com/film")
+        assertEquals(1, wakes)
+    }
+
+    @Test
+    fun nothingWakesWhenNothingOpens() {
+        opener().open("https://example.com/film")
+        installBrowser()
+        opener(canStart = false).open("https://example.com/film")
+        assertEquals(0, wakes)
     }
 
     @Test

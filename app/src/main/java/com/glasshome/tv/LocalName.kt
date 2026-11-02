@@ -9,6 +9,7 @@ import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.MulticastSocket
+import java.net.SocketTimeoutException
 
 /**
  * Answers mDNS questions for "glasshome.local", so phones can open
@@ -57,10 +58,22 @@ class LocalName(private val context: Context) {
             socket = multicast
 
             announce(multicast, group)
+            var announcedAt = System.currentTimeMillis()
+            // Wake up now and then without a question, to announce the name again.
+            multicast.soTimeout = ANNOUNCE_EVERY_MS.toInt()
             val buffer = ByteArray(1500)
             while (running) {
+                val now = System.currentTimeMillis()
+                if (isAnnounceDue(announcedAt, now)) {
+                    announce(multicast, group)
+                    announcedAt = now
+                }
                 val packet = DatagramPacket(buffer, buffer.size)
-                multicast.receive(packet)
+                try {
+                    multicast.receive(packet)
+                } catch (quiet: SocketTimeoutException) {
+                    continue
+                }
                 if (asksForOurName(packet.data, packet.length)) {
                     val reply = answer() ?: continue
                     multicast.send(DatagramPacket(reply, reply.size, group, MDNS_PORT))
@@ -78,7 +91,12 @@ class LocalName(private val context: Context) {
         }
     }
 
-    /** Tells the network about the name once at start, as mDNS hosts do. */
+    /**
+     * Tells the network about the name: at start, as mDNS hosts do, and then
+     * every [ANNOUNCE_EVERY_MS]. Found on a Mac: it held a wrong address for
+     * glasshome.local for minutes. The answer carries the cache-flush bit, so
+     * every device that hears it drops any other address it has for the name.
+     */
     private fun announce(multicast: MulticastSocket, group: InetAddress) {
         val reply = answer() ?: return
         multicast.send(DatagramPacket(reply, reply.size, group, MDNS_PORT))
@@ -185,5 +203,10 @@ class LocalName(private val context: Context) {
         private const val TYPE_NSEC = 47
         private const val TYPE_ANY = 255
         private const val TTL_SECONDS = 120
+        const val ANNOUNCE_EVERY_MS = 60_000L
+
+        fun isAnnounceDue(announcedAt: Long, now: Long): Boolean {
+            return now - announcedAt >= ANNOUNCE_EVERY_MS || now < announcedAt
+        }
     }
 }

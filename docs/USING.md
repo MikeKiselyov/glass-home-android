@@ -70,26 +70,50 @@ pages in a browser. Google TV has no browser of its own; install one from
 Google Play on the TV ([TV Bro](https://play.google.com/store/apps/details?id=com.phlox.tvwebbrowser)
 is free and works with the remote). Only `http` and `https` links open.
 
-From the share button, in one step:
+If the TV is showing its screensaver or the screen is off, it wakes up first.
+**Sent before**, under the field, lists the last 10 links sent to the TV
+(kept on the TV, **Clear the list** empties it): tap one to open it again.
 
-- **iPhone**: in Shortcuts, make a new shortcut ("Send To TV") with
-  **Show in Share Sheet** on (the ⓘ button), receiving URLs, Safari web pages
-  and text. Three actions:
-  1. **URL Encode**, with only **Shortcut Input** in it;
-  2. **Text**: `http://glasshome.local:8090/?open=` and right after the `=`
-     the **URL Encoded Text** variable, on the same line;
-  3. **Open URLs** (it takes the Text).
+### Send To TV from the iPhone's Share menu
 
-  Share a page to it: the website opens with the link filled in, press
-  **Open**. It opens in the default browser, which has to be signed in to the
-  TV's website and allowed in Settings > Privacy & Security > Local Network.
-- **Computer**: a bookmark with this address, clicked on the page you want on
-  the TV:
-  `javascript:location='http://glasshome.local:8090/?open='+encodeURIComponent(location.href)`
+One tap in any app's Share menu, and the page is on the TV: no browser, no
+**Open**. The TV's website shows what to paste under **More > Open on the TV >
+Send from the Share menu**. In Shortcuts, make a shortcut once:
 
-The browser you use for this has to be signed in to the TV's website once. The
-link waits for **Open** on purpose: any site could send you to such an
-address.
+1. **+**, then the action **Get Contents of URL**, with the address from the
+   website (`http://glasshome.local:8090/send/<key>`) as its URL;
+2. **Show More**: Method **POST**, Request Body **Form**, **Add new field >
+   Text** with the key `link` and **Shortcut Input** as the value;
+3. optional: **Show Notification** with **Contents of URL**, to see the TV's
+   answer ("Opened on the TV.");
+4. name it "Send To TV" and turn on **Show in Share Sheet** under ⓘ.
+
+The key in that address only opens links, works only on the home network,
+and is 128 random bits. **New address** on the website, or **New code** on the
+TV, replaces it: shortcuts with the old one stop working.
+
+### From a computer
+
+A bookmark with this address, clicked on the page you want on the TV:
+`javascript:location='http://glasshome.local:8090/?open='+encodeURIComponent(location.href)`.
+The website opens with the link filled in; press **Open**. It waits for the
+tap on purpose: any site could send you to such an address.
+
+## Sleep timer
+
+**More > Sleep timer** on the website (on the TV too): 30, 60, 90 or 120
+minutes, then the TV turns its screen off. It works through Glass Home's
+accessibility service (Settings > Accessibility > Glass Home). A timer that ran
+out while the TV was off is dropped, so turning the TV on doesn't turn it off.
+
+## Screensaver
+
+Glass Home has a screensaver of its own: the home screen's photos one after
+another and the clock with the date, which moves a little every minute.
+Unlike Google's it uses no network. Google TV doesn't list other screensavers
+in its settings; turn it on with `scripts/setup.sh --screensaver glasshome`
+(or `adb shell settings put secure screensaver_components
+com.glasshome.tv/.GlassHomeDream`).
 
 ## Updates
 
@@ -141,6 +165,9 @@ release (a few hours later again if it didn't answer; the APK itself comes
 from GitHub's download servers; off with More > Updates on the website). The
 update check sends nothing about you or the TV beyond what any web request
 carries.
+
+The last 10 links sent from a phone stay on the TV for **Sent before**, until
+**Clear the list**; the TV's log notes when a link arrived, never which.
 
 The accessibility service that makes Home open Glass Home sees the keys
 pressed on the remote, because that is how Android lets an app catch Home. It

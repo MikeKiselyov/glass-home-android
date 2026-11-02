@@ -72,8 +72,12 @@ class GlassHomeApp : Application() {
         server.albumCount = { albumCount }
         server.currentPhoto = { currentPhotoKey }
         server.updater = updater
-        val linkOpener = LinkOpener(this) { HomeScreenState.inFront || LinkOpener.serviceOn(this) }
+        val screenWaker = ScreenWaker(this)
+        val linkOpener = LinkOpener(this, { HomeScreenState.inFront || LinkOpener.serviceOn(this) }, { screenWaker.wake() })
         server.openLink = { link -> linkOpener.open(link) }
+        sleepTimer = SleepTimer(PrefsSleepStorage(getSharedPreferences("settings", MODE_PRIVATE)))
+        server.sleepTimer = sleepTimer
+        server.onSleepChanged = { handler.post { scheduleSleep() } }
         // Off the UI thread: NanoHTTPD's start waits for its socket, and nothing
         // on the first frame needs the website or the album.
         albumExecutor.execute {
@@ -86,6 +90,33 @@ class GlassHomeApp : Application() {
         }
         handler.postDelayed(albumTick, ALBUM_FIRST_MS)
         handler.postDelayed(updateTick, UPDATE_FIRST_MS)
+        scheduleSleep()
+    }
+
+    lateinit var sleepTimer: SleepTimer
+
+    private val sleepTick = Runnable { sleepIfDue() }
+
+    /** The next look at the sleep timer: when it runs out, or never. */
+    private fun scheduleSleep() {
+        handler.removeCallbacks(sleepTick)
+        val sleepAt = sleepTimer.sleepAt() ?: return
+        val wait = sleepAt - System.currentTimeMillis()
+        handler.postDelayed(sleepTick, wait.coerceAtLeast(0L))
+    }
+
+    private fun sleepIfDue() {
+        val now = System.currentTimeMillis()
+        if (!sleepTimer.isDue(now)) {
+            scheduleSleep()
+            return
+        }
+        if (!sleepTimer.takeDue(now)) {
+            return
+        }
+        if (!HomeOverrideService.sleepTv()) {
+            Log.w("GlassHome", "Sleep timer ran out, but the accessibility service is off")
+        }
     }
 
     /** Opens the settings on the TV, signed in with a session made here, where the website runs. */
@@ -135,5 +166,16 @@ class GlassHomeApp : Application() {
         /** The first update check after the TV starts, then a look every 6 hours (GitHub is asked once a day). */
         private const val UPDATE_FIRST_MS = 120_000L
         private const val UPDATE_TICK_MS = 6 * 3600_000L
+    }
+}
+
+/** The sleep time in the settings' SharedPreferences. */
+private class PrefsSleepStorage(private val prefs: android.content.SharedPreferences) : SleepTimerStorage {
+    override fun loadSleepAt(): Long {
+        return prefs.getLong("sleep_at", 0L)
+    }
+
+    override fun saveSleepAt(millis: Long) {
+        prefs.edit().putLong("sleep_at", millis).apply()
     }
 }

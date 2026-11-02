@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Turns the screen on (and ends the screensaver) when a link arrives from the phone. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <!-- "Uninstall" in a tile's menu: Android asks the viewer before removing anything. -->
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
     <!-- Answering mDNS for glasshome.local. -->
@@ -104,6 +106,18 @@
             <meta-data
                 android:name="android.accessibilityservice"
                 android:resource="@xml/home_override" />
+        </service>
+
+        <!-- The screensaver with Glass Home photos and clock, turned on by scripts/setup.sh (screensaver: glasshome). -->
+        <service
+            android:name=".GlassHomeDream"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_DREAM_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.dreams.DreamService" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </service>
 
         <!-- Android's answer about an update install (see Updater). -->

@@ -20,9 +20,10 @@
 #                             (ask: one by one; junk: all junk, no features; --yes: junk)
 #   --animations 0.5|1|keep   system animation speed (0.5: twice as fast)
 #   --dns adguard|keep        block ads and trackers for every app with Private DNS (keep)
-#   --screensaver keep|colors|off
+#   --screensaver keep|glasshome|colors|off
 #                             Google's photo screensaver uses the network and
-#                             memory while the TV sits idle (keep)
+#                             memory while the TV sits idle; glasshome shows
+#                             Glass Home's photos and clock instead (keep)
 #
 # Examples:
 #   scripts/setup.sh                       asks about everything
@@ -196,10 +197,14 @@ if [ "$cleanup" = true ]; then
     fi
 
     if [ -z "$screensaver" ]; then
-        screensaver=$(ask "9. Screensaver: keep Google's, plain colours, or off?" keep colors off)
+        screensaver=$(ask "9. Screensaver: keep Google's, Glass Home's photos and clock, plain colours, or off?" keep glasshome colors off)
     fi
-    check_choice screensaver "$screensaver" keep colors off
+    check_choice screensaver "$screensaver" keep glasshome colors off
     . "$scripts/lib/changelog.sh"
+    if [ "$screensaver" = glasshome ]; then
+        put_setting secure screensaver_components com.glasshome.tv/.GlassHomeDream
+        put_setting secure screensaver_enabled 1
+    fi
     if [ "$screensaver" = colors ]; then
         put_setting secure screensaver_components com.android.dreams.basic/.Colors
     fi
