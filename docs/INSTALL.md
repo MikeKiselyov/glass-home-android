@@ -70,9 +70,9 @@ option instead (`scripts/setup.sh --help` lists them too):
 | Step | Option | Recommended | What it does |
 |---|---|---|---|
 | Install | `--apk <file>` | build from source | Installs a downloaded APK instead of building (building needs JDK 17+ and the Android SDK) |
-| Home button | `--home on\|off` | on | Home opens Glass Home (see [Good to know](#good-to-know)) |
+| Home button | `--home on\|off` | on | Home opens Glass Home (see [Good to know](USING.md#good-to-know)) |
 | Now playing | `--now-playing on\|off` | on | Track and cover art while Spotify or YouTube Music plays |
-| Clean-up | `--clean ask\|junk\|none` | junk | Switches off ads, tracking and demo apps from [debloat/packages.tsv](debloat/packages.tsv); `ask` goes one by one, features you might use (voice search, Chromecast) are only switched off when you say so |
+| Clean-up | `--clean ask\|junk\|none` | junk | Switches off ads, tracking and demo apps from [debloat/packages.tsv](../debloat/packages.tsv); `ask` goes one by one, features you might use (voice search, Chromecast) are only switched off when you say so |
 | Animations | `--animations 0.5\|1\|keep` | 0.5 | System animations twice as fast |
 | Ad-blocking DNS | `--dns adguard\|keep` | keep | AdGuard's Private DNS for every app (not YouTube ads) |
 | Screensaver | `--screensaver keep\|colors\|off` | keep | Google's photo screensaver uses the network and memory while the TV is idle |
