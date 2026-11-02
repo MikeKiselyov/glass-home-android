@@ -60,11 +60,16 @@ apk="$root/app/build/outputs/apk/release/app-release.apk"
 echo "Checking the signature"
 sdk=$(sed -n 's/^sdk.dir=//p' local.properties)
 build_tools=$(ls "$sdk/build-tools" | tail -1)
-signer=$("$sdk/build-tools/$build_tools/apksigner" verify --print-certs "$apk" | sed -n 's/^Signer #1 certificate DN: //p')
-echo "  $signer"
-case "$signer" in
-    *"Android Debug"*) echo "Signed with the debug key; stopping." >&2; git checkout app/build.gradle.kts; exit 1 ;;
-esac
+certificates=$("$sdk/build-tools/$build_tools/apksigner" verify --print-certs "$apk")
+echo "$certificates" | sed -n 's/^.*[Ss]igner.*certificate DN: /  /p' | head -1
+# "Signer #1 certificate SHA-256 digest: ..." up to build-tools 36, "V2 Signer: certificate SHA-256 digest: ..." from 37.
+certificate=$(echo "$certificates" | sed -n 's/^.*[Ss]igner.*certificate SHA-256 digest: //p' | head -1)
+# The release key's certificate (docs/RELEASING.md): any other key, the debug key included, can't update a TV.
+if [ "$certificate" != "952f6d18b0ce7c4b6c77ae4e00a9b5aac9576c3666ec604a4f9e060440e7afc6" ]; then
+    echo "Not signed with the release key ($certificate); stopping." >&2
+    git checkout app/build.gradle.kts
+    exit 1
+fi
 
 out="$root/build/release"
 mkdir -p "$out"
