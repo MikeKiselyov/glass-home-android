@@ -11,7 +11,7 @@ Everything runs from the repository folder and finds the TV by itself
 | `cleanup/` | The TV clean-up: `debloat.sh`, `speed.sh` (animations), `private-dns.sh` |
 | `backup/` | `backup.sh`: the TV's state, before any change |
 | `measure/` | Speed and memory: `compare.sh` (before/after), `themes.sh`, `home-key.sh`, `stock.sh` |
-| `dev/` | For working on Glass Home: `release.sh`, `readme-media.sh`, official logos |
+| `dev/` | For working on Glass Home: `release.sh` (by hand; CI releases on merge), `next-version.sh`, `readme-media.sh`, official logos |
 | `lib/` | `changelog.sh`, shared by the scripts that change the TV |
 
 Every change to the TV is written to `.tv/changes.log`; `restore.sh` undoes it.

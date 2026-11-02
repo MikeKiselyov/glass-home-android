@@ -3,16 +3,49 @@
 Releases are APKs signed with one permanent key, so a TV can update from one
 release to the next without losing Glass Home's settings and photos.
 
-## Make a release
+## Releases happen on merge
+
+[`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs the unit tests on
+every pull request and every push to `main`. After a merge to `main` that
+changes the app (`app/`, the Gradle files; not docs or scripts) and passes the
+tests, it publishes a release by itself:
+
+1. The version is the next patch after the newest tag (`v0.4.0` -> `0.4.1`), or
+   the `versionName` in `app/build.gradle.kts` when that is higher: raise it in
+   the pull request for a bigger release (`0.5.0`). `scripts/dev/next-version.sh`
+   prints what the next one will be.
+2. `versionCode` is `major*10000 + minor*100 + patch` (0.4.1 -> 401), so it grows
+   with the version. Both go to Gradle as `-PreleaseVersionName` and
+   `-PreleaseVersionCode`; nothing is committed back to `main`.
+3. It builds the APK with the release key, refuses any other certificate,
+   tags `v0.4.1` on the merged commit and publishes `glass-home.apk` with its
+   SHA-256 and the merged pull requests as notes.
+
+Merging to `main` is therefore publishing: every TV on 0.4.0 or later is
+offered the release within a day.
+
+The key lives in the repository's Actions secrets: `RELEASE_KEYSTORE_BASE64`
+(the `.jks` in base64), `RELEASE_STORE_PASSWORD`, `RELEASE_KEY_ALIAS`,
+`RELEASE_KEY_PASSWORD`. Set from this folder:
 
 ```sh
-scripts/dev/release.sh 0.2.0
+base64 -i glass-home-release.jks | gh secret set RELEASE_KEYSTORE_BASE64
+sed -n 's/^storePassword=//p' keystore.properties | gh secret set RELEASE_STORE_PASSWORD
+sed -n 's/^keyAlias=//p' keystore.properties | gh secret set RELEASE_KEY_ALIAS
+sed -n 's/^keyPassword=//p' keystore.properties | gh secret set RELEASE_KEY_PASSWORD
 ```
 
-From a clean `main`, it bumps `versionName` and `versionCode`, runs the tests,
-builds the APK signed with the release key, refuses to go on if it is signed
-with the debug key, commits "Release 0.2.0", tags `v0.2.0`, pushes both and
-publishes a GitHub release with `glass-home.apk` and its SHA-256 attached.
+## By hand
+
+```sh
+scripts/dev/release.sh 0.5.0
+```
+
+From a clean `main`, it sets `versionName` and `versionCode` (the same formula),
+runs the tests, builds the APK signed with the release key, refuses to go on if
+it is signed with the debug key, commits "Release 0.5.0", tags `v0.5.0`, pushes
+both and publishes a GitHub release with `glass-home.apk`. The commit then
+starts CI, which finds no app change since the tag and publishes nothing more.
 
 ## How TVs find it
 

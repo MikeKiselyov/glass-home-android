@@ -41,8 +41,11 @@ if [ -z "${JAVA_HOME:-}" ] && [ -d /Library/Java/JavaVirtualMachines/jdk-19.jdk/
 fi
 
 echo "Version $version"
-code=$(sed -n 's/^ *versionCode = \([0-9]*\)$/\1/p' app/build.gradle.kts)
-next_code=$((code + 1))
+# The same versionCode CI gives this version (scripts/dev/next-version.sh): major*10000 + minor*100 + patch.
+major=$(echo "$version" | cut -d. -f1)
+minor=$(echo "$version" | cut -d. -f2)
+patch=$(echo "$version" | cut -d. -f3)
+next_code=$((major * 10000 + minor * 100 + patch))
 sed -i.bak -e "s/^\( *versionCode = \)[0-9]*$/\1$next_code/" -e "s/^\( *versionName = \)\"[^\"]*\"$/\1\"$version\"/" app/build.gradle.kts
 rm -f app/build.gradle.kts.bak
 grep -E "versionCode|versionName" app/build.gradle.kts

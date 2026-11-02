@@ -112,6 +112,12 @@ class HomeOverrideService : AccessibilityService() {
         if (!STOCK_HOMES.contains(packageName)) {
             return
         }
+        if (HomeScreenState.inFront) {
+            // Found on the TV: Google TV's launcher also draws notifications
+            // ("Wireless debugging connected") over Glass Home. Opening Glass Home
+            // again then closed whatever was open on it, the update question too.
+            return
+        }
         openGlassHome()
     }
 
