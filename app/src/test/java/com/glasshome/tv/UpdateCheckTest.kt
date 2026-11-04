@@ -71,6 +71,8 @@ class UpdateCheckTest {
     @Test
     fun comparesVersionsByNumberNotByText() {
         assertTrue(UpdateCheck.isNewer("0.4.0", "0.3.0"))
+        // 1.0.0, the first major release, is offered to TVs on 0.4.x.
+        assertTrue(UpdateCheck.isNewer("1.0.0", "0.4.2"))
         assertTrue(UpdateCheck.isNewer("0.10.0", "0.9.0"))
         assertTrue(UpdateCheck.isNewer("1.0", "0.9.9"))
         assertTrue(UpdateCheck.isNewer("0.3.1", "0.3"))

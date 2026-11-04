@@ -163,7 +163,7 @@ asks on the home screen:
 - **Skip this version**: not asked again until a newer version comes out.
 
 Nothing is installed without **Install**. The phone website has the same under
-More > Updates, with **Check now** and a switch that stops the checks
+Settings > Updates, with **Check now** and a switch that stops the checks
 altogether.
 
 After Install, Android puts the update on straight away when Glass Home is its
@@ -225,7 +225,7 @@ app with an accessibility service).
 
 **Home still shows Google TV for a moment.** Some TVs handle the Home key
 before accessibility services see it. Glass Home then still comes in front as
-soon as Google TV opens. On the website, More > Home button > After Google TV
+soon as Google TV opens. On the website, Settings > Home button > After Google TV
 makes that the only way.
 
 **Fixing it without a computer.** Settings > Apps > See all apps > Show

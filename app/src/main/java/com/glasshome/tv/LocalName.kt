@@ -32,6 +32,12 @@ class LocalName(private val context: Context) {
         thread.start()
     }
 
+    /**
+     * Answers on the home network until Glass Home stops. Found on the TV:
+     * after the sleep timer put it into standby, a send with the Wi-Fi down
+     * threw and glasshome.local was gone until Glass Home restarted. Now any
+     * failure, or a change of network, starts over on the network there is.
+     */
     private fun serve() {
         try {
             val wifi = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
@@ -39,55 +45,69 @@ class LocalName(private val context: Context) {
             multicastLock.setReferenceCounted(false)
             multicastLock.acquire()
             lock = multicastLock
-
-            // Right after boot the Wi-Fi may not be up yet.
-            var home = HomeNetwork.find()
-            while (home == null && running) {
-                Thread.sleep(NETWORK_WAIT_MS)
-                home = HomeNetwork.find()
-            }
-            if (home == null) {
-                return
-            }
-            val group = InetAddress.getByName(MDNS_GROUP)
-            val multicast = MulticastSocket(MDNS_PORT)
-            // On the home network by name: with a VPN on, the default route (and
-            // with it the group membership and the replies) goes into the tunnel.
-            multicast.networkInterface = home.networkInterface
-            multicast.joinGroup(InetSocketAddress(group, MDNS_PORT), home.networkInterface)
-            socket = multicast
-
-            announce(multicast, group)
-            var announcedAt = System.currentTimeMillis()
-            // Wake up now and then without a question, to announce the name again.
-            multicast.soTimeout = ANNOUNCE_EVERY_MS.toInt()
-            val buffer = ByteArray(1500)
             while (running) {
-                val now = System.currentTimeMillis()
-                if (isAnnounceDue(announcedAt, now)) {
-                    announce(multicast, group)
-                    announcedAt = now
-                }
-                val packet = DatagramPacket(buffer, buffer.size)
-                try {
-                    multicast.receive(packet)
-                } catch (quiet: SocketTimeoutException) {
-                    continue
-                }
-                if (asksForOurName(packet.data, packet.length)) {
-                    val reply = answer() ?: continue
-                    multicast.send(DatagramPacket(reply, reply.size, group, MDNS_PORT))
-                    // A one-shot question from a phone (not port 5353) also gets a direct reply.
-                    if (packet.port != MDNS_PORT) {
-                        multicast.send(DatagramPacket(reply, reply.size, packet.address, packet.port))
+                // Right after boot or standby the Wi-Fi may not be up yet.
+                val home = HomeNetwork.find()
+                if (home != null) {
+                    try {
+                        serveOn(home)
+                    } catch (error: Exception) {
+                        Log.w(TAG, "glasshome.local stopped, starting over", error)
                     }
+                    socket?.close()
+                    socket = null
+                }
+                if (running) {
+                    Thread.sleep(NETWORK_WAIT_MS)
                 }
             }
-        } catch (error: Exception) {
-            Log.w(TAG, "glasshome.local is not available", error)
+        } catch (stopped: InterruptedException) {
+            // Glass Home is going away.
         } finally {
             running = false
             lock?.release()
+        }
+    }
+
+    /** Until a failure, or until the home network is another one (Wi-Fi to Ethernet, a new address). */
+    private fun serveOn(home: HomeNetwork.Found) {
+        val group = InetAddress.getByName(MDNS_GROUP)
+        val multicast = MulticastSocket(MDNS_PORT)
+        socket = multicast
+        // On the home network by name: with a VPN on, the default route (and
+        // with it the group membership and the replies) goes into the tunnel.
+        multicast.networkInterface = home.networkInterface
+        multicast.joinGroup(InetSocketAddress(group, MDNS_PORT), home.networkInterface)
+
+        announce(multicast, group)
+        var announcedAt = System.currentTimeMillis()
+        // Wake up now and then without a question, to announce the name again.
+        multicast.soTimeout = ANNOUNCE_EVERY_MS.toInt()
+        val buffer = ByteArray(1500)
+        while (running) {
+            val now = System.currentTimeMillis()
+            if (isAnnounceDue(announcedAt, now)) {
+                val found = HomeNetwork.find()
+                if (networkChanged(home.networkInterface.name, home.address.hostAddress, found?.networkInterface?.name, found?.address?.hostAddress)) {
+                    return
+                }
+                announce(multicast, group)
+                announcedAt = now
+            }
+            val packet = DatagramPacket(buffer, buffer.size)
+            try {
+                multicast.receive(packet)
+            } catch (quiet: SocketTimeoutException) {
+                continue
+            }
+            if (asksForOurName(packet.data, packet.length)) {
+                val reply = answer() ?: continue
+                multicast.send(DatagramPacket(reply, reply.size, group, MDNS_PORT))
+                // A one-shot question from a phone (not port 5353) also gets a direct reply.
+                if (packet.port != MDNS_PORT) {
+                    multicast.send(DatagramPacket(reply, reply.size, packet.address, packet.port))
+                }
+            }
         }
     }
 
@@ -204,6 +224,11 @@ class LocalName(private val context: Context) {
         private const val TYPE_ANY = 255
         private const val TTL_SECONDS = 120
         const val ANNOUNCE_EVERY_MS = 60_000L
+
+        /** The network joined is not the home network any more (gone, another interface, a new address). */
+        fun networkChanged(joinedName: String, joinedAddress: String?, foundName: String?, foundAddress: String?): Boolean {
+            return joinedName != foundName || joinedAddress != foundAddress
+        }
 
         fun isAnnounceDue(announcedAt: Long, now: Long): Boolean {
             return now - announcedAt >= ANNOUNCE_EVERY_MS || now < announcedAt

@@ -18,4 +18,13 @@ class LocalNameTest {
     fun aClockSetBackDoesNotStopAnnouncing() {
         assertTrue(LocalName.isAnnounceDue(10_000_000L, 5_000L))
     }
+
+    /** Found on the TV: after standby the name was gone. A changed network means starting over. */
+    @Test
+    fun aChangedNetworkIsJoinedAgain() {
+        assertFalse(LocalName.networkChanged("wlan0", "192.168.1.250", "wlan0", "192.168.1.250"))
+        assertTrue(LocalName.networkChanged("wlan0", "192.168.1.250", null, null))
+        assertTrue(LocalName.networkChanged("wlan0", "192.168.1.250", "eth0", "192.168.1.250"))
+        assertTrue(LocalName.networkChanged("wlan0", "192.168.1.250", "wlan0", "192.168.1.31"))
+    }
 }
