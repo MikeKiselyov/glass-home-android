@@ -122,6 +122,9 @@
         </ScrollView>
     </LinearLayout>
 
+    <include layout="@layout/part_vpn" />
+
+
     <FrameLayout
         android:id="@+id/overlay"
         android:layout_width="match_parent"

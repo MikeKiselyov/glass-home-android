@@ -41,6 +41,7 @@ class ThemeLayoutsTest {
         "now_playing_title" to R.id.now_playing_title,
         "now_playing_artist" to R.id.now_playing_artist,
         "overlay" to R.id.overlay,
+        "vpn_badge" to R.id.vpn_badge,
         "slide_a" to R.id.slide_a,
         "slide_b" to R.id.slide_b,
         "blurred_a" to R.id.blurred_a,

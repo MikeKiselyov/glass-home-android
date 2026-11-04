@@ -31,18 +31,22 @@ type `glasshome.local:8090` on a phone on the same Wi-Fi and enter the code.
 </p>
 
 The website shows the TV as it is right now at the top: its photo with the
-clock, date, weather and dock drawn the way you set them. Below it, four tabs:
+clock, date, weather and dock drawn the way you set them. Six tabs, at the
+bottom on a phone and down the left on a laptop and on the TV:
 
-- **Look**: theme, clock (24 h, 12 h or the TV's setting), clock font, date,
-  weather style and night mode.
+- **TV**: open a link on the TV, the links sent before, the sleep timer.
+- **Look**: theme, clock (24 h, 12 h or the TV's setting), clock font, date
+  and night mode.
+- **Weather**: on or off, the city, and how it looks on the TV.
 - **Photos**: add photos, shuffle or your own order, how long each one stays,
-  slow zoom on or off.
-- **Apps**: the dock in order, hide or show, and the colour buttons.
-- **More**: open a link on the TV, language, the Home button, the weather
-  city, a shared iCloud or Google Photos album, updates, icons.
+  slow zoom on or off, a shared iCloud or Google Photos album.
+- **Apps**: the dock in order, hide or show, the colour buttons, icons.
+- **Settings**: language, the Home button, updates, Send To TV for the
+  iPhone, and This TV (whether a VPN is on, the TV's address by IP).
 
 It follows the phone's light or dark setting; the sun/moon button at the top
-switches it.
+switches it. Light is a cool, quiet page with the preview drawn as the TV on
+its stand; dark is the teal of the app icon, with keys like a remote's.
 
 <p align="center">
   <img src="images/web-look.png" width="300" alt="The phone website in light mode: the live preview of the TV with the Alps photo and 17:55, the tabs, and the Look tab with four theme cards over the same photo, Clock selected">
@@ -64,7 +68,7 @@ the remote.
 
 ## Open a link on the TV
 
-**More > Open on the TV** on the phone website: paste a link and press
+**TV > Open on the TV** on the phone website: paste a link and press
 **Open**. The TV opens it in the app for it: YouTube links in YouTube, other
 pages in a browser. Google TV has no browser of its own; install one from
 Google Play on the TV ([TV Bro](https://play.google.com/store/apps/details?id=com.phlox.tvwebbrowser)
@@ -77,8 +81,8 @@ If the TV is showing its screensaver or the screen is off, it wakes up first.
 ### Send To TV from the iPhone's Share menu
 
 One tap in any app's Share menu, and the page is on the TV: no browser, no
-**Open**. The TV's website shows what to paste under **More > Open on the TV >
-Send from the Share menu**. In Shortcuts, make a shortcut once:
+**Open**. The TV's website shows what to paste under **Settings > Send from the
+Share menu**. In Shortcuts, make a shortcut once:
 
 1. **+**, then the action **Get Contents of URL**, with the address from the
    website (`http://glasshome.local:8090/send/<key>`) as its URL;
@@ -101,7 +105,7 @@ tap on purpose: any site could send you to such an address.
 
 ## Sleep timer
 
-**More > Sleep timer** on the website (on the TV too): 30, 60, 90 or 120
+**TV > Sleep timer** on the website (on the TV too): 30, 60, 90 or 120
 minutes, or any number from 1 to 720 under **Other**; then the TV turns its
 screen off. It works through Glass Home's
 accessibility service (Settings > Accessibility > Glass Home). A timer that ran
@@ -124,7 +128,7 @@ When a new release is out, the home screen asks **Install**, **Later** or
 
 ## Languages
 
-English, Ukrainian and Belarusian: More > Language on the website. All text is
+English, Ukrainian and Belarusian: Settings > Language on the website. All text is
 in [app/src/main/assets/i18n](../app/src/main/assets/i18n). To add a language,
 copy `en.json` to a new file (for example `pl.json`), set `language.name` and
 `language.tag` and translate the rest; missing keys fall back to English.
@@ -149,12 +153,13 @@ your TV and are never part of this repository or the APK.
   cut the network). So `set-home.sh` keeps both and turns on a small
   accessibility service that catches the Home key and opens Glass Home.
   Holding Home no longer opens the Google TV panel. If catching the key doesn't
-  work on your TV, set **More > Home button > After Google TV** on the website.
+  work on your TV, set **Settings > Home button > After Google TV** on the website.
 - **Force stop** on Glass Home, and some system updates, switch that service
   off. Home then opens Google TV until you run `scripts/install/set-home.sh`
   or turn it on in Settings > Accessibility > Glass Home.
 - **A VPN on the TV** (Surfshark and the like) doesn't get in the way: the
-  phone website and `glasshome.local` stay on the home Wi-Fi.
+  phone website and `glasshome.local` stay on the home Wi-Fi. While one is
+  on, the home screen shows a small **VPN** mark at the top.
 - **Google Photos albums** are read from the public share page, which Google
   can change at any time. iCloud shared albums use Apple's web API.
 
@@ -163,7 +168,7 @@ your TV and are never part of this repository or the APK.
 The app talks to: Open-Meteo for weather (once you pick a city), your shared
 album's host (once you add a link), and GitHub once a day to look for a new
 release (a few hours later again if it didn't answer; the APK itself comes
-from GitHub's download servers; off with More > Updates on the website). The
+from GitHub's download servers; off with Settings > Updates on the website). The
 update check sends nothing about you or the TV beyond what any web request
 carries.
 

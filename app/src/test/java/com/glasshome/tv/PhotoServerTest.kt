@@ -253,6 +253,15 @@ class PhotoServerTest {
         assertEquals(NanoHTTPD.Response.Status.UNAUTHORIZED, response.status)
     }
 
+    /** "This TV" on the website shows the VPN and the address by IP. */
+    @Test
+    fun settingsSayWhetherAVpnIsOnAndTheAddress() {
+        val cookie = sessionCookie(signIn(server.code))
+        val settings = server.serve(FakeSession(NanoHTTPD.Method.GET, "/api/settings", cookie = cookie)).data.bufferedReader().readText()
+        assertTrue(settings.contains("\"vpn\":false"))
+        assertTrue(settings.contains("\"address\":"))
+    }
+
     /** A signed-in phone sends a link; the TV opens it. Only web links get that far. */
     @Test
     fun aLinkFromThePhoneOpensOnTheTv() {

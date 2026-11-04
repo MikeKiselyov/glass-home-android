@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- The "VPN" mark on the home screen: is a VPN network up? -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Turns the screen on (and ends the screensaver) when a link arrives from the phone. -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <!-- "Uninstall" in a tile's menu: Android asks the viewer before removing anything. -->

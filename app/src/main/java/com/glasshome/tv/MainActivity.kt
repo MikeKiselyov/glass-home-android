@@ -50,6 +50,7 @@ class MainActivity : Activity() {
     private var weatherCornerIcon: ImageView? = null
     private var weatherForecast: LinearLayout? = null
     private var weatherWeek: View? = null
+    private var vpnWatch: VpnWatch? = null
     private var dockLabel: TextView? = null
     private lateinit var nightShade: View
     private lateinit var musicTint: View
@@ -124,6 +125,12 @@ class MainActivity : Activity() {
         weatherCornerIcon = findViewById(R.id.weather_corner_icon)
         weatherForecast = findViewById(R.id.weather_forecast)
         weatherWeek = findViewById(R.id.weather_week)
+        val vpnBadge: View = findViewById(R.id.vpn_badge)
+        vpnBadge.contentDescription = I18n.t("vpn.on")
+        vpnWatch = VpnWatch(this) { on ->
+            runOnUiThread { vpnBadge.visibility = if (on) View.VISIBLE else View.GONE }
+        }
+        vpnWatch?.start()
         dockLabel = findViewById(R.id.dock_label)
         timeSizePx = timeView.textSize
         tiles = DockTiles(this, theme) { item ->
@@ -288,6 +295,7 @@ class MainActivity : Activity() {
             app.server.signInGuard.onCodeChanged = null
         }
         weatherLoader.shutdown()
+        vpnWatch?.stop()
         dockLoader.shutdown()
         super.onDestroy()
     }

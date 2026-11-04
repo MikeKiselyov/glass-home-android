@@ -135,6 +135,9 @@
         android:textColor="#99FFFFFF"
         android:textSize="10dp" />
 
+    <include layout="@layout/part_vpn" />
+
+
     <FrameLayout
         android:id="@+id/overlay"
         android:layout_width="match_parent"

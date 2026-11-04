@@ -429,6 +429,9 @@ class PhotoServer(
             .put("language", I18n.language)
             .put("languages", JSONArray(availableLanguages()))
             .put("languageNames", languageNames())
+            // "This TV" on the website: the VPN, and the address that works without glasshome.local.
+            .put("vpn", VpnWatch.isOn(context))
+            .put("address", address() ?: "")
             .put("shufflePhotos", settings.shufflePhotos)
             .put("photoMotion", settings.photoMotion)
             .put("photoMode", store.mode)
