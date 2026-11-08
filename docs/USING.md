@@ -14,6 +14,9 @@
   in front.
 - **Settings** on the remote opens Google TV's settings panel (keyboard,
   network, picture), over Glass Home.
+- **Microphone** starts Google's voice search. Its results stay on screen,
+  also when Google TV shows them in its own home screen; Back or Home from
+  them comes back to Glass Home.
 
 <p align="center">
   <img src="images/tile-menu.jpg" width="820" alt="The menu after holding OK on YouTube: move right, change icon, put on a colour button, hide from the dock, wallpaper, set up from your phone">
@@ -120,6 +123,14 @@ in its settings; turn it on with `scripts/setup.sh --screensaver glasshome`
 (or `adb shell settings put secure screensaver_components
 com.glasshome.tv/.GlassHomeDream`).
 
+Google's screensaver shows the TV's clock: 24 h or 12 h on the website's **Look**
+tab sets it for the whole TV too (Glass Home is allowed to while installing,
+`scripts/install/allow-clock.sh`); **the TV's setting** leaves it alone. A
+change in the TV's own settings (Date & Time) comes back to Glass Home and the
+website the next time the home screen opens. Its
+weather is set on the TV only: Settings > System > Ambient Screensaver >
+Settings > On-screen info > Weather (°C, °F, both or hide).
+
 ## Updates
 
 When a new release is out, the home screen asks **Install**, **Later** or
@@ -179,6 +190,9 @@ The accessibility service that makes Home open Glass Home sees the keys
 pressed on the remote, because that is how Android lets an app catch Home. It
 acts only on Home, keeps nothing, sends nothing and cannot read what is on
 screen; it logs only the time Home was pressed, for the speed numbers.
+
+"Modify system settings" is used for one setting only: the TV's 12/24-hour clock,
+set to the one chosen on the website.
 
 The phone website only answers devices on your home network, needs the code
 from the TV, and uses plain HTTP, so anyone on the same Wi-Fi could read the

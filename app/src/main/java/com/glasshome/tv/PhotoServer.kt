@@ -404,6 +404,7 @@ class PhotoServer(
     }
 
     private fun homeSettings(): Response {
+        SystemClockFormat.sync(context, settings)
         val buttons = JSONObject()
         for (color in HomeSettings.BUTTON_COLORS) {
             val key = settings.buttonTarget(color) ?: continue
@@ -454,6 +455,7 @@ class PhotoServer(
         val clockFormat = parameters["clockFormat"]?.firstOrNull()
         if (clockFormat == "auto" || clockFormat == "12" || clockFormat == "24") {
             settings.clockFormat = clockFormat
+            SystemClockFormat.chosen(context, settings)
         }
         val homeButton = parameters["homeButton"]?.firstOrNull()
         if (homeButton != null && HomeButton.MODES.contains(homeButton)) {

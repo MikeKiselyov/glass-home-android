@@ -7,7 +7,7 @@ Everything runs from the repository folder and finds the TV by itself
 |---|---|
 | `setup.sh`, `restore.sh` | The two you need: set the TV up, and put it back |
 | `tv/` | Pair the computer (`pair.sh`), find the TV (`connect.sh`), take a screenshot (`shot.sh`) |
-| `install/` | Glass Home itself: `install-apk.sh`, `deploy.sh` (build and install), `set-home.sh`, `enable-now-playing.sh`, `allow-updates.sh` |
+| `install/` | Glass Home itself: `install-apk.sh`, `deploy.sh` (build and install), `set-home.sh`, `enable-now-playing.sh`, `allow-updates.sh`, `allow-clock.sh` |
 | `cleanup/` | The TV clean-up: `debloat.sh`, `speed.sh` (animations), `private-dns.sh` |
 | `backup/` | `backup.sh`: the TV's state, before any change |
 | `measure/` | Speed and memory: `compare.sh` (before/after), `themes.sh`, `home-key.sh`, `stock.sh` |

@@ -21,6 +21,11 @@ class HomeSettings(context: Context) {
         get() = prefs.getString("clock_format", DEFAULT_CLOCK_FORMAT) ?: DEFAULT_CLOCK_FORMAT
         set(value) = prefs.edit().putString("clock_format", value).apply()
 
+    /** The clock Glass Home last put on the TV (SystemClockFormat), or null. */
+    var clockOnTv: String?
+        get() = prefs.getString("clock_on_tv", null)
+        set(value) = prefs.edit().putString("clock_on_tv", value).apply()
+
     var nightEnabled: Boolean
         get() = prefs.getBoolean("night_enabled", true)
         set(value) = prefs.edit().putBoolean("night_enabled", value).apply()

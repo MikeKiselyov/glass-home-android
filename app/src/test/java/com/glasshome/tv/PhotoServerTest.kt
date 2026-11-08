@@ -214,6 +214,15 @@ class PhotoServerTest {
         assertTrue(body.contains("\"homeButton\":\"after\""))
     }
 
+    /** The clock chosen on the website is the TV's clock too (Google's screensaver). */
+    @Test
+    fun clockFormatReachesTheTv() {
+        val cookie = sessionCookie(signIn(server.code))
+        val context = RuntimeEnvironment.getApplication()
+        server.serve(FakeSession(NanoHTTPD.Method.POST, "/api/settings", cookie = cookie, form = mapOf("clockFormat" to "12")))
+        assertEquals("12", android.provider.Settings.System.getString(context.contentResolver, android.provider.Settings.System.TIME_12_24))
+    }
+
     /** Still photos (no slow zoom) is a switch on the website's Photos tab. */
     @Test
     fun photoMotionCanBeSwitchedOff() {

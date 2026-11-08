@@ -89,6 +89,22 @@ class HomeOverrideServiceTest {
         assertOpenedGlassHome(shadowOf(service).nextStartedActivity)
     }
 
+    /** Voice search results stay; Home or Back from them still leads to Glass Home at once. */
+    @Test
+    fun leavingVoiceSearchResultsLeadsToGlassHome() {
+        val service = startService()
+        HomeSettings(service).homeButton = HomeButton.AFTER
+        for (leavingKey in listOf(KeyEvent.KEYCODE_HOME, KeyEvent.KEYCODE_BACK)) {
+            service.onAccessibilityEvent(windowOpened(GOOGLE_TV, "com.google.apps.tiktok.nav.gateway.GatewayActivity"))
+            service.onAccessibilityEvent(googleTvHomeOpened())
+            assertNull(shadowOf(service).nextStartedActivity)
+
+            assertFalse(service.onKeyEvent(key(KeyEvent.ACTION_DOWN, leavingKey)))
+            service.onAccessibilityEvent(googleTvHomeOpened())
+            assertOpenedGlassHome(shadowOf(service).nextStartedActivity)
+        }
+    }
+
     @Test
     fun theStockHomeOpeningAnotherWayStillLeadsToGlassHome() {
         val service = startService()

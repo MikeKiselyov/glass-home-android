@@ -23,6 +23,7 @@ import android.view.accessibility.AccessibilityEvent
  *   It only receives window events from the stock launchers listed in
  *   res/xml/home_override.xml, and only their home screen counts
  *   ([StockHomeScreens]): Google TV's settings panel is a launcher window too.
+ *   Voice search results open in the launcher's home screen and stay ([StockHomeWatch]).
  *
  * It never reads what is on screen. Every key from the remote passes through
  * [onKeyEvent], so that stays a few comparisons with no work behind them.
@@ -35,6 +36,7 @@ class HomeOverrideService : AccessibilityService() {
 
     private val settings by lazy { HomeSettings(this) }
     private val homeButton = HomeButton()
+    private val stockHome = StockHomeWatch()
     private val loggedWindows = HashSet<String>()
 
     /**
@@ -97,6 +99,10 @@ class HomeOverrideService : AccessibilityService() {
             // For scripts/measure/home-key.sh: from the key press to Glass Home's first frame.
             Log.i(TIMING_TAG, "home key " + event.eventTime)
         }
+        val leaving = event.keyCode == KeyEvent.KEYCODE_HOME || event.keyCode == KeyEvent.KEYCODE_BACK
+        if (leaving && event.action == KeyEvent.ACTION_DOWN) {
+            stockHome.resultsLeft()
+        }
         if (event.keyCode != KeyEvent.KEYCODE_HOME) {
             return false
         }
@@ -116,11 +122,11 @@ class HomeOverrideService : AccessibilityService() {
         }
         val packageName = event.packageName?.toString() ?: return
         val className = event.className?.toString()
-        if (!StockHomeScreens.isHomeScreen(packageName, className)) {
+        if (!stockHome.shouldCover(packageName, className, event.eventTime)) {
             // Once per window: if a Google TV build names its home screen
             // differently, the log shows which name to add.
             if (className != null && loggedWindows.add(className)) {
-                Log.i(TAG, "Not a home screen: $className")
+                Log.i(TAG, "Left on screen: $className")
             }
             return
         }
