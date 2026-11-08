@@ -48,6 +48,16 @@ class StockHomeScreensTest {
         assertTrue(StockHomeScreens.isHomeScreen(googleTv, null))
     }
 
+    /**
+     * Found on the TV: a voice search opens its results in Google TV's launcher
+     * through a deep link, announced as the gateway class of Google's own
+     * navigation library, and Glass Home covered the results at once.
+     */
+    @Test
+    fun voiceSearchResultsAreNot() {
+        assertFalse(StockHomeScreens.isHomeScreen(googleTv, "com.google.apps.tiktok.nav.gateway.GatewayActivity"))
+    }
+
     /** Not checked on a TV with these launchers: any of their windows still counts. */
     @Test
     fun olderLaunchersCountAsBefore() {

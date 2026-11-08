@@ -1,6 +1,7 @@
 #!/bin/sh
 # Installs a Glass Home APK on the TV with Glass Home as its own installer, then
-# lets it install apps (scripts/install/allow-updates.sh). Together they let Glass Home
+# lets it install apps (scripts/install/allow-updates.sh) and set the TV's 12/24-hour
+# clock (scripts/install/allow-clock.sh). The installer and allow-updates let Glass Home
 # put an update on after you say "Install", without Android's extra questions.
 # Android 14 doesn't let adb change the installer later, so it is set here.
 #
@@ -31,3 +32,4 @@ case "$installed" in
         ;;
 esac
 TV="$TV" "$root/scripts/install/allow-updates.sh"
+TV="$TV" "$root/scripts/install/allow-clock.sh"

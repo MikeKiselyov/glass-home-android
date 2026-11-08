@@ -146,7 +146,7 @@ enter the code), and you can:
 - link an iCloud or Google Photos shared album,
 - pick the city for the weather,
 - reorder or hide dock tiles,
-- set the photo interval, clock format and night mode,
+- set the photo interval, clock format (for the whole TV, Google's screensaver too) and night mode,
 - install an update, or switch update checks off.
 
 ## Updates

@@ -234,6 +234,9 @@ class MainActivity : Activity() {
         super.onResume()
         hideSystemBars()
         HomeScreenState.inFront = true
+        // The clock may have been changed in the TV's settings, or Glass Home allowed to set it.
+        SystemClockFormat.sync(this, app.settings)
+        renderClock()
         app.updater.onNews = { askAboutUpdate() }
         handler.postDelayed(updateQuestion, UPDATE_QUESTION_DELAY_MS)
         // For scripts/measure/home-key.sh: the first frame after Glass Home came in front.

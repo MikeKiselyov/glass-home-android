@@ -22,8 +22,8 @@ android {
         applicationId = "com.glasshome.tv"
         minSdk = 26
         targetSdk = 34
-        versionCode = 10000
-        versionName = "1.0.0"
+        versionCode = 10100
+        versionName = "1.1.0"
         // Releases from CI (.github/workflows/ci.yml) pass the version they publish;
         // the lines above are then only the lowest version the next release may have.
         val releaseVersionName = project.findProperty("releaseVersionName") as String?
